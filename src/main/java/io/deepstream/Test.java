@@ -2,12 +2,15 @@ import io.deepstream.ConnectionChangeListener;
 import io.deepstream.DeepstreamClient;
 import io.deepstream.LoginCallback;
 import io.deepstream.constants.ConnectionState;
+import io.deepstream.message.Connection;
+import io.socket.emitter.Emitter;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 
 public class Test {
-
     public static void main(String[] args) {
         new Application();
     }
@@ -23,6 +26,19 @@ class Application implements ConnectionChangeListener, LoginCallback {
             ds
                     .addConnectionChangeListener( this )
                     .login( authData, this );
+
+            ds.event.emit( "bob" );
+            ds.event.emit( "bob", 22 );
+            ds.event.emit( "bob", "Hi" );
+            ds.event.emit( "bob", true );
+            ds.event.emit( "bob", false );
+            ds.event.emit( "bob", null );
+
+            ds.event.subscribe( "bob", new Emitter.Listener() {
+                public void call(Object... args) {
+                    System.out.println( "Recieved event bob with arguments: " + args[ 0 ] );
+                }
+            } );
         }
         catch( Exception e ) {
 

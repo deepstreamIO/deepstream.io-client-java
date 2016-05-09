@@ -29,7 +29,7 @@ public enum Types {
             lookup.put( s.toString(), s);
     }
 
-    static public Types getType( String type ) {
-        return lookup.get( type );
+    static public Types getType( char type ) {
+        return lookup.get( type + "" );
     }
 }

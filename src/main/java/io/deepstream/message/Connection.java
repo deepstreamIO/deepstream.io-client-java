@@ -1,13 +1,13 @@
 package io.deepstream.message;
 
 import io.deepstream.ConnectionChangeListener;
+import io.deepstream.DeepstreamClient;
 import io.deepstream.LoginCallback;
 import io.deepstream.constants.Actions;
 import io.deepstream.constants.ConnectionState;
 import io.deepstream.constants.Topic;
 import io.socket.emitter.Emitter;
 import io.socket.engineio.client.Socket;
-import jdk.nashorn.api.scripting.JSObject;
 import org.json.JSONObject;
 
 import java.net.URISyntaxException;
@@ -15,19 +15,24 @@ import java.util.*;
 
 public class Connection {
 
+    private DeepstreamClient client;
     private String originalUrl;
     private Socket socket;
     private ConnectionState connectionState;
     private ArrayList<ConnectionChangeListener> connectStateListeners;
 
+    private StringBuilder messageBuffer;
+
     private LoginCallback loginCallback;
     private JSONObject authParameters;
 
-    public Connection( final String url, final Map options ) throws URISyntaxException {
+    public Connection(final String url, final Map options, DeepstreamClient client ) throws URISyntaxException {
         System.out.println( "Connecting to " + url );
+        this.client = client;
         this.connectStateListeners = new ArrayList<ConnectionChangeListener>();
         this.originalUrl = url;
         this.connectionState = ConnectionState.CLOSED;
+        this.messageBuffer = new StringBuilder();
 
         this.socket = new Socket( url );
         this.addConnectionListeners();
@@ -44,9 +49,18 @@ public class Connection {
         }
     }
 
+    public void send( String message ) {
+        if( this.connectionState != ConnectionState.OPEN ) {
+            this.messageBuffer.append( message );
+            System.out.println( "Buffering " + message );
+        } else {
+            System.out.println( "Sending " + message );
+            this.socket.send( message );
+        }
+    }
+
     private void sendAuthMessage() {
         String authMessage = MessageBuilder.getMsg( Topic.AUTH, Actions.REQUEST, this.authParameters.toString() );
-        System.out.println( authMessage );
         this.socket.send( authMessage );
     }
 
@@ -62,10 +76,6 @@ public class Connection {
         return this.connectionState;
     }
 
-    public void send( Message message ) {
-        this.socket.send( MessageBuilder.getMsg( message ) );
-    }
-
     private void onOpen() {
         this.setState( ConnectionState.AWAITING_CONNECTION );
     }
@@ -75,7 +85,7 @@ public class Connection {
     }
 
     private void onMessage( String rawMessage ) {
-        System.out.println( rawMessage );
+        System.out.println( "Message received: " + rawMessage );
         List<Message> parsedMessages = MessageParser.parse( rawMessage, this );
         for( short i=0; i<parsedMessages.size(); i++ ) {
             Message message = parsedMessages.get( i );
@@ -84,6 +94,9 @@ public class Connection {
             }
             else if( message.topic == Topic.AUTH ) {
                 handleAuthResponse( message );
+            }
+            else if( message.topic == Topic.EVENT ){
+                this.client.event.handle( message );
             }
             else {
                 System.out.println( "Normal message of type " + message.topic );
@@ -109,6 +122,13 @@ public class Connection {
         }
         else if( message.action == Actions.ACK ) {
             this.setState( connectionState.OPEN );
+
+            if( this.messageBuffer.length() > 0 ) {
+                System.out.println( "Flushing initial buffer: " + this.messageBuffer.toString() );
+                this.socket.send( this.messageBuffer.toString() );
+                this.messageBuffer = new StringBuilder();
+            }
+
             if( this.loginCallback != null ) {
                 this.loginCallback.loginSuccess( new HashMap() );
             }

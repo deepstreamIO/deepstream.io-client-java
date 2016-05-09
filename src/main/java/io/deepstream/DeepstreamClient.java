@@ -5,16 +5,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.deepstream.constants.ConnectionState;
+import io.deepstream.event.EventHandler;
 import io.deepstream.message.Connection;
 import org.json.JSONObject;
 
 public class DeepstreamClient {
 
     private Connection connection;
+    public EventHandler event;
 
     public DeepstreamClient( final String url, Map options ) {
         try {
-            this.connection = new Connection( url, options );
+            this.connection = new Connection( url, options, this );
+            this.event = new EventHandler( options, this.connection );
         } catch( URISyntaxException e ) {
 
         }

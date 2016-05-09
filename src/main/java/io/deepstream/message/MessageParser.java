@@ -5,8 +5,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import io.deepstream.constants.*;
+import org.json.JSONObject;
 
-class MessageParser {
+public class MessageParser {
 
     static private final String MPS = Character.toString( '\u001f' );
     static private final String MS = Character.toString( '\u001e' );
@@ -43,4 +44,35 @@ class MessageParser {
 
         return new Message( message, Topic.getTopic( parts[ 0 ] ), Actions.getAction( parts[ 1 ] ), Arrays.copyOfRange( parts, 2, parts.length ) );
     }
+
+    public static Object convertTyped( String value ) {
+
+        char type = value.charAt(0);
+
+        if( Types.getType( type ) == Types.STRING ) {
+            return value.substring( 1 );
+        }
+        else if( Types.getType( type ) == Types.NULL ) {
+            return null;
+        }
+        else if( Types.getType( type ) == Types.NUMBER ) {
+            return Float.parseFloat( value.substring( 1 ) );
+        }
+        else if( Types.getType( type ) == Types.TRUE ) {
+            return true;
+        }
+        else if( Types.getType( type ) == Types.FALSE ) {
+            return false;
+        }
+        else if( Types.getType( type ) == Types.OBJECT ) {
+            return JSONObject.stringToValue( value.substring( 1 ) );
+        }
+        else if( Types.getType( type ) == Types.UNDEFINED ) {
+            // Undefined isn't a thing in Java..
+        } else {
+
+        }
+        return null;
+    }
+
 }
