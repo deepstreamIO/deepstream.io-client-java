@@ -14,16 +14,12 @@ public class DeepstreamClient {
     private Connection connection;
     public EventHandler event;
 
-    public DeepstreamClient( final String url, Map options ) {
-        try {
-            this.connection = new Connection( url, options, this );
-            this.event = new EventHandler( options, this.connection );
-        } catch( URISyntaxException e ) {
-
-        }
+    public DeepstreamClient( final String url, Map options ) throws URISyntaxException {
+        this.connection = new Connection( url, options, this );
+        this.event = new EventHandler( options, this.connection );
     }
 
-    public DeepstreamClient( final String url ) {
+    public DeepstreamClient( final String url ) throws URISyntaxException {
         this( url, new HashMap() );
     }
 

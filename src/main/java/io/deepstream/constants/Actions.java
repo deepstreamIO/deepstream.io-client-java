@@ -1,6 +1,5 @@
 package io.deepstream.constants;
 
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
