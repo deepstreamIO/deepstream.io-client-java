@@ -5,6 +5,7 @@ import io.deepstream.DeepstreamClient;
 import io.deepstream.LoginCallback;
 import io.deepstream.constants.Actions;
 import io.deepstream.constants.ConnectionState;
+import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
 import io.socket.emitter.Emitter;
 import io.socket.engineio.client.Socket;
@@ -27,14 +28,17 @@ public class Connection {
     private JSONObject authParameters;
 
     public Connection(final String url, final Map options, DeepstreamClient client ) throws URISyntaxException {
-        System.out.println( "Connecting to " + url );
+        this( url, options, client, new Socket( url ) );
+    }
+
+    Connection(final String url, final Map options, DeepstreamClient client, Socket socket ) throws URISyntaxException {
         this.client = client;
         this.connectStateListeners = new ArrayList<ConnectionChangeListener>();
         this.originalUrl = url;
         this.connectionState = ConnectionState.CLOSED;
         this.messageBuffer = new StringBuilder();
 
-        this.socket = new Socket( url );
+        this.socket = socket;
         this.addConnectionListeners();
         this.socket.open();
     }
@@ -85,7 +89,6 @@ public class Connection {
     }
 
     private void onMessage( String rawMessage ) {
-        System.out.println( "Message received: " + rawMessage );
         List<Message> parsedMessages = MessageParser.parse( rawMessage, this );
         for( short i=0; i<parsedMessages.size(); i++ ) {
             Message message = parsedMessages.get( i );
@@ -117,8 +120,9 @@ public class Connection {
     private void handleAuthResponse( Message message ) {
         if( message.action == Actions.ERROR ) {
             if( this.loginCallback != null ) {
-                this.loginCallback.loginFailed( message.data[ 1 ] );
+                this.loginCallback.loginFailed(Event.getEvent( message.data[ 0 ] ), message.data[ 1 ] );
             }
+            this.setState( ConnectionState.AWAITING_AUTHENTICATION );
         }
         else if( message.action == Actions.ACK ) {
             this.setState( connectionState.OPEN );

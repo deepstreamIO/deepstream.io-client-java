@@ -2,6 +2,7 @@ import io.deepstream.ConnectionChangeListener;
 import io.deepstream.DeepstreamClient;
 import io.deepstream.LoginCallback;
 import io.deepstream.constants.ConnectionState;
+import io.deepstream.constants.Event;
 import io.deepstream.message.Connection;
 import io.socket.emitter.Emitter;
 import org.json.JSONObject;
@@ -53,7 +54,7 @@ class Application implements ConnectionChangeListener, LoginCallback {
         System.out.println( "Login Success" );
     }
 
-    public void loginFailed( String errorEvent ) {
+    public void loginFailed( Event errorEvent, String errorMessage ) {
         System.out.println( "Login failed " + errorEvent );
     }
 }

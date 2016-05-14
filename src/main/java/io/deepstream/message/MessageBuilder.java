@@ -19,6 +19,10 @@ public class MessageBuilder {
         return topic.toString() + MPS + action.toString() + MPS + data + MS;
     }
 
+    public static String getMsg( Topic topic, Actions action ) {
+        return topic.toString() + MPS + action.toString() + MS;
+    }
+
     /**
      * Converts a serializable value into its string-representation and adds
      * a flag that provides instructions on how to deserialize it.
