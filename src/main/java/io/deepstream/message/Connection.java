@@ -2,6 +2,7 @@ package io.deepstream.message;
 
 import io.deepstream.ConnectionChangeListener;
 import io.deepstream.DeepstreamClient;
+import io.deepstream.DeepstreamException;
 import io.deepstream.LoginCallback;
 import io.deepstream.constants.Actions;
 import io.deepstream.constants.ConnectionState;
@@ -22,6 +23,8 @@ public class Connection {
     private ConnectionState connectionState;
     private ArrayList<ConnectionChangeListener> connectStateListeners;
 
+    public boolean tooManyAuthAttempts;
+
     private StringBuilder messageBuffer;
 
     private LoginCallback loginCallback;
@@ -37,13 +40,18 @@ public class Connection {
         this.originalUrl = url;
         this.connectionState = ConnectionState.CLOSED;
         this.messageBuffer = new StringBuilder();
+        this.tooManyAuthAttempts = false;
 
         this.socket = socket;
         this.addConnectionListeners();
         this.socket.open();
     }
 
-    public void authenticate( JSONObject authParameters, LoginCallback loginCallback ) {
+    public void authenticate( JSONObject authParameters, LoginCallback loginCallback ) throws Exception {
+        if( this.tooManyAuthAttempts ) {
+            this.client.onError( Topic.ERROR, Event.IS_CLOSED, "the client\'s connection was closed" );
+            return;
+        }
         this.loginCallback = loginCallback;
         this.authParameters = authParameters;
 
@@ -119,13 +127,18 @@ public class Connection {
 
     private void handleAuthResponse( Message message ) {
         if( message.action == Actions.ERROR ) {
+            if( message.data[0].equals( Event.TOO_MANY_AUTH_ATTEMPTS.name() ) ) {
+                this.tooManyAuthAttempts = true;
+            } else {
+                this.setState( ConnectionState.AWAITING_AUTHENTICATION );
+            }
+
             if( this.loginCallback != null ) {
                 this.loginCallback.loginFailed(Event.getEvent( message.data[ 0 ] ), message.data[ 1 ] );
             }
-            this.setState( ConnectionState.AWAITING_AUTHENTICATION );
         }
         else if( message.action == Actions.ACK ) {
-            this.setState( connectionState.OPEN );
+            this.setState( ConnectionState.OPEN );
 
             if( this.messageBuffer.length() > 0 ) {
                 System.out.println( "Flushing initial buffer: " + this.messageBuffer.toString() );

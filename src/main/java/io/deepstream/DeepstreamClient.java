@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.deepstream.constants.ConnectionState;
+import io.deepstream.constants.Event;
+import io.deepstream.constants.Topic;
 import io.deepstream.event.EventHandler;
 import io.deepstream.message.Connection;
 import org.json.JSONObject;
@@ -23,12 +25,12 @@ public class DeepstreamClient {
         this( url, new HashMap() );
     }
 
-    public DeepstreamClient login( JSONObject data ) {
+    public DeepstreamClient login( JSONObject data ) throws Exception {
         this.connection.authenticate( data, null );
         return this;
     }
 
-    public DeepstreamClient login( JSONObject data, LoginCallback loginCallback ) {
+    public DeepstreamClient login( JSONObject data, LoginCallback loginCallback ) throws Exception {
         this.connection.authenticate( data, loginCallback );
         return this;
     }
@@ -51,4 +53,12 @@ public class DeepstreamClient {
         return this.connection.getConnectionState();
     }
 
+    public void onError(Topic topic, Event event, String message) throws DeepstreamException {
+        System.out.println( "--- You can catch all deepstream errors by subscribing to the error event ---" );
+
+        String errorMsg = event + ": " + message;
+        errorMsg += " (" + topic + ")";
+
+        throw new DeepstreamException( errorMsg );
+    }
 }
