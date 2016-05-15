@@ -73,7 +73,7 @@ public class ConnectionTest {
     }
 
     @Test
-    public void sendingAuthentication() throws JSONException {
+    public void sendingAuthentication() throws JSONException, Exception {
         this.challengeAck();
         JSONObject authParams = new JSONObject( "{\"name\":\"Yasser\"}" );
         connection.authenticate( authParams, loginCallback );
@@ -83,7 +83,7 @@ public class ConnectionTest {
     }
 
     @Test
-    public void gettingValidAuthenticationBack() throws JSONException {
+    public void gettingValidAuthenticationBack() throws JSONException, Exception {
         this.sendingAuthentication();
 
         socketMock.emit(Socket.EVENT_MESSAGE, MessageBuilder.getMsg(Topic.AUTH, Actions.ACK));
@@ -94,7 +94,7 @@ public class ConnectionTest {
     }
 
     @Test
-    public void gettingInValidAuthenticationBack() throws JSONException {
+    public void gettingInValidAuthenticationBack() throws JSONException, Exception {
         this.sendingAuthentication();
 
         socketMock.emit(Socket.EVENT_MESSAGE, MessageBuilder.getMsg(Topic.AUTH, Actions.ERROR, Event.NOT_AUTHENTICATED.toString(), "Fail" ));
@@ -102,6 +102,18 @@ public class ConnectionTest {
         verifyConnectionState( ConnectionState.AWAITING_AUTHENTICATION );
         //verify( loginCallback, times( 1 ) ).loginSuccess(); //TODO: Any
         verify( loginCallback, times( 1 ) ).loginFailed(  Event.NOT_AUTHENTICATED, "Fail" );
+    }
+
+    @Test
+    public void errorsWhenTooManyAuthAttempts() throws JSONException, Exception {
+        this.sendingAuthentication();
+
+        socketMock.emit(Socket.EVENT_MESSAGE, MessageBuilder.getMsg( Topic.AUTH, Actions.ERROR, Event.TOO_MANY_AUTH_ATTEMPTS.toString(), "TOO_MANY_AUTH_ATTEMPTS" ));
+        verify( loginCallback, times( 1 ) ).loginFailed(  Event.TOO_MANY_AUTH_ATTEMPTS, "TOO_MANY_AUTH_ATTEMPTS" );
+
+        JSONObject authParams = new JSONObject( "{\"name\":\"Yasser\"}" );
+        connection.authenticate( authParams, loginCallback );
+        verify( deepstreamClientMock, times( 1 ) ).onError( Topic.ERROR, Event.IS_CLOSED, "the client\'s connection was closed" );
     }
 
     private void verifyConnectionState( ConnectionState connectionState) {

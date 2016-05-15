@@ -21,7 +21,7 @@ public class Socket extends Emitter {
         this.lastSentMessage = null;
         this.url = url;
         this.isDisconnected = true;
-        this.sentMessages = new ArrayList<>();
+        this.sentMessages = new ArrayList<String>();
     }
 
     public Socket open() {
