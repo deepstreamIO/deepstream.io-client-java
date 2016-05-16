@@ -58,7 +58,7 @@ public class ResubscribeNotifier implements ConnectionChangeListener {
         }
         if( state == ConnectionState.OPEN && this.isReconnecting == true ) {
             this.isReconnecting = false;
-            this.resubscribe.call();
+            this.resubscribe.resubscribe();
         }
     }
 }

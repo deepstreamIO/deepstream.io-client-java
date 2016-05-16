@@ -42,22 +42,22 @@ public class ResubscriptionTest {
     @Test
     public void resubscribeCallbackNotCalledWhenReconnecting() {
         setConnectionState( ConnectionState.RECONNECTING );
-        verify( resubscribeCallbackMock, times( 0 ) ).call();
+        verify( resubscribeCallbackMock, times( 0 ) ).resubscribe();
     }
 
     @Test
     public void resubscribeCallbackNotCalledWhenOpening() {
         setConnectionState( ConnectionState.OPEN );
-        verify( resubscribeCallbackMock, times( 0 ) ).call();
+        verify( resubscribeCallbackMock, times( 0 ) ).resubscribe();
     }
 
     @Test
     public void resubscribeCallbackCalledWhenReconnectingAndOpen() {
         setConnectionState( ConnectionState.RECONNECTING );
-        verify( resubscribeCallbackMock, times( 0 ) ).call();
+        verify( resubscribeCallbackMock, times( 0 ) ).resubscribe();
 
         setConnectionState( ConnectionState.OPEN );
-        verify( resubscribeCallbackMock, times( 1 ) ).call();
+        verify( resubscribeCallbackMock, times( 1 ) ).resubscribe();
     }
 
     public void setConnectionState( ConnectionState state ) {
