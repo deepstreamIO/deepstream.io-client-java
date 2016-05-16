@@ -41,28 +41,24 @@ public class ResubscriptionTest {
 
     @Test
     public void resubscribeCallbackNotCalledWhenReconnecting() {
-        setConnectionState( ConnectionState.RECONNECTING );
+        deepstreamClientMock.setConnectionState( ConnectionState.RECONNECTING );
         verify( resubscribeCallbackMock, times( 0 ) ).resubscribe();
     }
 
     @Test
     public void resubscribeCallbackNotCalledWhenOpening() {
-        setConnectionState( ConnectionState.OPEN );
+        deepstreamClientMock.setConnectionState( ConnectionState.OPEN );
         verify( resubscribeCallbackMock, times( 0 ) ).resubscribe();
     }
 
     @Test
     public void resubscribeCallbackCalledWhenReconnectingAndOpen() {
-        setConnectionState( ConnectionState.RECONNECTING );
+        deepstreamClientMock.setConnectionState( ConnectionState.RECONNECTING );
         verify( resubscribeCallbackMock, times( 0 ) ).resubscribe();
 
-        setConnectionState( ConnectionState.OPEN );
+        deepstreamClientMock.setConnectionState( ConnectionState.OPEN );
         verify( resubscribeCallbackMock, times( 1 ) ).resubscribe();
     }
 
-    public void setConnectionState( ConnectionState state ) {
-        for ( ConnectionChangeListener listener : this.deepstreamClientMock.connectionListeners ) {
-            listener.connectionStateChanged( state );
-        }
-    }
+
 }

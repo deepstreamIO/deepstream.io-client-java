@@ -17,7 +17,7 @@ public class ResubscribeNotifier implements ConnectionChangeListener {
 
     private IDeepstreamClient client;
     private ResubscribeCallback resubscribe;
-    public boolean isReconnecting;
+    private boolean isReconnecting;
 
     /**
      * Constructor.

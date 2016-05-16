@@ -1,5 +1,6 @@
 package io.deepstream;
 
+import io.deepstream.constants.ConnectionState;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
 import io.deepstream.message.Connection;
@@ -25,5 +26,11 @@ public class DeepstreamClientMock implements IDeepstreamClient {
 
     public void onError(Topic topic, Event event, String message) {
 
+    }
+
+    public void setConnectionState( ConnectionState state ) {
+        for ( ConnectionChangeListener listener : this.connectionListeners ) {
+            listener.connectionStateChanged( state );
+        }
     }
 }
