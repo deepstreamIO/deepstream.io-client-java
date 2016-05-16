@@ -26,12 +26,6 @@ public class DeepstreamClient implements IDeepstreamClient {
         this( url, new HashMap() );
     }
 
-    //Todo this shouldn't be public
-    public DeepstreamClient( Connection connection, HashMap options ) {
-        this.connection = connection;
-        this.event = new EventHandler( options, this.connection, this );
-    }
-
     public DeepstreamClient login( JSONObject data ) throws Exception {
         this.connection.authenticate( data, null );
         return this;
