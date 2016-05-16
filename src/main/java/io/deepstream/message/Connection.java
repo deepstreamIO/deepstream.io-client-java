@@ -1,9 +1,6 @@
 package io.deepstream.message;
 
-import io.deepstream.ConnectionChangeListener;
-import io.deepstream.DeepstreamClient;
-import io.deepstream.DeepstreamException;
-import io.deepstream.LoginCallback;
+import io.deepstream.*;
 import io.deepstream.constants.Actions;
 import io.deepstream.constants.ConnectionState;
 import io.deepstream.constants.Event;

@@ -9,16 +9,17 @@ import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
 import io.deepstream.event.EventHandler;
 import io.deepstream.message.Connection;
+import io.socket.emitter.Emitter;
 import org.json.JSONObject;
 
-public class DeepstreamClient {
+public class DeepstreamClient implements IDeepstreamClient {
 
     private Connection connection;
     public EventHandler event;
 
     public DeepstreamClient( final String url, Map options ) throws URISyntaxException {
         this.connection = new Connection( url, options, this );
-        this.event = new EventHandler( options, this.connection );
+        this.event = new EventHandler( options, this.connection, this );
     }
 
     public DeepstreamClient( final String url ) throws URISyntaxException {
@@ -53,7 +54,7 @@ public class DeepstreamClient {
         return this.connection.getConnectionState();
     }
 
-    public void onError(Topic topic, Event event, String message) throws DeepstreamException {
+    public void onError(Topic topic, Event event, String message) {
         System.out.println( "--- You can catch all deepstream errors by subscribing to the error event ---" );
 
         String errorMsg = event + ": " + message;

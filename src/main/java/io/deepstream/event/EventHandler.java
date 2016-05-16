@@ -1,23 +1,30 @@
 package io.deepstream.event;
 
+import io.deepstream.DeepstreamClient;
 import io.deepstream.constants.Actions;
 import io.deepstream.constants.Topic;
 import io.deepstream.message.Connection;
 import io.deepstream.message.Message;
 import io.deepstream.message.MessageBuilder;
 import io.deepstream.message.MessageParser;
+import io.deepstream.utils.ResubscribeCallback;
+import io.deepstream.utils.ResubscribeNotifier;
 import io.socket.emitter.Emitter;
 import java.util.Map;
 
-public class EventHandler {
+public class EventHandler implements ResubscribeCallback {
 
     private Emitter emitter;
     private Map options;
     private Connection connection;
+    private DeepstreamClient client;
+    private ResubscribeNotifier resubscribeNotifier;
 
-    public EventHandler( Map options, Connection connection ) {
+    public EventHandler( Map options, Connection connection, DeepstreamClient client ) {
         this.emitter = new Emitter();
         this.connection = connection;
+        this.client = client;
+        this.resubscribeNotifier = new ResubscribeNotifier( this.client, this );
     }
 
     public void subscribe( String eventName, Emitter.Listener eventListener ) {
@@ -29,7 +36,7 @@ public class EventHandler {
 
     public void unsubscribe( String eventName, Emitter.Listener eventListener ) {
         this.emitter.off(eventName, eventListener);
-        if (this.emitter.hasListeners(eventName) == false) {
+        if ( this.emitter.hasListeners(eventName) == false ) {
             this.connection.send(MessageBuilder.getMsg(Topic.EVENT, Actions.UNSUBSCRIBE, eventName));
         }
     }
@@ -68,5 +75,10 @@ public class EventHandler {
         }else {
             System.out.println( "Unsoliciated message " + eventName );
         }
+    }
+
+    @Override
+    public void resubscribe() {
+
     }
 }
