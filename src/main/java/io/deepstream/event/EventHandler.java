@@ -1,11 +1,14 @@
 package io.deepstream.event;
 
+import io.deepstream.DeepstreamClient;
 import io.deepstream.constants.Actions;
 import io.deepstream.constants.Topic;
 import io.deepstream.message.Connection;
 import io.deepstream.message.Message;
 import io.deepstream.message.MessageBuilder;
 import io.deepstream.message.MessageParser;
+import io.deepstream.utils.ResubscribeCallback;
+import io.deepstream.utils.ResubscribeNotifier;
 import io.socket.emitter.Emitter;
 import java.util.Map;
 
@@ -14,10 +17,18 @@ public class EventHandler {
     private Emitter emitter;
     private Map options;
     private Connection connection;
+    private DeepstreamClient client;
+    private ResubscribeNotifier resubscribeNotifier;
 
-    public EventHandler( Map options, Connection connection ) {
+    public EventHandler( Map options, Connection connection, DeepstreamClient client ) {
         this.emitter = new Emitter();
         this.connection = connection;
+        this.client = client;
+        this.resubscribeNotifier = new ResubscribeNotifier(this.client, new ResubscribeCallback() {
+            public void call() {
+                resubscribe();
+            }
+        });
     }
 
     public void subscribe( String eventName, Emitter.Listener eventListener ) {
@@ -68,5 +79,9 @@ public class EventHandler {
         }else {
             System.out.println( "Unsoliciated message " + eventName );
         }
+    }
+
+    private void resubscribe() {
+
     }
 }

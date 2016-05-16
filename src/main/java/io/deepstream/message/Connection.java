@@ -152,7 +152,7 @@ public class Connection {
         }
     }
 
-    private void setState( ConnectionState connectionState ) {
+    protected void setState( ConnectionState connectionState ) {
         this.connectionState = connectionState;
 
         if( connectionState == ConnectionState.AWAITING_CONNECTION && this.authParameters != null ) {
