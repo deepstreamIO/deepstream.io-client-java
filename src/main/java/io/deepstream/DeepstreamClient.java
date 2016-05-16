@@ -12,7 +12,7 @@ import io.deepstream.message.Connection;
 import io.socket.emitter.Emitter;
 import org.json.JSONObject;
 
-public class DeepstreamClient {
+public class DeepstreamClient implements IDeepstreamClient {
 
     private Connection connection;
     public EventHandler event;
