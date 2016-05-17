@@ -1,26 +1,31 @@
 package io.deepstream.utils;
 
+import io.deepstream.ConnectionChangeListener;
 import io.deepstream.IDeepstreamClient;
 import io.deepstream.constants.Actions;
+import io.deepstream.constants.ConnectionState;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
 import io.deepstream.message.Message;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Timer;
+import java.util.*;
+import java.util.concurrent.LinkedBlockingQueue;
 
-public class AckTimeoutRegistry implements AckTimeoutCallback {
+public class AckTimeoutRegistry implements AckTimeoutCallback, ResubscribeCallback, ConnectionChangeListener {
 
     private Map<String, AckTimeoutTask> register;
     private Timer timer;
     private Topic topic;
     private long timeoutDuration;
     private IDeepstreamClient client;
+    private ConnectionState state;
+    private LinkedBlockingQueue<AckTimeoutTask> ackTimers;
 
     public AckTimeoutRegistry(IDeepstreamClient client, Topic topic, long timeoutDuration ) {
         this.client = client;
+        this.state = client.getConnectionState();
         this.register = new HashMap<String, AckTimeoutTask>();
+        this.ackTimers = new LinkedBlockingQueue<AckTimeoutTask>();
         this.timer = new Timer();
         this.topic = topic;
         this.timeoutDuration = timeoutDuration;
@@ -53,7 +58,6 @@ public class AckTimeoutRegistry implements AckTimeoutCallback {
      * @param name The name to be added to the register
      */
     public void add( String name ) {
-
         AckTimeoutTask task = this.register.get( name );
         if( task != null ) {
             Message m = new Message(null, null, null, new String[]{} );
@@ -88,14 +92,19 @@ public class AckTimeoutRegistry implements AckTimeoutCallback {
     }
 
     /**
-     * Adds the uniqueName to the register and starts the timer.
+     * Adds the uniqueName to the register and starts the timer if the
+     * connection state is OPEN.
      *
      * @param uniqueName The name to be added to the register
      */
     private void addToRegister( String uniqueName ) {
         AckTimeoutTask task = new AckTimeoutTask( uniqueName, this );
         register.put( uniqueName, task );
-        timer.schedule( task, this.timeoutDuration );
+        if( this.state == ConnectionState.OPEN ) {
+            timer.schedule( task, this.timeoutDuration );
+        } else {
+            this.ackTimers.add( task );
+        }
     }
 
     @Override
@@ -104,5 +113,27 @@ public class AckTimeoutRegistry implements AckTimeoutCallback {
         String msg = "No ACK message received in time for " + name;
         this.client.onError( this.topic, Event.ACK_TIMEOUT, msg );
         //this.emit( 'timeout', name );
+    }
+
+    @Override
+    public void resubscribe() {
+        AckTimeoutTask task = null;
+        while( this.ackTimers.peek() != null ) {
+            try {
+                task = this.ackTimers.take();
+            } catch (InterruptedException e) {}
+            
+            if( task != null ) {
+                this.timer.schedule( task, this.timeoutDuration );
+            }
+        }
+    }
+
+    @Override
+    public void connectionStateChanged(ConnectionState connectionState) {
+        if( connectionState == ConnectionState.OPEN ) {
+            resubscribe();
+        }
+        this.state = connectionState;
     }
 }
