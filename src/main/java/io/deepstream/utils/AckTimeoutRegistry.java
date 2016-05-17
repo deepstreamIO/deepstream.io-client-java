@@ -26,6 +26,11 @@ public class AckTimeoutRegistry implements AckTimeoutCallback {
         this.timeoutDuration = timeoutDuration;
     }
 
+    /**
+     * Clears the ack timeout for a message once.
+     *
+     * @param message The message received to remove the ack timer for
+     */
     public void clear( Message message ) {
         String name = message.data[ 1 ];
         String uniqueName = message.data[ 0 ] + name;
@@ -41,14 +46,54 @@ public class AckTimeoutRegistry implements AckTimeoutCallback {
         }
     }
 
+    /**
+     * Checks to see if an ack timer already exists for the given name. If
+     * it does, it clears it, then starts a new one.
+     *
+     * @param name The name to be added to the register
+     */
+    public void add( String name ) {
+
+        AckTimeoutTask task = this.register.get( name );
+        if( task != null ) {
+            Message m = new Message(null, null, null, new String[]{} );
+            m.data[0] = name;
+            clear( m );
+        }
+        addToRegister( name );
+    }
+
+    /**
+     * Checks to see if an ack timer already exists for the given name
+     * and action. If it does, it clears it, then starts a new one.
+     *
+     * @param name The name to be added to the register
+     * @param action The action to be added to the register
+     */
     public void add( String name, Actions action ) {
         String uniqueName = ( action != null ) ? action + name : name;
 
         AckTimeoutTask task = this.register.get( uniqueName );
         if( task != null ) {
-            task.cancel();
+            Message m = new Message(null, null, null, new String[]{} );
+            if( action == null ) {
+                m.data[0] = name;
+            } else {
+                m.data[0] = action.name();
+                m.data[1] = name;
+            }
+            clear( m );
         }
-        task = new AckTimeoutTask( uniqueName, this );
+        addToRegister( uniqueName );
+    }
+
+    /**
+     * Adds the uniqueName to the register and starts the timer.
+     *
+     * @param uniqueName The name to be added to the register
+     */
+    private void addToRegister( String uniqueName ) {
+        AckTimeoutTask task = new AckTimeoutTask( uniqueName, this );
         register.put( uniqueName, task );
         timer.schedule( task, this.timeoutDuration );
     }
