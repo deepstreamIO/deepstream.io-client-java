@@ -1,21 +1,16 @@
 package io.deepstream.message;
 
-import io.deepstream.ConnectionChangeListener;
-import io.deepstream.DeepstreamClient;
 import io.deepstream.DeepstreamClientMock;
 import io.deepstream.constants.ConnectionState;
 import io.deepstream.utils.ResubscribeCallback;
 import io.deepstream.utils.ResubscribeNotifier;
-import io.socket.engineio.client.Socket;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.net.URISyntaxException;
-import java.util.HashMap;
 
 import static org.mockito.Mockito.*;
 
