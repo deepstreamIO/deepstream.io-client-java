@@ -29,7 +29,7 @@ public class AckTimeoutRegistry implements AckTimeoutCallback, ConnectionChangeL
      * @param topic The topic for all acks in the register
      * @param timeoutDuration The timeout duration for acks in milliseconds
      */
-    public AckTimeoutRegistry(IDeepstreamClient client, Topic topic, long timeoutDuration ) {
+    public AckTimeoutRegistry( IDeepstreamClient client, Topic topic, long timeoutDuration ) {
         this.client = client;
         this.register = new HashMap<String, AckTimeoutTask>();
         this.ackTimers = new LinkedBlockingQueue<AckTimeoutTask>();
@@ -43,7 +43,7 @@ public class AckTimeoutRegistry implements AckTimeoutCallback, ConnectionChangeL
         this.ackTimeoutCallback = this;
     }
 
-    public AckTimeoutRegistry(IDeepstreamClient client, Topic topic, long timeoutDuration, AckTimeoutCallback callback ) {
+    public AckTimeoutRegistry( IDeepstreamClient client, Topic topic, long timeoutDuration, AckTimeoutCallback callback ) {
         this.client = client;
         this.register = new HashMap<String, AckTimeoutTask>();
         this.ackTimers = new LinkedBlockingQueue<AckTimeoutTask>();
@@ -58,74 +58,74 @@ public class AckTimeoutRegistry implements AckTimeoutCallback, ConnectionChangeL
     }
 
     /**
-     * Clears the ack timeout for a message once.
+     * Clears the ack timeout for a message.
      *
      * @param message The message received to remove the ack timer for
      */
     public void clear( Message message ) {
         String name = message.data[ 1 ];
-        String uniqueName = message.data[ 0 ] + name;
+        String action = message.data[ 0 ];
+        String uniqueName = name != null ? action + name : action;
 
         AckTimeoutTask task = register.get( uniqueName );
-        if( task == null ) {
-            task = register.get( name );
-        }
         if( task != null ) {
             task.cancel();
         } else {
-            this.client.onError( this.topic, Event.UNSOLICITED_MESSAGE, message.raw);
+            this.client.onError( this.topic, Event.UNSOLICITED_MESSAGE, message.raw );
         }
     }
 
     /**
-     * Checks to see if an ack timer already exists for the given name. If
-     * it does, it clears it, then starts a new one.
+     * Checks to see if an ack timer already exists in the register for
+     * the given name. If it does, it clears it, then starts a new one.
      *
      * @param name The name to be added to the register
      */
     public void add( String name ) {
         AckTimeoutTask task = this.register.get( name );
         if( task != null ) {
-            Message m = new Message(null, null, null, new String[]{} );
-            m.data[0] = name;
+            Message m = new Message(
+                    null,
+                    null,
+                    null,
+                    new String[]{ name } );
             clear( m );
         }
         addToRegister( name );
     }
 
     /**
-     * Checks to see if an ack timer already exists for the given name
-     * and action. If it does, it clears it, then starts a new one.
+     * Checks to see if an ack timer already exists in the register for
+     * the given name and action. If it does, it clears it, then starts a new one.
      *
      * @param name The name to be added to the register
      * @param action The action to be added to the register
      */
     public void add( String name, Actions action ) {
         String uniqueName = ( action != null ) ? action + name : name;
-
         AckTimeoutTask task = this.register.get( uniqueName );
+
         if( task != null ) {
-            Message m = new Message(null, null, null, new String[]{} );
-            if( action == null ) {
-                m.data[0] = name;
-            } else {
-                m.data[0] = action.name();
-                m.data[1] = name;
-            }
+            Message m = new Message(
+                    null,
+                    null,
+                    null,
+                    new String[]{ action.toString(), name } );
             clear( m );
         }
         addToRegister( uniqueName );
     }
 
     /**
-     * Adds the uniqueName to the register and starts the timer if the
-     * connection state is OPEN.
+     * Adds the uniqueName to the register. Only schedules the timer if
+     * the connection state is OPEN, otherwise it adds to the queue of waiting acks.
      *
      * @param uniqueName The name to be added to the register
      */
     private void addToRegister( String uniqueName ) {
         AckTimeoutTask task = new AckTimeoutTask( uniqueName, this.ackTimeoutCallback );
         register.put( uniqueName, task );
+
         if( this.state == ConnectionState.OPEN ) {
             timer.schedule( task, this.timeoutDuration );
         } else {
@@ -138,7 +138,6 @@ public class AckTimeoutRegistry implements AckTimeoutCallback, ConnectionChangeL
         this.register.remove( name );
         String msg = "No ACK message received in time for " + name;
         this.client.onError( this.topic, Event.ACK_TIMEOUT, msg );
-        //this.emit( 'timeout', name );
     }
 
     public void scheduleAcks() {
@@ -151,6 +150,7 @@ public class AckTimeoutRegistry implements AckTimeoutCallback, ConnectionChangeL
             if( task != null ) {
                 this.timer.schedule( task, this.timeoutDuration );
             }
+            task = null;
         }
     }
 
