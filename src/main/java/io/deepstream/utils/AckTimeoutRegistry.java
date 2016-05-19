@@ -55,19 +55,6 @@ public class AckTimeoutRegistry implements ConnectionChangeListener {
 
     /**
      * Checks to see if an ack timer already exists in the register for
-     * the given name. If it does, it clears it, then starts a new one.
-     *
-     * @param name The name to be added to the register
-     *
-     * @deprecated This is flagged as deprecated since we should avoid using it ( but it's a JS port
-     * so is worth flagging when used ).
-     */
-    public void add( String name ) {
-        this.add( name, null );
-    }
-
-    /**
-     * Checks to see if an ack timer already exists in the register for
      * the given name and action. If it does, it clears it, then starts a new one.
      *
      * @param name The name to be added to the register
@@ -133,7 +120,9 @@ public class AckTimeoutRegistry implements ConnectionChangeListener {
         while( this.ackTimers.peek() != null ) {
             try {
                 task = this.ackTimers.take();
-            } catch (InterruptedException e) {}
+            } catch (InterruptedException e) {
+                System.out.println( e );
+            }
 
             if( task != null ) {
                 this.timer.schedule( task, this.timeoutDuration );
