@@ -1,10 +1,10 @@
 package io.deepstream.message;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import io.deepstream.constants.Actions;
 import io.deepstream.constants.Topic;
 import io.deepstream.constants.Types;
-import org.json.JSONException;
-import org.json.JSONStringer;
 
 public class MessageBuilder {
 
@@ -47,13 +47,8 @@ public class MessageBuilder {
             return Types.NULL.toString();
         }
         else {
-            try {
-                System.out.println( value.toString() );
-                return Types.OBJECT.toString() + new JSONStringer().value( value );
-            } catch (JSONException e) {
-                e.printStackTrace();
-                return null;
-            }
+            Gson gson = new GsonBuilder().enableComplexMapKeySerialization().create();
+            return Types.OBJECT.toString() + gson.toJson( value );
         }
     }
 }
