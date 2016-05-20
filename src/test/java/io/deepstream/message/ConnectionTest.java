@@ -27,7 +27,7 @@ public class ConnectionTest {
     String originalUrl = "originalProtocol://originalHost:originalPort";
 
     DeepstreamClient deepstreamClientMock;
-    Socket socketMock;
+    EndpointMock endpointMock;
     Connection connection;
     ConnectionChangeListener connectionChangeListenerMock;
     LoginCallback loginCallback;
@@ -35,8 +35,11 @@ public class ConnectionTest {
     @Before
     public void setUp() throws URISyntaxException {
         this.deepstreamClientMock = mock(DeepstreamClient.class);
-        this.socketMock = new Socket(originalUrl);
-        this.connection = new Connection(originalUrl, new HashMap(), this.deepstreamClientMock, this.socketMock);
+
+        this.endpointMock = new EndpointMock(originalUrl, this.connection);
+        this.connection = new Connection(originalUrl, new HashMap(), this.deepstreamClientMock, this.endpointMock);
+        this.endpointMock.setConnection( this.connection );
+
         this.connectionChangeListenerMock = mock(ConnectionChangeListener.class);
         this.loginCallback = mock( LoginCallback.class );
 
@@ -50,15 +53,15 @@ public class ConnectionTest {
 
     @Test
     public void initialState() {
-        this.socketMock.emit(Socket.EVENT_OPEN);
+        this.endpointMock.sendOpenEvent();
         verifyConnectionState( ConnectionState.AWAITING_CONNECTION );
     }
 
     @Test
     public void challengeReceivedSendsOriginalUrl() {
-        this.socketMock.emit(Socket.EVENT_MESSAGE, MessageBuilder.getMsg(Topic.CONNECTION, Actions.CHALLENGE));
+        this.endpointMock.sendMessage( MessageBuilder.getMsg(Topic.CONNECTION, Actions.CHALLENGE) );
         verifyConnectionState( ConnectionState.CHALLENGING );
-        assertEquals(socketMock.lastSentMessage, MessageBuilder.getMsg(Topic.CONNECTION, Actions.CHALLENGE_RESPONSE, originalUrl));
+        assertEquals(endpointMock.lastSentMessage, MessageBuilder.getMsg(Topic.CONNECTION, Actions.CHALLENGE_RESPONSE, originalUrl));
     }
 
     //TODO: Challenge response redirect
@@ -68,7 +71,7 @@ public class ConnectionTest {
 
     @Test
     public void challengeAck() {
-        socketMock.emit(Socket.EVENT_MESSAGE, MessageBuilder.getMsg(Topic.CONNECTION, Actions.ACK));
+        this.endpointMock.sendMessage( MessageBuilder.getMsg(Topic.CONNECTION, Actions.ACK) );
         verifyConnectionState( ConnectionState.AWAITING_AUTHENTICATION );
     }
 
@@ -78,7 +81,7 @@ public class ConnectionTest {
         JSONObject authParams = new JSONObject( "{\"name\":\"Yasser\"}" );
         connection.authenticate( authParams, loginCallback );
 
-        assertEquals(socketMock.lastSentMessage, MessageBuilder.getMsg( Topic.AUTH, Actions.REQUEST, "{\"name\":\"Yasser\"}" ));
+        assertEquals(endpointMock.lastSentMessage, MessageBuilder.getMsg( Topic.AUTH, Actions.REQUEST, "{\"name\":\"Yasser\"}" ));
         verifyConnectionState( ConnectionState.AUTHENTICATING );
     }
 
@@ -86,7 +89,7 @@ public class ConnectionTest {
     public void gettingValidAuthenticationBack() throws JSONException, Exception {
         this.sendingAuthentication();
 
-        socketMock.emit(Socket.EVENT_MESSAGE, MessageBuilder.getMsg(Topic.AUTH, Actions.ACK));
+        endpointMock.sendMessage( MessageBuilder.getMsg(Topic.AUTH, Actions.ACK) );
 
         verifyConnectionState( ConnectionState.OPEN );
         verify( loginCallback, times( 1 ) ).loginSuccess( new HashMap() );
@@ -97,7 +100,7 @@ public class ConnectionTest {
     public void gettingInValidAuthenticationBack() throws JSONException, Exception {
         this.sendingAuthentication();
 
-        socketMock.emit(Socket.EVENT_MESSAGE, MessageBuilder.getMsg(Topic.AUTH, Actions.ERROR, Event.NOT_AUTHENTICATED.toString(), "Fail" ));
+        endpointMock.sendMessage( MessageBuilder.getMsg(Topic.AUTH, Actions.ERROR, Event.NOT_AUTHENTICATED.toString(), "Fail" ));
 
         verifyConnectionState( ConnectionState.AWAITING_AUTHENTICATION );
         //verify( loginCallback, times( 1 ) ).loginSuccess(); //TODO: Any
@@ -108,7 +111,7 @@ public class ConnectionTest {
     public void errorsWhenTooManyAuthAttempts() throws JSONException, Exception {
         this.sendingAuthentication();
 
-        socketMock.emit(Socket.EVENT_MESSAGE, MessageBuilder.getMsg( Topic.AUTH, Actions.ERROR, Event.TOO_MANY_AUTH_ATTEMPTS.toString(), "TOO_MANY_AUTH_ATTEMPTS" ));
+        endpointMock.sendMessage( MessageBuilder.getMsg( Topic.AUTH, Actions.ERROR, Event.TOO_MANY_AUTH_ATTEMPTS.toString(), "TOO_MANY_AUTH_ATTEMPTS" ));
         verify( loginCallback, times( 1 ) ).loginFailed(  Event.TOO_MANY_AUTH_ATTEMPTS, "TOO_MANY_AUTH_ATTEMPTS" );
 
         JSONObject authParams = new JSONObject( "{\"name\":\"Yasser\"}" );
@@ -117,7 +120,7 @@ public class ConnectionTest {
     }
 
     private void verifyConnectionState( ConnectionState connectionState) {
-        assertEquals(connection.getConnectionState(), connectionState);
-        verify( connectionChangeListenerMock, atLeastOnce() ).connectionStateChanged(connectionState);
+        assertEquals( this.connection.getConnectionState(), connectionState);
+        verify( this.connectionChangeListenerMock, atLeastOnce() ).connectionStateChanged(connectionState);
     }
 }

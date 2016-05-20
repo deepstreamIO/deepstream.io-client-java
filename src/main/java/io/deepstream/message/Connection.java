@@ -1,12 +1,9 @@
 package io.deepstream.message;
 
-import io.deepstream.*;
-import io.deepstream.constants.Actions;
-import io.deepstream.constants.ConnectionState;
-import io.deepstream.constants.Event;
-import io.deepstream.constants.Topic;
-import io.socket.emitter.Emitter;
-import io.socket.engineio.client.Socket;
+import io.deepstream.ConnectionChangeListener;
+import io.deepstream.DeepstreamClient;
+import io.deepstream.LoginCallback;
+import io.deepstream.constants.*;
 import org.json.JSONObject;
 
 import java.net.URISyntaxException;
@@ -14,34 +11,34 @@ import java.util.*;
 
 public class Connection {
 
+    Endpoint endpoint;
+
     private DeepstreamClient client;
     private String originalUrl;
-    private Socket socket;
     private ConnectionState connectionState;
     private ArrayList<ConnectionChangeListener> connectStateListeners;
 
-    public boolean tooManyAuthAttempts;
-
+    private boolean tooManyAuthAttempts;
     private StringBuilder messageBuffer;
 
     private LoginCallback loginCallback;
     private JSONObject authParameters;
+    private Map options;
 
-    public Connection(final String url, final Map options, DeepstreamClient client ) throws URISyntaxException {
-        this( url, options, client, new Socket( url ) );
+    public Connection(final String url, final Map options, DeepstreamClient client ) throws Exception {
+        this( url, options, client, null );
+        this.endpoint = createEndpoint(url, options);
     }
 
-    Connection(final String url, final Map options, DeepstreamClient client, Socket socket ) throws URISyntaxException {
+    Connection(final String url, final Map options, DeepstreamClient client, Endpoint endpoint ) {
         this.client = client;
-        this.connectStateListeners = new ArrayList<ConnectionChangeListener>();
+        this.connectStateListeners = new ArrayList<>();
         this.originalUrl = url;
         this.connectionState = ConnectionState.CLOSED;
         this.messageBuffer = new StringBuilder();
         this.tooManyAuthAttempts = false;
-
-        this.socket = socket;
-        this.addConnectionListeners();
-        this.socket.open();
+        this.options = options;
+        this.endpoint = endpoint;
     }
 
     public void authenticate( JSONObject authParameters, LoginCallback loginCallback ) throws Exception {
@@ -64,13 +61,13 @@ public class Connection {
             System.out.println( "Buffering " + message );
         } else {
             System.out.println( "Sending " + message );
-            this.socket.send( message );
+            this.endpoint.send( message );
         }
     }
 
     private void sendAuthMessage() {
         String authMessage = MessageBuilder.getMsg( Topic.AUTH, Actions.REQUEST, this.authParameters.toString() );
-        this.socket.send( authMessage );
+        this.endpoint.send( authMessage );
     }
 
     public void addConnectionChangeListener( ConnectionChangeListener connectionChangeListener ) {
@@ -85,29 +82,25 @@ public class Connection {
         return this.connectionState;
     }
 
-    private void onOpen() {
+    void onOpen() {
         this.setState( ConnectionState.AWAITING_CONNECTION );
     }
 
-    private void onError( Exception exception ) {
+    void onError(Exception exception) {
         System.out.println( exception );
     }
 
-    private void onMessage( String rawMessage ) {
+    void onMessage(String rawMessage) {
         List<Message> parsedMessages = MessageParser.parse( rawMessage, this );
-        for( short i=0; i<parsedMessages.size(); i++ ) {
-            Message message = parsedMessages.get( i );
-            if( message.topic == Topic.CONNECTION ) {
-                handleConnectionResponse( message  );
-            }
-            else if( message.topic == Topic.AUTH ) {
-                handleAuthResponse( message );
-            }
-            else if( message.topic == Topic.EVENT ){
-                this.client.event.handle( message );
-            }
-            else {
-                System.out.println( "Normal message of type " + message.topic );
+        for (Message message : parsedMessages) {
+            if (message.topic == Topic.CONNECTION) {
+                handleConnectionResponse(message);
+            } else if (message.topic == Topic.AUTH) {
+                handleAuthResponse(message);
+            } else if (message.topic == Topic.EVENT) {
+                this.client.event.handle(message);
+            } else {
+                System.out.println("Normal message of type " + message.topic);
             }
         }
     }
@@ -118,7 +111,7 @@ public class Connection {
         }
         else if( message.action == Actions.CHALLENGE ) {
             this.setState( ConnectionState.CHALLENGING );
-            this.socket.send( MessageBuilder.getMsg( Topic.CONNECTION, Actions.CHALLENGE_RESPONSE,  this.originalUrl ) );
+            this.endpoint.send( MessageBuilder.getMsg( Topic.CONNECTION, Actions.CHALLENGE_RESPONSE,  this.originalUrl ) );
         }
     }
 
@@ -139,7 +132,7 @@ public class Connection {
 
             if( this.messageBuffer.length() > 0 ) {
                 System.out.println( "Flushing initial buffer: " + this.messageBuffer.toString() );
-                this.socket.send( this.messageBuffer.toString() );
+                this.endpoint.send( this.messageBuffer.toString() );
                 this.messageBuffer = new StringBuilder();
             }
 
@@ -162,23 +155,16 @@ public class Connection {
         }
     }
 
-    private void addConnectionListeners() {
-        this.socket.on( Socket.EVENT_OPEN, new Emitter.Listener() {
-            public void call(Object... args) {
-                Connection.this.onOpen();
-            }
-        } );
-
-        this.socket.on( Socket.EVENT_MESSAGE, new Emitter.Listener() {
-            public void call(Object... args) {
-                Connection.this.onMessage( (String)args[0] );
-            }
-        });
-
-        this.socket.on(Socket.EVENT_ERROR, new Emitter.Listener() {
-            public void call(Object... args) {
-                Connection.this.onError( (Exception)args[ 0 ] );
-            }
-        });
+    private Endpoint createEndpoint(String url, Map options) throws Exception {
+        Endpoint endpoint;
+        System.out.println( options.get( "endpoint") + " " +  EndpointType.ENGINEIO.name() );
+        if( options.get( "endpoint" ) == EndpointType.TCP.name() ) {
+            endpoint = new EndpointTCP( url, options );
+        } else if( options.get( "endpoint" ).equals( EndpointType.ENGINEIO.name() ) ) {
+            endpoint = new EndpointEngineIO( url, options, this );
+        } else {
+            throw new Exception( "Unknown Endpoint" );
+        }
+        return endpoint;
     }
 }
