@@ -9,8 +9,8 @@ os:
   - linux
   - osx
 
-before_script:
-  - chmod a+x gradlew
+before_install:
+  - chmod +x gradlew
 
 after_success:
   - ./gradlew cobertura coveralls
