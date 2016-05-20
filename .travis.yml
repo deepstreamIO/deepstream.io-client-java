@@ -6,6 +6,6 @@ os:
 
 before_install:
   - chmod +x gradlew
-  - chmod +x setupJ2OBJC
+  - chmod +x setupJ2OBJC.sh
   - ./setupJ2OBJC.sh
 
