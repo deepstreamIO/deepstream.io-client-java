@@ -25,6 +25,6 @@ dependencies {
 j2objcConfig {
     // Sets up libraries you depend on
     autoConfigureDeps true
-
+    supportedArchs += ['ios_i386']
     finalConfigure()          // Must be last call to configuration
 }
