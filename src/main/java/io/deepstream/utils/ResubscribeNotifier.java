@@ -1,7 +1,6 @@
 package io.deepstream.utils;
 
 import io.deepstream.ConnectionChangeListener;
-import io.deepstream.DeepstreamClient;
 import io.deepstream.IDeepstreamClient;
 import io.deepstream.constants.ConnectionState;
 

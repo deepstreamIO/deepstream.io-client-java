@@ -1,0 +1,8 @@
+language: java
+
+os:
+  - linux
+  - osx
+
+before_install:
+  - chmod +x gradlew
