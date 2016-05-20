@@ -9,7 +9,7 @@ import io.deepstream.message.MessageBuilder;
 import io.deepstream.message.MessageParser;
 import io.deepstream.utils.ResubscribeCallback;
 import io.deepstream.utils.ResubscribeNotifier;
-import io.socket.emitter.Emitter;
+import io.deepstream.utils.Emitter;
 import java.util.Map;
 
 public class EventHandler implements ResubscribeCallback {
@@ -20,7 +20,7 @@ public class EventHandler implements ResubscribeCallback {
     private DeepstreamClient client;
     private ResubscribeNotifier resubscribeNotifier;
 
-    public EventHandler( Map options, Connection connection, DeepstreamClient client ) {
+    public EventHandler(Map options, Connection connection, DeepstreamClient client ) {
         this.emitter = new Emitter();
         this.connection = connection;
         this.client = client;

@@ -1,29 +1,33 @@
 package io.deepstream;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import io.deepstream.constants.ConnectionState;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
 import io.deepstream.event.EventHandler;
 import io.deepstream.message.Connection;
-import io.socket.emitter.Emitter;
 import org.json.JSONObject;
 
 public class DeepstreamClient implements IDeepstreamClient {
 
     private Connection connection;
     public EventHandler event;
+    public Properties config;
 
-    public DeepstreamClient( final String url, Map options ) throws URISyntaxException {
-        this.connection = new Connection( url, options, this );
+    public DeepstreamClient( final String url, Properties options ) throws Exception {
+        this.config = getConfig( options );
+        this.connection = new Connection( url, this.config, this );
         this.event = new EventHandler( options, this.connection, this );
     }
 
-    public DeepstreamClient( final String url ) throws URISyntaxException {
-        this( url, new HashMap() );
+    public DeepstreamClient( final String url ) throws Exception {
+        this( url, new Properties() );
     }
 
     public DeepstreamClient login( JSONObject data ) throws Exception {
@@ -54,12 +58,21 @@ public class DeepstreamClient implements IDeepstreamClient {
         return this.connection.getConnectionState();
     }
 
-    public void onError(Topic topic, Event event, String message) {
+    public void onError(Topic topic, Event event, String message) throws DeepstreamException {
         System.out.println( "--- You can catch all deepstream errors by subscribing to the error event ---" );
 
         String errorMsg = event + ": " + message;
         errorMsg += " (" + topic + ")";
 
         throw new DeepstreamException( errorMsg );
+    }
+
+    private Properties getConfig( Properties properties ) throws IOException {
+        Properties config = new Properties();
+        FileInputStream in = new FileInputStream( "DefaultConfig.properties" );
+        config.load( in );
+        config.putAll( properties );
+        in.close();
+        return config;
     }
 }

@@ -3,12 +3,9 @@ import io.deepstream.DeepstreamClient;
 import io.deepstream.LoginCallback;
 import io.deepstream.constants.ConnectionState;
 import io.deepstream.constants.Event;
-import io.deepstream.message.Connection;
-import io.socket.emitter.Emitter;
+import io.deepstream.utils.Emitter;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Map;
 
 public class Test {
@@ -42,7 +39,7 @@ class Application implements ConnectionChangeListener, LoginCallback {
             } );
         }
         catch( Exception e ) {
-
+            System.out.println( e );
         }
     }
 
