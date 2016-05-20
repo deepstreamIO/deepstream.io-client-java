@@ -2,8 +2,6 @@ package io.deepstream.message;
 
 import io.deepstream.constants.*;
 
-import java.util.List;
-
 public class Message {
     public String raw;
     public Actions action;
