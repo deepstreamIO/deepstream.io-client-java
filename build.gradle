@@ -1,7 +1,13 @@
+plugins {
+  id 'java'
+}
+
+// Java compatability
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
 group 'io.deepstream'
 version '1.0-SNAPSHOT'
-
-apply plugin: 'java'
 
 repositories {
     mavenCentral()
