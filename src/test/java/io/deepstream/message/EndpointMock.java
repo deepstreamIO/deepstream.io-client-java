@@ -1,33 +1,41 @@
-package io.socket.engineio.client;
-
+package io.deepstream.message;
 import io.socket.emitter.Emitter;
-
 import java.util.ArrayList;
 
-public class Socket extends Emitter {
+public class EndpointMock implements Endpoint {
 
     public static final String EVENT_OPEN = "open";
     public static final String EVENT_MESSAGE = "message";
     public static final String EVENT_ERROR = "error";
+    private Connection connection;
 
     public String url;
     public String lastSentMessage;
     public Boolean isDisconnected;
     public ArrayList<String> sentMessages;
 
-    public Socket( String url ) {
-        super();
-
+    public EndpointMock( String url, Connection connection ) {
+        this.connection = connection;
         this.lastSentMessage = null;
         this.url = url;
         this.isDisconnected = true;
         this.sentMessages = new ArrayList<String>();
     }
 
-    public Socket open() {
-        this.isDisconnected = false;
-        this.emit( EVENT_OPEN );
-        return this;
+    public void setConnection( Connection connection ) {
+        this.connection = connection;
+    }
+
+    public void sendOpenEvent() {
+        this.connection.onOpen();
+    }
+
+    public void sendMessage( String message ) {
+        this.connection.onMessage( message );
+    }
+
+    public void sendError( Exception exception ) {
+        this.connection.onError( exception );
     }
 
     public void send( String message ) {

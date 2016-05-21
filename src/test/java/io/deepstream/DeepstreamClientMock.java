@@ -3,22 +3,22 @@ package io.deepstream;
 import io.deepstream.constants.ConnectionState;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
-import io.deepstream.message.Message;
 
 import java.util.ArrayList;
 
 public class DeepstreamClientMock implements IDeepstreamClient, ErrorCallback {
 
-    public ArrayList<ConnectionChangeListener> connectionListeners;
-    private ConnectionState connectionState = ConnectionState.CLOSED;
+    private ArrayList<ConnectionChangeListener> connectionListeners;
+    private ConnectionState connectionState;
     private ErrorCallback errorCallback;
 
     public DeepstreamClientMock() {
-        connectionListeners = new ArrayList<ConnectionChangeListener>();
+        connectionListeners = new ArrayList();
+        this.connectionState = ConnectionState.CLOSED;
     }
 
     public DeepstreamClientMock( ErrorCallback errorCallback ) {
-        connectionListeners = new ArrayList<ConnectionChangeListener>();
+        connectionListeners = new ArrayList();
         this.errorCallback = errorCallback;
     }
 
