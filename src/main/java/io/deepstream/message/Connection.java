@@ -6,7 +6,7 @@ import io.deepstream.LoginCallback;
 import io.deepstream.constants.*;
 import org.json.JSONObject;
 
-import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.*;
 
 public class Connection {
@@ -86,9 +86,7 @@ public class Connection {
         this.setState( ConnectionState.AWAITING_CONNECTION );
     }
 
-    void onError(Exception exception) {
-        System.out.println( exception );
-    }
+    void onError( String error ) { System.out.println( error ); }
 
     void onMessage(String rawMessage) {
         List<Message> parsedMessages = MessageParser.parse( rawMessage, this );
@@ -157,9 +155,9 @@ public class Connection {
 
     private Endpoint createEndpoint(String url, Map options) throws Exception {
         Endpoint endpoint;
-        System.out.println( options.get( "endpoint") + " " +  EndpointType.ENGINEIO.name() );
+        System.out.println( options.get( "endpoint") );
         if( options.get( "endpoint" ) == EndpointType.TCP.name() ) {
-            endpoint = new EndpointTCP( url, options );
+            endpoint = new EndpointTCP( new URL( url ), options, this );
         } else if( options.get( "endpoint" ).equals( EndpointType.ENGINEIO.name() ) ) {
             endpoint = new EndpointEngineIO( url, options, this );
         } else {
