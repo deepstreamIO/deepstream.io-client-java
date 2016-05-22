@@ -16,6 +16,6 @@ before_install:
   - ./setupJ2OBJC.sh
   - ./installJava.sh
 
-  script:
+script:
   - ./gradlew check
 
