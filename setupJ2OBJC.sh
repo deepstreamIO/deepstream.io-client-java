@@ -1,3 +1,6 @@
+#J2OBJCVersion=1.0.2
+J2OBJCVersion=0.9.8.2.1
+
 # Paths and Stuff
 DIRECTORY=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd );
 if [ -z ${TRAVIS_BUILD_DIR} ]; then
@@ -7,7 +10,7 @@ J2OBJC_ROOT=$TRAVIS_BUILD_DIR/j2objcDist
 
 # Create local.properties for gradlew
 #sed -i '' '/j2objc.home/d' $DIRECTORY/local.properties
-echo j2objc.home=$J2OBJC_ROOT/j2objc-1.0.2 >> $DIRECTORY/local.properties
+echo j2objc.home=$J2OBJC_ROOT/j2objc-$J2OBJCVersion >> $DIRECTORY/local.properties
 if [[ "$TRAVIS_OS_NAME" == "osx" && "$OSTYPE" == "darwin"* ]]; then
 	echo 'Wooho! Mac! j2objc compilation!';
 else
@@ -18,9 +21,9 @@ fi
 # Download J2OBJC
 mkdir -p $J2OBJC_ROOT;
 pushd $J2OBJC_ROOT;
-if [ ! -d "$J2OBJC_ROOT/j2objc-1.0.2" ]; then
-	curl -L https://github.com/google/j2objc/releases/download/1.0.2/j2objc-1.0.2.zip > j2objc-1.0.2.zip
-	unzip j2objc-1.0.2.zip; popd
+if [ ! -d "$J2OBJC_ROOT/j2objc-$J2OBJCVersion" ]; then
+	curl -L https://github.com/google/j2objc/releases/download/$J2OBJCVersion/j2objc-$J2OBJCVersion.zip > j2objc-$J2OBJCVersion.zip
+	unzip j2objc-$J2OBJCVersion.zip; popd
 else
 	echo 'j2objc already downloaded';
 fi
