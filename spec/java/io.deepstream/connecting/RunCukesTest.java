@@ -1,11 +1,11 @@
-package io.deepstream.features;
+package io.deepstream.connecting;
 
 import cucumber.api.CucumberOptions;
 import cucumber.api.junit.Cucumber;
 import org.junit.runner.RunWith;
 
 @RunWith(Cucumber.class)
-@CucumberOptions(features = "src/test/resources/features/io/deepstream/message/Connection.feature")
+@CucumberOptions(features = "spec/resources/features/connecting")
 public class RunCukesTest {
 }
 
