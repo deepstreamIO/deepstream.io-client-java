@@ -1,7 +1,7 @@
 plugins {
     id 'java'
     id "com.github.samueltbrown.cucumber" version "0.9"
-    //id 'com.github.j2objccontrib.j2objcgradle' version '0.6.0-alpha'
+    id 'com.github.j2objccontrib.j2objcgradle' version '0.6.0-alpha'
 }
 
 // Java compatability
@@ -18,7 +18,7 @@ repositories {
 dependencies {
     compile fileTree( dir: 'libs', include: ['*.jar'] )
     compile 'com.google.code.gson:gson:2.6.2'
-    compile 'io.socket:engine.io-client:0.7.0'
+    //compile 'io.socket:engine.io-client:0.7.0'
     testCompile group: 'junit', name: 'junit', version: '4.11'
     testCompile "org.mockito:mockito-core:1.+"
     cucumberCompile  "info.cukes:cucumber-java:1.2.4"
@@ -37,13 +37,13 @@ dependencies {
 //    ignoreFailures = false
 //}
 
-//j2objcConfig {
-//    // Sets up libraries you depend on
-//    skipJ2objcVerification true
-//    autoConfigureDeps true
-//    supportedArchs += ['ios_i386']
-//    testPattern {
-//        include '**/*Test.java'
-//    }
-//    finalConfigure()          // Must be last call to configuration
-//}
+j2objcConfig {
+    // Sets up libraries you depend on
+    skipJ2objcVerification true
+    autoConfigureDeps true
+    supportedArchs += ['ios_i386']
+    testPattern {
+        include '**/*Test.java'
+    }
+    finalConfigure()          // Must be last call to configuration
+}
