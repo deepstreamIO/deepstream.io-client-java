@@ -1,6 +1,7 @@
 package io.deepstream.connecting;
 
 import cucumber.api.java.After;
+import cucumber.api.java.Before;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
@@ -20,8 +21,23 @@ public class ConnectionStepDefs {
     private final char MS = '\u001e';
 
     private MockTcpServer server;
+
+    {
+        try {
+            server = new MockTcpServer(9696);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private DeepstreamClient client;
     Properties options = new Properties();
+
+    @Before
+    public void beforeScenario() throws IOException, InterruptedException {
+        server.open();
+        Thread.sleep(10);
+    }
 
     @After
     public void afterScenario() throws IOException, InterruptedException {
@@ -30,7 +46,6 @@ public class ConnectionStepDefs {
 
     @Given("^the test server is ready$")
     public void The_test_server_is_ready() throws Throwable {
-        server = new MockTcpServer( 9696 );
         Assert.assertEquals( true, server.isOpen );
     }
 
@@ -54,6 +69,7 @@ public class ConnectionStepDefs {
     public void The_server_sends_the_message(String message) throws Throwable {
         message = message.replace( '|', MPS );
         message = message.replace( '+', MS );
+        Thread.sleep(1000);
         server.send( message );
     }
 

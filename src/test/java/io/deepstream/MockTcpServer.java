@@ -24,7 +24,10 @@ public class MockTcpServer {
         serverSocket.bind(new InetSocketAddress(port));
         connections = new ArrayList<>();
         threads = new ArrayList<>();
-        isOpen = true;
+    }
+
+    public void open() {
+        this.isOpen = true;
         MockTcpServer self = this;
         Thread thread = new Thread() {
             @Override
@@ -84,7 +87,8 @@ public class MockTcpServer {
         for ( Thread connectedThread : this.threads ) {
             connectedThread.join(1);
         }
-        this.serverSocket.close();
+        serverSocket.close();
+        serverSocket = null;
     }
 
     public String getLastMessage() {
