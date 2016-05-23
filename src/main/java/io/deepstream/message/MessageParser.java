@@ -1,11 +1,14 @@
 package io.deepstream.message;
 
+import com.google.gson.Gson;
+import io.deepstream.constants.Actions;
+import io.deepstream.constants.Event;
+import io.deepstream.constants.Topic;
+import io.deepstream.constants.Types;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import io.deepstream.constants.*;
-import org.json.JSONObject;
 
 public class MessageParser {
 
@@ -65,7 +68,7 @@ public class MessageParser {
             return false;
         }
         else if( Types.getType( type ) == Types.OBJECT ) {
-            return JSONObject.stringToValue( value.substring( 1 ) );
+            return new Gson().fromJson( value.substring( 1 ), Object.class );
         }
         else if( Types.getType( type ) == Types.UNDEFINED ) {
             // Undefined isn't a thing in Java..

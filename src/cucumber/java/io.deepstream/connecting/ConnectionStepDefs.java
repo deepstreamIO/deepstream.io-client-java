@@ -1,15 +1,15 @@
 package io.deepstream.connecting;
 
+import com.google.gson.JsonObject;
 import cucumber.api.java.After;
 import cucumber.api.java.Before;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
 import io.deepstream.DeepstreamClient;
-import io.deepstream.util.MockTcpServer;
 import io.deepstream.constants.EndpointType;
+import io.deepstream.util.MockTcpServer;
 import io.deepstream.util.Util;
-import org.json.JSONObject;
 import org.junit.Assert;
 
 import java.io.IOException;
@@ -75,8 +75,9 @@ public class ConnectionStepDefs {
 
     @When("^the client logs in with username \"(.*?)\" and password \"(.*?)\"")
     public void The_client_logs_in_with_username_and_password( String username, String password ) throws Exception {
-        String creds = String.format("{\"username\":\"%s\", \"password\":\"%s\" }", username, password);
-        JSONObject authData = new JSONObject( creds );
+        JsonObject authData = new JsonObject();
+        authData.addProperty( "password", password );
+        authData.addProperty( "username", username );
         client.login( authData );
     }
 

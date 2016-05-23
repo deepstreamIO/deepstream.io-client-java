@@ -1,5 +1,6 @@
 package io.deepstream.message;
 
+import com.google.gson.JsonObject;
 import io.deepstream.ConnectionChangeListener;
 import io.deepstream.DeepstreamClient;
 import io.deepstream.LoginCallback;
@@ -7,11 +8,9 @@ import io.deepstream.constants.Actions;
 import io.deepstream.constants.ConnectionState;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
-import io.socket.engineio.client.Socket;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -76,9 +75,10 @@ public class ConnectionTest {
     }
 
     @Test
-    public void sendingAuthentication() throws JSONException, Exception {
+    public void sendingAuthentication() throws Exception {
         this.challengeAck();
-        JSONObject authParams = new JSONObject( "{\"name\":\"Yasser\"}" );
+        JsonObject authParams = new JsonObject();
+        authParams.addProperty( "name", "Yasser" );
         connection.authenticate( authParams, loginCallback );
 
         assertEquals(endpointMock.lastSentMessage, MessageBuilder.getMsg( Topic.AUTH, Actions.REQUEST, "{\"name\":\"Yasser\"}" ));
@@ -86,7 +86,7 @@ public class ConnectionTest {
     }
 
     @Test
-    public void gettingValidAuthenticationBack() throws JSONException, Exception {
+    public void gettingValidAuthenticationBack() throws Exception {
         this.sendingAuthentication();
 
         endpointMock.sendMessage( MessageBuilder.getMsg(Topic.AUTH, Actions.ACK) );
@@ -97,7 +97,7 @@ public class ConnectionTest {
     }
 
     @Test
-    public void gettingInValidAuthenticationBack() throws JSONException, Exception {
+    public void gettingInValidAuthenticationBack() throws Exception {
         this.sendingAuthentication();
 
         endpointMock.sendMessage( MessageBuilder.getMsg(Topic.AUTH, Actions.ERROR, Event.NOT_AUTHENTICATED.toString(), "Fail" ));
@@ -108,13 +108,15 @@ public class ConnectionTest {
     }
 
     @Test
-    public void errorsWhenTooManyAuthAttempts() throws JSONException, Exception {
+    public void errorsWhenTooManyAuthAttempts() throws  Exception {
         this.sendingAuthentication();
 
         endpointMock.sendMessage( MessageBuilder.getMsg( Topic.AUTH, Actions.ERROR, Event.TOO_MANY_AUTH_ATTEMPTS.toString(), "TOO_MANY_AUTH_ATTEMPTS" ));
         verify( loginCallback, times( 1 ) ).loginFailed(  Event.TOO_MANY_AUTH_ATTEMPTS, "TOO_MANY_AUTH_ATTEMPTS" );
 
-        JSONObject authParams = new JSONObject( "{\"name\":\"Yasser\"}" );
+        JsonObject authParams = new JsonObject();
+        authParams.addProperty( "name", "Yasser" );
+
         connection.authenticate( authParams, loginCallback );
         verify( deepstreamClientMock, times( 1 ) ).onError( Topic.ERROR, Event.IS_CLOSED, "the client\'s connection was closed" );
     }

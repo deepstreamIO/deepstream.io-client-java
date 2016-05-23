@@ -1,12 +1,11 @@
 package io.deepstream.message;
 
+import com.google.gson.JsonObject;
 import io.deepstream.ConnectionChangeListener;
 import io.deepstream.DeepstreamClient;
 import io.deepstream.LoginCallback;
 import io.deepstream.constants.*;
-import org.json.JSONObject;
 
-import java.net.URL;
 import java.util.*;
 
 public class Connection {
@@ -22,7 +21,7 @@ public class Connection {
     private StringBuilder messageBuffer;
 
     private LoginCallback loginCallback;
-    private JSONObject authParameters;
+    private JsonObject authParameters;
     private Map options;
 
     public Connection(final String url, final Map options, DeepstreamClient client ) throws Exception {
@@ -41,7 +40,7 @@ public class Connection {
         this.endpoint = endpoint;
     }
 
-    public void authenticate( JSONObject authParameters, LoginCallback loginCallback ) throws Exception {
+    public void authenticate(JsonObject authParameters, LoginCallback loginCallback ) throws Exception {
         if( this.tooManyAuthAttempts ) {
             this.client.onError( Topic.ERROR, Event.IS_CLOSED, "the client\'s connection was closed" );
             return;
@@ -157,9 +156,9 @@ public class Connection {
         Endpoint endpoint;
         System.out.println( options.get( "endpoint") );
         if( options.get( "endpoint" ) == EndpointType.TCP.name() ) {
-            endpoint = new EndpointTCP( new URL( url ), options, this );
+           endpoint = new EndpointTCP( url, options, this );
         } else if( options.get( "endpoint" ).equals( EndpointType.ENGINEIO.name() ) ) {
-            endpoint = new EndpointEngineIO( url, options, this );
+            throw new Exception( "EngineIO doesn't transpile" );
         } else {
             throw new Exception( "Unknown Endpoint" );
         }

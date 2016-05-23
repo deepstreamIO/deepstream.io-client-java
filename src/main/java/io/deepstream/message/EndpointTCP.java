@@ -18,8 +18,9 @@ public class EndpointTCP implements Endpoint {
     private DataOutputStream out;
     private DataInputStream in;
 
-    public EndpointTCP(URL url, Map options, Connection connection) throws IOException {
-        this.url = url;
+    public EndpointTCP(String url, Map options, Connection connection) throws IOException {
+
+        this.url = new URL( url );
         this.connection = connection;
         this.messageBuffer = "";
         this.socket = new Socket();

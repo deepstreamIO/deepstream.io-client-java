@@ -1,10 +1,11 @@
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import io.deepstream.ConnectionChangeListener;
 import io.deepstream.DeepstreamClient;
 import io.deepstream.LoginCallback;
 import io.deepstream.constants.ConnectionState;
 import io.deepstream.constants.Event;
-import io.socket.emitter.Emitter;
-import org.json.JSONObject;
+import io.deepstream.utils.Emitter;
 
 import java.util.Map;
 
@@ -18,7 +19,8 @@ class Application implements ConnectionChangeListener, LoginCallback {
 
     public Application() {
         try {
-            JSONObject authData = new JSONObject( "{\"name\":\"Yasser\"}" );
+            JsonObject authData = new JsonObject();
+            authData.addProperty( "name", "Yasser" );
 
             DeepstreamClient ds = new DeepstreamClient( "ws://localhost:6020" );
             ds
