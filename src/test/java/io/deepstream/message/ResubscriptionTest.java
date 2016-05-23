@@ -24,7 +24,7 @@ public class ResubscriptionTest {
     @Before
     public void setUp() throws URISyntaxException {
         this.resubscribeCallbackMock = mock( ResubscribeCallback.class );
-        this.deepstreamClientMock = new DeepstreamClientMock();
+        this.deepstreamClientMock = new DeepstreamClientMock( null );
 
         this.resubscribeNotifier = new ResubscribeNotifier( this.deepstreamClientMock, this.resubscribeCallbackMock );
     }

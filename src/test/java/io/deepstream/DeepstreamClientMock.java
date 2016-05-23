@@ -12,11 +12,6 @@ public class DeepstreamClientMock implements IDeepstreamClient, ErrorCallback {
     private ConnectionState connectionState;
     private ErrorCallback errorCallback;
 
-    public DeepstreamClientMock() {
-        connectionListeners = new ArrayList();
-        this.connectionState = ConnectionState.CLOSED;
-    }
-
     public DeepstreamClientMock( ErrorCallback errorCallback ) {
         connectionListeners = new ArrayList();
         this.errorCallback = errorCallback;
