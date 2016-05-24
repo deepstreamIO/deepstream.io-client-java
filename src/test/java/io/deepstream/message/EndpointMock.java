@@ -1,5 +1,4 @@
 package io.deepstream.message;
-import io.socket.emitter.Emitter;
 import java.util.ArrayList;
 
 public class EndpointMock implements Endpoint {
@@ -35,7 +34,7 @@ public class EndpointMock implements Endpoint {
     }
 
     public void sendError( Exception exception ) {
-        this.connection.onError( exception );
+        this.connection.onError( exception.getMessage() );
     }
 
     public void send( String message ) {

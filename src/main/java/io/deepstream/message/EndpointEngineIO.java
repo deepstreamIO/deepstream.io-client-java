@@ -37,7 +37,8 @@ class EndpointEngineIO implements Endpoint {
 
         this.socket.on(Socket.EVENT_ERROR, new Emitter.Listener() {
             public void call(Object... args) {
-                connection.onError( (Exception)args[ 0 ] );
+                Exception e = (Exception)args[ 0 ];
+                connection.onError( e.getMessage() );
             }
         });
     }

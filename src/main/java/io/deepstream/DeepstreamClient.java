@@ -1,18 +1,15 @@
 package io.deepstream;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-
+import com.google.gson.JsonObject;
 import io.deepstream.constants.ConnectionState;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
 import io.deepstream.event.EventHandler;
 import io.deepstream.message.Connection;
-import org.json.JSONObject;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
 
 public class DeepstreamClient implements IDeepstreamClient {
 
@@ -30,12 +27,12 @@ public class DeepstreamClient implements IDeepstreamClient {
         this( url, new Properties() );
     }
 
-    public DeepstreamClient login( JSONObject data ) throws Exception {
+    public DeepstreamClient login( JsonObject data ) throws Exception {
         this.connection.authenticate( data, null );
         return this;
     }
 
-    public DeepstreamClient login( JSONObject data, LoginCallback loginCallback ) throws Exception {
+    public DeepstreamClient login( JsonObject data, LoginCallback loginCallback ) throws Exception {
         this.connection.authenticate( data, loginCallback );
         return this;
     }
