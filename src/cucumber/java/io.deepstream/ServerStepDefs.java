@@ -52,10 +52,11 @@ public class ServerStepDefs {
 
     @Then("^the server sends the message (.*?)$")
     public void The_server_sends_the_message(String message) throws Throwable {
+        Thread.sleep(200);
         message = message.replace( '|', MPS );
         message = message.replace( '+', MS );
-        Thread.sleep(1000);
         server.send( message );
+        Thread.sleep(200);
     }
 
     @Then("^the last message the server recieved is (.*?)$")

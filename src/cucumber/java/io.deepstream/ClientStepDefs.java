@@ -22,6 +22,7 @@ public class ClientStepDefs {
     public void the_client_is_initialised() throws Throwable {
         options.setProperty( "endpoint", EndpointType.TCP.name() );
         client = new DeepstreamClient( "http://localhost:9696", options );
+        Thread.sleep(200);
     }
 
     @Then("^the clients connection state is \"(.*?)\"$")
@@ -36,6 +37,7 @@ public class ClientStepDefs {
         authData.addProperty( "username", username );
         try {
             client.login(authData, status);
+            Thread.sleep(200);
         } catch ( DeepstreamException ex ) {
             deepstreamException = ex;
         }
