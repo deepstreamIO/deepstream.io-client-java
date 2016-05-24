@@ -26,7 +26,7 @@ public class MockTcpServer {
         threads = new ArrayList<>();
     }
 
-    public void open() {
+    public void open() throws InterruptedException {
         this.isOpen = true;
         final MockTcpServer self = this;
         Thread thread = new Thread() {
@@ -46,6 +46,8 @@ public class MockTcpServer {
             }
         };
         thread.start();
+        Thread.sleep(10); //Allow thread to open socket
+        return;
     }
 
     private void handleConnection( final Socket sock ) {

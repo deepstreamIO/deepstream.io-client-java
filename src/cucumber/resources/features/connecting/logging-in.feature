@@ -13,16 +13,17 @@ Feature: Logging In
     Then the last message the server recieved is A|REQ|{"password":"XXX","username":"YYY"}+
     And the clients connection state is "AUTHENTICATING"
 
-  #Scenario: The client receives a login confirmation
-    #When the server sends the message A|A+
-    #Then the clients connection state is "OPEN"
-    #And the last login was successful
+  Scenario: The client receives a login confirmation
+    Given the test server is ready
+    And the client is initialised
+    When the server sends the message A|A+
+    Then the clients connection state is "OPEN"
 
-  #Scenario: The client logs in with an invalid authentication message
-    #Given the client is initialised
-    #When the client logs in with username "XXX" and password "YYY"
-    #But the server sends the message A|E|INVALID_AUTH_MSG|Sinvalid authentication message+
-    #Then the last login failed with error "INVALID_AUTH_MSG" and message "invalid authentication message"
+  Scenario: The client logs in with an invalid authentication message
+    Given the client is initialised
+    When the client logs in with username "XXX" and password "YYY"
+    But the server sends the message A|E|INVALID_AUTH_MSG|Sinvalid authentication message+
+    Then the last login failed with error "INVALID_AUTH_MSG" and message "invalid authentication message"
 
   #Scenario: The client's authentication data is rejected
     #Given the client is initialised
