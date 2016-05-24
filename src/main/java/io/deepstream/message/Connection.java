@@ -42,7 +42,7 @@ public class Connection {
 
     public void authenticate(JsonObject authParameters, LoginCallback loginCallback ) throws Exception {
         if( this.tooManyAuthAttempts ) {
-            this.client.onError( Topic.ERROR, Event.IS_CLOSED, "the client\'s connection was closed" );
+            this.client.onError( Topic.ERROR, Event.IS_CLOSED, "this client\'s connection was closed" );
             return;
         }
         this.loginCallback = loginCallback;

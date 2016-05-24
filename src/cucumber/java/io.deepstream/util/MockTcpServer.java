@@ -12,6 +12,7 @@ public class MockTcpServer {
     ServerSocket serverSocket;
     ArrayList<Socket> connections;
     ArrayList<Thread> threads;
+    ArrayList<String> messages;
     String lastMessage;
     Socket lastSocket;
     DataInputStream in;
@@ -24,6 +25,7 @@ public class MockTcpServer {
         serverSocket.bind(new InetSocketAddress(port));
         connections = new ArrayList<>();
         threads = new ArrayList<>();
+        messages = new ArrayList<>();
     }
 
     public void open() throws InterruptedException {
@@ -68,6 +70,7 @@ public class MockTcpServer {
                     try {
                         String message = in.readUTF();
                         self.lastMessage = message;
+                        self.messages.add( message );
                     } catch ( SocketException e) {
                         System.out.println( "SocketException " + e );
                     } catch (IOException e) {
@@ -103,4 +106,8 @@ public class MockTcpServer {
     public int getNumberOfConnections() {
         return this.connections.size();
     }
+
+    public void resetMessageCount() { this.messages = new ArrayList<>(); }
+
+    public int getMessageCount() { return this.messages.size(); }
 }

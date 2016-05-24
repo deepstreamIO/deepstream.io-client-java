@@ -16,6 +16,7 @@ public class ClientStepDefs {
     private DeepstreamClient client;
     Properties options = new Properties();
     LoginStatus status = new LoginStatus();
+    DeepstreamException deepstreamException;
 
     @Given("^the client is initialised$")
     public void the_client_is_initialised() throws Throwable {
@@ -33,7 +34,11 @@ public class ClientStepDefs {
         JsonObject authData = new JsonObject();
         authData.addProperty( "password", password );
         authData.addProperty( "username", username );
-        client.login( authData, status );
+        try {
+            client.login(authData, status);
+        } catch ( DeepstreamException ex ) {
+            deepstreamException = ex;
+        }
     }
 
     @Then("^the last login failed with error \"(.*?)\" and message \"(.*?)\"")
@@ -41,6 +46,15 @@ public class ClientStepDefs {
         Assert.assertEquals( expectedError, status.errorEvent.name() );
         Assert.assertEquals( expectedMessage, status.errorMessage );
     }
+
+    @Then("^the client throws a \"(.*?)\" error with message \"(.*?)\"")
+    public void Client_throws_err_and_message( String expectedError, String expectedMessage ) throws Exception {
+        String message = deepstreamException.getMessage();
+
+        Assert.assertTrue( message.contains( expectedError ));
+        Assert.assertTrue( message.contains( expectedMessage ));
+    }
+
 
     class LoginStatus implements LoginCallback {
 

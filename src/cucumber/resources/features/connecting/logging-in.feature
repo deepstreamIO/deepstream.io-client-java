@@ -25,20 +25,23 @@ Feature: Logging In
     But the server sends the message A|E|INVALID_AUTH_MSG|Sinvalid authentication message+
     Then the last login failed with error "INVALID_AUTH_MSG" and message "invalid authentication message"
 
-  #Scenario: The client's authentication data is rejected
-    #Given the client is initialised
-    #When the client logs in with username "XXX" and password "ZZZ"
-    #But the server sends the message A|E|INVALID_AUTH_DATA|Sinvalid authentication data+
-    #Then the last login failed with error "INVALID_AUTH_DATA" and message "invalid authentication data"
+  Scenario: The client's authentication data is rejected
+    Given the client is initialised
+    When the client logs in with username "XXX" and password "ZZZ"
+    But the server sends the message A|E|INVALID_AUTH_DATA|Sinvalid authentication data+
+    Then the last login failed with error "INVALID_AUTH_DATA" and message "invalid authentication data"
 
-  #Scenario: The client has made too many unsuccessful authentication attempts
-    #Given the client is initialised
-    #When the client logs in with username "XXX" and password "ZZZ"
-    #But the server sends the message A|E|TOO_MANY_AUTH_ATTEMPTS|Stoo many authentication attempts+
-    #Then the last login failed with error "TOO_MANY_AUTH_ATTEMPTS" and message "too many authentication attempts"
+  Scenario: The client has made too many unsuccessful authentication attempts
+    Given the client is initialised
+    When the client logs in with username "XXX" and password "ZZZ"
+    But the server sends the message A|E|TOO_MANY_AUTH_ATTEMPTS|Stoo many authentication attempts+
+    Then the last login failed with error "TOO_MANY_AUTH_ATTEMPTS" and message "too many authentication attempts"
 
-  #Scenario: The client can't made further authentication attempts after it received TOO_MANY_AUTH_ATTEMPTS
-    #Given the server resets its message count
-    #When the client logs in with username "XXX" and password "ZZZ"
-    #Then the server has received 0 messages
-    #And the client throws a "IS_CLOSED" error with message "this client's connection was closed"
+  Scenario: The client can't made further authentication attempts after it received TOO_MANY_AUTH_ATTEMPTS
+    Given the client is initialised
+    When the client logs in with username "XXX" and password "ZZZ"
+    But the server sends the message A|E|TOO_MANY_AUTH_ATTEMPTS|Stoo many authentication attempts+
+    Given the server resets its message count
+    When the client logs in with username "XXX" and password "ZZZ"
+    Then the server has received 0 messages
+    And the client throws a "IS_CLOSED" error with message "this client's connection was closed"

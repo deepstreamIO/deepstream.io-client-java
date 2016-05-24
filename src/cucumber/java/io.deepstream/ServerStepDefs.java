@@ -40,6 +40,11 @@ public class ServerStepDefs {
         Assert.assertEquals( true, server.isOpen );
     }
 
+    @Given("^the server resets its message count$")
+    public void Server_resets_message_count() throws Throwable {
+        server.resetMessageCount();
+    }
+
     @Then("^the server has (\\d+) active connections$")
     public void The_server_has_connections(int connections) throws Throwable {
         Assert.assertEquals( connections, server.getNumberOfConnections() );
@@ -56,5 +61,10 @@ public class ServerStepDefs {
     @Then("^the last message the server recieved is (.*?)$")
     public void The_last_message_the_server_received_is( String message ) throws Exception {
         Assert.assertEquals( message, Util.matchMessage( server.getLastMessage() ) );
+    }
+
+    @Then("^the server has received (\\d+) messages")
+    public void Server_has_received_messages( int messageCount ) throws Exception {
+        Assert.assertEquals( messageCount, server.getMessageCount() );
     }
 }
