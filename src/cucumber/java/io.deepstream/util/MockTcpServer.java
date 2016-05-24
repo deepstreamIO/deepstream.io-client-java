@@ -9,13 +9,13 @@ import java.util.ArrayList;
 
 public class MockTcpServer {
 
-    ServerSocket serverSocket;
-    ArrayList<Socket> connections;
-    ArrayList<Thread> threads;
-    String lastMessage;
-    Socket lastSocket;
-    DataInputStream in;
-    DataOutputStream out;
+    private ServerSocket serverSocket;
+    private ArrayList<Socket> connections;
+    private ArrayList<Thread> threads;
+    private String lastMessage;
+    private Socket lastSocket;
+    private DataInputStream in;
+    private DataOutputStream out;
     public boolean isOpen;
 
     public MockTcpServer( int port ) throws IOException {
@@ -48,24 +48,24 @@ public class MockTcpServer {
         thread.start();
     }
 
-    private void handleConnection( final Socket sock ) {
-        this.connections.add( sock );
+    private void handleConnection( final Socket socket ) {
+        this.connections.add( socket );
         final MockTcpServer self = this;
 
         Thread connectionThread = new Thread() {
             @Override
             public void run() {
+                try {
+                    self.in = new DataInputStream(socket.getInputStream());
+                    self.out = new DataOutputStream(socket.getOutputStream());
+                }
+                catch (IOException e) {
+                    System.out.println( "IOException " + e );
+                }
+
                 while( self.isOpen ) {
                     try {
-                        self.in = new DataInputStream(sock.getInputStream());
-                        self.out = new DataOutputStream(sock.getOutputStream());
-                    } catch (IOException e) {
-                        System.out.println( "IOException " + e );
-                    }
-
-                    try {
-                        String message = in.readUTF();
-                        self.lastMessage = message;
+                        self.lastMessage = in.readUTF();
                     } catch ( SocketException e) {
                         System.out.println( "SocketException " + e );
                     } catch (IOException e) {

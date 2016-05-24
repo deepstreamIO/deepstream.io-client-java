@@ -31,7 +31,7 @@ public class ConnectionStepDefs {
     }
 
     private DeepstreamClient client;
-    Properties options = new Properties();
+    private Properties options = new Properties();
 
     @Before
     public void beforeScenario() throws IOException, InterruptedException {
@@ -67,18 +67,25 @@ public class ConnectionStepDefs {
 
     @Then("^the server sends the message (.*?)$")
     public void The_server_sends_the_message(String message) throws Throwable {
+        Thread.sleep(100);
+
         message = message.replace( '|', MPS );
         message = message.replace( '+', MS );
-        Thread.sleep(1000);
         server.send( message );
+
+        Thread.sleep(100);
     }
 
     @When("^the client logs in with username \"(.*?)\" and password \"(.*?)\"")
     public void The_client_logs_in_with_username_and_password( String username, String password ) throws Exception {
+        Thread.sleep(100);
+
         JsonObject authData = new JsonObject();
         authData.addProperty( "password", password );
         authData.addProperty( "username", username );
         client.login( authData );
+
+        Thread.sleep(100);
     }
 
     @Then("^the last message the server recieved is (.*?)$")
