@@ -42,7 +42,7 @@ public class Connection {
 
     public void authenticate(JsonObject authParameters, LoginCallback loginCallback ) throws Exception {
         if( this.tooManyAuthAttempts ) {
-            this.client.onError( Topic.ERROR, Event.IS_CLOSED, "the client\'s connection was closed" );
+            this.client.onError( Topic.ERROR, Event.IS_CLOSED, "this client\'s connection was closed" );
             return;
         }
         this.loginCallback = loginCallback;
@@ -121,7 +121,9 @@ public class Connection {
             }
 
             if( this.loginCallback != null ) {
-                this.loginCallback.loginFailed(Event.getEvent( message.data[ 0 ] ), message.data[ 1 ] );
+                this.loginCallback.loginFailed(
+                        Event.getEvent( message.data[ 0 ] ),
+                        getAuthData( message.data[ 1 ] ) );
             }
         }
         else if( message.action == Actions.ACK ) {
@@ -163,5 +165,11 @@ public class Connection {
             throw new Exception( "Unknown Endpoint" );
         }
         return endpoint;
+    }
+
+    private String getAuthData( String data ) {
+        String result;
+        result = (String) MessageParser.convertTyped( data );
+        return result;
     }
 }
