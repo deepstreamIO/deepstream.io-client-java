@@ -30,7 +30,11 @@ public class EndpointMock implements Endpoint {
     }
 
     public void sendMessage( String message ) {
-        this.connection.onMessage( message );
+        try {
+            this.connection.onMessage( message );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void sendError( Exception exception ) {
@@ -40,5 +44,10 @@ public class EndpointMock implements Endpoint {
     public void send( String message ) {
         this.lastSentMessage = message;
         this.sentMessages.add( message );
+    }
+
+    @Override
+    public void close() {
+
     }
 }

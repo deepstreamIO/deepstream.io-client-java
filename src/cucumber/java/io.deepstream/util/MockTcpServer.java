@@ -17,7 +17,7 @@ public class MockTcpServer {
     Socket lastSocket;
     DataInputStream in;
     DataOutputStream out;
-    public boolean isOpen;
+    public volatile boolean isOpen;
 
     public MockTcpServer( int port ) throws IOException {
         serverSocket = new ServerSocket();
@@ -39,11 +39,8 @@ public class MockTcpServer {
                     self.lastSocket = sock;
                     self.handleConnection(sock);
                 } catch ( SocketTimeoutException e) {
-                    System.out.println( "SocketTimeoutException " + e );
                 } catch ( SocketException e ) {
-                    System.out.println( "SocketException " + e );
                 } catch (IOException e) {
-                    System.out.println( "IOException " + e );
                 }
             }
         };
@@ -54,6 +51,11 @@ public class MockTcpServer {
 
     private void handleConnection( final Socket sock ) {
         this.connections.add( sock );
+        try {
+            in = new DataInputStream(sock.getInputStream());
+            out = new DataOutputStream(sock.getOutputStream());
+        } catch (IOException e) {
+        }
         final MockTcpServer self = this;
 
         Thread connectionThread = new Thread() {
@@ -61,20 +63,19 @@ public class MockTcpServer {
             public void run() {
                 while( self.isOpen ) {
                     try {
-                        self.in = new DataInputStream(sock.getInputStream());
-                        self.out = new DataOutputStream(sock.getOutputStream());
-                    } catch (IOException e) {
-                        System.out.println( "IOException " + e );
-                    }
-
-                    try {
                         String message = in.readUTF();
                         self.lastMessage = message;
                         self.messages.add( message );
                     } catch ( SocketException e) {
-                        System.out.println( "SocketException " + e );
                     } catch (IOException e) {
-                        System.out.println( "IOException " + e );
+                        try {
+                            self.close();
+                        } catch (InterruptedException e1) {
+                            e1.printStackTrace();
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
+                        }
+
                     }
                 }
             }
@@ -95,8 +96,8 @@ public class MockTcpServer {
         for ( Thread connectedThread : this.threads ) {
             connectedThread.join(1);
         }
-        serverSocket.close();
-        serverSocket = null;
+        this.serverSocket.close();
+        this.connections = new ArrayList<>();
     }
 
     public String getLastMessage() {

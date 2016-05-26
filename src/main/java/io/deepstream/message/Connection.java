@@ -14,10 +14,14 @@ public class Connection {
 
     private DeepstreamClient client;
     private String originalUrl;
+    private String url;
     private ConnectionState connectionState;
     private ArrayList<ConnectionChangeListener> connectStateListeners;
 
     private boolean tooManyAuthAttempts;
+    private boolean challengeDenied;
+    private boolean deliberateClose;
+    private boolean redirecting;
     private StringBuilder messageBuffer;
 
     private LoginCallback loginCallback;
@@ -26,22 +30,26 @@ public class Connection {
 
     public Connection(final String url, final Map options, DeepstreamClient client ) throws Exception {
         this( url, options, client, null );
-        this.endpoint = createEndpoint(url, options);
+        this.endpoint = createEndpoint();
     }
 
     Connection(final String url, final Map options, DeepstreamClient client, Endpoint endpoint ) {
         this.client = client;
         this.connectStateListeners = new ArrayList<>();
         this.originalUrl = url;
+        this.url = url;
         this.connectionState = ConnectionState.CLOSED;
         this.messageBuffer = new StringBuilder();
         this.tooManyAuthAttempts = false;
+        this.challengeDenied = false;
+        this.deliberateClose = false;
+        this.redirecting = false;
         this.options = options;
         this.endpoint = endpoint;
     }
 
     public void authenticate(JsonObject authParameters, LoginCallback loginCallback ) throws Exception {
-        if( this.tooManyAuthAttempts ) {
+        if( this.tooManyAuthAttempts || this.challengeDenied ) {
             this.client.onError( Topic.ERROR, Event.IS_CLOSED, "this client\'s connection was closed" );
             return;
         }
@@ -81,13 +89,20 @@ public class Connection {
         return this.connectionState;
     }
 
+    public void close() throws Exception {
+        this.deliberateClose = true;
+        this.endpoint.close();
+    }
+
     void onOpen() {
         this.setState( ConnectionState.AWAITING_CONNECTION );
     }
 
-    void onError( String error ) { System.out.println( error ); }
+    void onError( String error ) {
+        //System.out.println( error );
+    }
 
-    void onMessage(String rawMessage) {
+    void onMessage(String rawMessage) throws Exception {
         List<Message> parsedMessages = MessageParser.parse( rawMessage, this );
         for (Message message : parsedMessages) {
             if (message.topic == Topic.CONNECTION) {
@@ -102,13 +117,39 @@ public class Connection {
         }
     }
 
-    private void handleConnectionResponse( Message message ) {
+    void onClose() throws Exception {
+        if( this.redirecting ) {
+            this.redirecting = false;
+            this.createEndpoint();
+        }
+        else if( this.deliberateClose ) {
+            System.out.println("Setting closed");
+            this.setState( ConnectionState.CLOSED );
+        }
+        else {
+            if( !(this.originalUrl.equals( this.url )) ) {
+                this.url = this.originalUrl;
+                this.createEndpoint();
+            }
+        }
+    }
+
+    private void handleConnectionResponse( Message message ) throws Exception {
         if( message.action == Actions.ACK ) {
             this.setState( ConnectionState.AWAITING_AUTHENTICATION );
         }
         else if( message.action == Actions.CHALLENGE ) {
             this.setState( ConnectionState.CHALLENGING );
             this.endpoint.send( MessageBuilder.getMsg( Topic.CONNECTION, Actions.CHALLENGE_RESPONSE,  this.originalUrl ) );
+        }
+        else if( message.action == Actions.REJECTION ) {
+            this.challengeDenied = true;
+            this.close();
+        }
+        else if( message.action == Actions.REDIRECT ) {
+            this.url = message.data[ 0 ];
+            this.redirecting = true;
+            this.endpoint.close();
         }
     }
 
@@ -154,11 +195,11 @@ public class Connection {
         }
     }
 
-    private Endpoint createEndpoint(String url, Map options) throws Exception {
+    private Endpoint createEndpoint() throws Exception {
         Endpoint endpoint;
         System.out.println( options.get( "endpoint") );
         if( options.get( "endpoint" ) == EndpointType.TCP.name() ) {
-           endpoint = new EndpointTCP( url, options, this );
+           endpoint = new EndpointTCP( this.url, this.options, this );
         } else if( options.get( "endpoint" ).equals( EndpointType.ENGINEIO.name() ) ) {
             throw new Exception( "EngineIO doesn't transpile" );
         } else {
