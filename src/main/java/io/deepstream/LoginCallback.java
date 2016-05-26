@@ -7,5 +7,5 @@ public interface LoginCallback {
 
     public void loginSuccess( Map loginData );
 
-    public void loginFailed( Event errorEvent, String errorMessage );
+    public void loginFailed( Event errorEvent, Object data );
 }

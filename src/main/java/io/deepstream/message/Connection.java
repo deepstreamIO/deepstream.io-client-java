@@ -1,11 +1,10 @@
 package io.deepstream.message;
 
 import com.google.gson.JsonObject;
-import io.deepstream.ConnectionChangeListener;
-import io.deepstream.DeepstreamClient;
-import io.deepstream.LoginCallback;
+import io.deepstream.*;
 import io.deepstream.constants.*;
 
+import java.net.URISyntaxException;
 import java.util.*;
 
 public class Connection {
@@ -28,7 +27,7 @@ public class Connection {
     private JsonObject authParameters;
     private Map options;
 
-    public Connection(final String url, final Map options, DeepstreamClient client ) throws Exception {
+    public Connection(final String url, final Map options, DeepstreamClient client ) throws URISyntaxException {
         this( url, options, client, null );
         this.endpoint = createEndpoint();
     }
@@ -48,9 +47,9 @@ public class Connection {
         this.endpoint = endpoint;
     }
 
-    public void authenticate(JsonObject authParameters, LoginCallback loginCallback ) throws Exception {
+    public void authenticate(JsonObject authParameters, LoginCallback loginCallback ) throws DeepstreamLoginException {
         if( this.tooManyAuthAttempts || this.challengeDenied ) {
-            this.client.onError( Topic.ERROR, Event.IS_CLOSED, "this client\'s connection was closed" );
+            this.client.onError( Topic.ERROR, Event.IS_CLOSED, "The client\'s connection was closed" );
             return;
         }
         this.loginCallback = loginCallback;
@@ -89,9 +88,14 @@ public class Connection {
         return this.connectionState;
     }
 
-    public void close() throws Exception {
+    public void close() {
         this.deliberateClose = true;
-        this.endpoint.close();
+
+        try {
+            this.endpoint.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     void onOpen() {
@@ -102,7 +106,7 @@ public class Connection {
         //System.out.println( error );
     }
 
-    void onMessage(String rawMessage) throws Exception {
+    void onMessage(String rawMessage) {
         List<Message> parsedMessages = MessageParser.parse( rawMessage, this );
         for (Message message : parsedMessages) {
             if (message.topic == Topic.CONNECTION) {
@@ -117,24 +121,21 @@ public class Connection {
         }
     }
 
-    void onClose() throws Exception {
+    void onClose() throws URISyntaxException {
         if( this.redirecting ) {
             this.redirecting = false;
             this.createEndpoint();
         }
         else if( this.deliberateClose ) {
-            System.out.println("Setting closed");
             this.setState( ConnectionState.CLOSED );
         }
-        else {
-            if( !(this.originalUrl.equals( this.url )) ) {
-                this.url = this.originalUrl;
-                this.createEndpoint();
-            }
+        else if( this.originalUrl.equals( this.url ) == false ) {
+            this.url = this.originalUrl;
+            this.createEndpoint();
         }
     }
 
-    private void handleConnectionResponse( Message message ) throws Exception {
+    private void handleConnectionResponse( Message message ) {
         if( message.action == Actions.ACK ) {
             this.setState( ConnectionState.AWAITING_AUTHENTICATION );
         }
@@ -164,14 +165,14 @@ public class Connection {
             if( this.loginCallback != null ) {
                 this.loginCallback.loginFailed(
                         Event.getEvent( message.data[ 0 ] ),
-                        getAuthData( message.data[ 1 ] ) );
+                        MessageParser.convertTyped( message.data[ 1 ] )
+                );
             }
         }
         else if( message.action == Actions.ACK ) {
             this.setState( ConnectionState.OPEN );
 
             if( this.messageBuffer.length() > 0 ) {
-                System.out.println( "Flushing initial buffer: " + this.messageBuffer.toString() );
                 this.endpoint.send( this.messageBuffer.toString() );
                 this.messageBuffer = new StringBuilder();
             }
@@ -195,22 +196,15 @@ public class Connection {
         }
     }
 
-    private Endpoint createEndpoint() throws Exception {
-        Endpoint endpoint;
+    private Endpoint createEndpoint() throws URISyntaxException {
+        Endpoint endpoint = null;
+
         System.out.println( options.get( "endpoint") );
-        if( options.get( "endpoint" ) == EndpointType.TCP.name() ) {
-           endpoint = new EndpointTCP( this.url, this.options, this );
+        if( options.get( "endpoint" ).equals( EndpointType.TCP.name() ) ) {
+           endpoint = new EndpointTCP( url, options, this );
         } else if( options.get( "endpoint" ).equals( EndpointType.ENGINEIO.name() ) ) {
-            throw new Exception( "EngineIO doesn't transpile" );
-        } else {
-            throw new Exception( "Unknown Endpoint" );
+            System.out.println( "EngineIO doesn't transpile" );
         }
         return endpoint;
-    }
-
-    private String getAuthData( String data ) {
-        String result;
-        result = (String) MessageParser.convertTyped( data );
-        return result;
     }
 }

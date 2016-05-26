@@ -1,19 +1,11 @@
-import com.google.gson.Gson;
+package io.deepstream;
+
 import com.google.gson.JsonObject;
-import io.deepstream.ConnectionChangeListener;
-import io.deepstream.DeepstreamClient;
-import io.deepstream.LoginCallback;
 import io.deepstream.constants.ConnectionState;
 import io.deepstream.constants.Event;
 import io.deepstream.utils.Emitter;
 
 import java.util.Map;
-
-public class Test {
-    public static void main(String[] args) {
-        new Application();
-    }
-}
 
 class Application implements ConnectionChangeListener, LoginCallback {
 
@@ -22,7 +14,7 @@ class Application implements ConnectionChangeListener, LoginCallback {
             JsonObject authData = new JsonObject();
             authData.addProperty( "name", "Yasser" );
 
-            DeepstreamClient ds = new DeepstreamClient( "ws://localhost:6020" );
+            DeepstreamClient ds = new DeepstreamClient( "localhost:6021" );
             ds
                     .addConnectionChangeListener( this )
                     .login( authData, this );
@@ -36,7 +28,7 @@ class Application implements ConnectionChangeListener, LoginCallback {
 
             ds.event.subscribe( "bob", new Emitter.Listener() {
                 public void call(Object... args) {
-                    System.out.println( "Recieved event bob with arguments: " + args[ 0 ] );
+                    System.out.println( "Received event bob with arguments: " + args[ 0 ] );
                 }
             } );
         }
@@ -53,7 +45,7 @@ class Application implements ConnectionChangeListener, LoginCallback {
         System.out.println( "Login Success" );
     }
 
-    public void loginFailed( Event errorEvent, String errorMessage ) {
-        System.out.println( "Login failed " + errorEvent );
+    public void loginFailed(Event errorEvent, Object errorMessage ) {
+        System.out.println( "Login failed " + errorEvent.toString() );
     }
 }

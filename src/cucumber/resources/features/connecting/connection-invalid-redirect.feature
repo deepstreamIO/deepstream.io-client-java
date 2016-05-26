@@ -6,7 +6,7 @@ Feature: Redirecting the client to another deepstream gets rejected
     Given the test server is ready
     And the client is initialised
     When the server sends the message C|CH+
-    Then the last message the server recieved is C|CHR|http://localhost:9696+
+    Then the last message the server recieved is C|CHR|localhost:9696+
     And the clients connection state is "CHALLENGING"
 
   Scenario: The client closes the connection if the challenge is rejected
@@ -20,7 +20,7 @@ Feature: Redirecting the client to another deepstream gets rejected
     Given the test server is ready
     And the client is initialised
     When the server sends the message C|CH+
-    Then the last message the server recieved is C|CHR|http://localhost:9696+
+    Then the last message the server recieved is C|CHR|localhost:9696+
     When the server sends the message C|REJ+
     When the client logs in with username "XXX" and password "YYY"
     Then the server has received 1 messages

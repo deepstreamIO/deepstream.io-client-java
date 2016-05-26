@@ -4,100 +4,126 @@ package io.deepstream.util;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.*;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
 
 public class MockTcpServer {
 
     ServerSocket serverSocket;
-    ArrayList<Socket> connections;
     ArrayList<Thread> threads;
     ArrayList<String> messages;
     String lastMessage;
     Socket lastSocket;
     DataInputStream in;
     DataOutputStream out;
-    public volatile boolean isOpen;
 
-    public MockTcpServer( int port ) throws IOException {
-        serverSocket = new ServerSocket();
-        serverSocket.setReuseAddress( true );
-        serverSocket.bind(new InetSocketAddress(port));
-        connections = new ArrayList<>();
+    public Boolean isOpen = false;
+
+    public MockTcpServer( int port ) {
         threads = new ArrayList<>();
         messages = new ArrayList<>();
+
+        try {
+            serverSocket = new ServerSocket( port );
+            isOpen = true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        this.open();
     }
 
-    public void open() throws InterruptedException {
-        this.isOpen = true;
+    public void open() {
         final MockTcpServer self = this;
+
         Thread thread = new Thread() {
             @Override
             public void run() {
-                try {
-                    Socket sock = serverSocket.accept();
-                    self.lastSocket = sock;
-                    self.handleConnection(sock);
-                } catch ( SocketTimeoutException e) {
-                } catch ( SocketException e ) {
-                } catch (IOException e) {
-                }
+            try {
+                Socket sock = serverSocket.accept();
+                self.lastSocket = sock;
+                self.handleConnection(sock);
+            } catch (IOException e) {
+                //e.printStackTrace();
+            }
             }
         };
+
         thread.start();
-        Thread.sleep(10); //Allow thread to open socket
+
+        try {
+            Thread.sleep( 10 ); //Allow thread to open socket
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         return;
     }
 
-    private void handleConnection( final Socket sock ) {
-        this.connections.add( sock );
-        try {
-            in = new DataInputStream(sock.getInputStream());
-            out = new DataOutputStream(sock.getOutputStream());
-        } catch (IOException e) {
-        }
+    private void handleConnection( final Socket socket ) {
         final MockTcpServer self = this;
+
+        try {
+            in = new DataInputStream(socket.getInputStream());
+            out = new DataOutputStream(socket.getOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         Thread connectionThread = new Thread() {
             @Override
             public void run() {
-                while( self.isOpen ) {
+                while( socket.isClosed() == false ) {
                     try {
-                        String message = in.readUTF();
-                        self.lastMessage = message;
-                        self.messages.add( message );
-                    } catch ( SocketException e) {
-                    } catch (IOException e) {
-                        try {
-                            self.close();
-                        } catch (InterruptedException e1) {
-                            e1.printStackTrace();
-                        } catch (IOException e1) {
-                            e1.printStackTrace();
+                        if( in.available() > 0 ) {
+                            String message = in.readUTF();
+                            self.lastMessage = message;
+                            self.messages.add( message );
                         }
-
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
+                }
+
+                System.out.println( "Socket is now closed" );
+
+                try {
+                    this.join( 1 );
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } finally {
+                    self.threads.remove( this );
                 }
             }
         };
+
         this.threads.add( connectionThread );
+        System.out.println( "Size:" + this.threads.size() );
+
         connectionThread.start();
     }
 
-    public void send( String message ) throws IOException {
-        this.out.writeUTF( message );
+    public void send( String message ) {
+        try {
+            this.out.writeUTF( message );
+        } catch (IOException e) {
+            System.out.println( "Socket Has Been Closed By Client" );
+        }
     }
 
-    public void close() throws InterruptedException, IOException {
+    public void close() throws InterruptedException {
+        try {
+            for (Thread connectedThread : this.threads) {
+                connectedThread.join(1);
+            }
+            this.serverSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         this.isOpen = false;
-        for ( Socket sock : this.connections ) {
-            sock.close();
-        }
-        for ( Thread connectedThread : this.threads ) {
-            connectedThread.join(1);
-        }
-        this.serverSocket.close();
-        this.connections = new ArrayList<>();
+        this.threads = new ArrayList<>();
     }
 
     public String getLastMessage() {
@@ -105,7 +131,7 @@ public class MockTcpServer {
     }
 
     public int getNumberOfConnections() {
-        return this.connections.size();
+        return this.threads.size();
     }
 
     public void resetMessageCount() { this.messages = new ArrayList<>(); }

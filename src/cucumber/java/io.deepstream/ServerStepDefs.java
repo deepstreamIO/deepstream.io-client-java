@@ -19,23 +19,14 @@ public class ServerStepDefs {
     private MockTcpServer server;
     private MockTcpServer server2;
 
-    {
-        try {
-            server = new MockTcpServer(9696);
-            server2 = new MockTcpServer(8898);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     @Before
-    public void beforeScenario() throws IOException, InterruptedException {
-        server.open();
-        server2.open();
+    public void beforeScenario() throws InterruptedException, IOException {
+        server = new MockTcpServer(9696);
+        server2 = new MockTcpServer(8898);
     }
 
     @After
-    public void afterScenario() throws IOException, InterruptedException {
+    public void afterScenario() throws InterruptedException, IOException {
         server.close();
         server2.close();
     }
@@ -52,6 +43,7 @@ public class ServerStepDefs {
 
     @Then("^the server has (\\d+) active connections$")
     public void The_server_has_connections(int connections) throws Throwable {
+        Thread.sleep(200);
         Assert.assertEquals( connections, server.getNumberOfConnections() );
     }
 
@@ -65,12 +57,12 @@ public class ServerStepDefs {
     }
 
     @Then("^the last message the server recieved is (.*?)$")
-    public void The_last_message_the_server_received_is( String message ) throws Exception {
+    public void The_last_message_the_server_received_is( String message ) {
         Assert.assertEquals( message, Util.matchMessage( server.getLastMessage() ) );
     }
 
     @Then("^the server has received (\\d+) messages")
-    public void Server_has_received_messages( int messageCount ) throws Exception {
+    public void Server_has_received_messages( int messageCount ) {
         Assert.assertEquals( messageCount, server.getMessageCount() );
     }
 
@@ -80,7 +72,7 @@ public class ServerStepDefs {
     }
 
     @Then("^the second server has (\\d+) active connections$")
-    public void Second_server_has_connections(int connections) throws Throwable {
+    public void Second_server_has_connections(int connections) {
         Assert.assertEquals( connections, server2.getNumberOfConnections() );
     }
 

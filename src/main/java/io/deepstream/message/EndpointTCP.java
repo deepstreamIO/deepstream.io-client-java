@@ -10,7 +10,8 @@ public class EndpointTCP implements Endpoint {
     private final String MS = Character.toString( '\u001e' );
 
     private Socket socket;
-    private URL url;
+    private String host;
+    private Integer port;
     private Connection connection;
     private boolean isOpen;
     private String messageBuffer;
@@ -18,35 +19,42 @@ public class EndpointTCP implements Endpoint {
     private DataOutputStream out;
     private DataInputStream in;
 
-    public EndpointTCP(String url, Map options, Connection connection) throws IOException {
+    public EndpointTCP(String url, Map options, Connection connection) throws URISyntaxException {
 
-        this.url = new URL( url );
+        this.host = url.substring( 0, url.indexOf( ':' ) );
+        this.port = Integer.parseInt( url.substring( url.indexOf( ':' ) + 1 )  );
+
+        this.isOpen = false;
         this.connection = connection;
         this.messageBuffer = "";
-        this.socket = new Socket();
-        this.socket.setSoTimeout(1);
-        this.isOpen = false;
-        this.open();
 
+        this.socket = new Socket();
+
+        try {
+            this.socket.setSoTimeout(1);
+            this.open();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    private void open() throws IOException {
+    private void open() {
         try {
-            this.socket.connect(new InetSocketAddress( url.getHost(), url.getPort() ) );
+            this.socket.connect(new InetSocketAddress( host, port ) );
             this.isOpen = true;
             this.connection.onOpen();
-        } catch (Exception e) {
-            this.onError(e);
+        } catch (IOException e) {
+            e.printStackTrace();
             return;
         }
 
         try {
             this.in = new DataInputStream(this.socket.getInputStream());
             this.out = new DataOutputStream(this.socket.getOutputStream());
-        } catch (Exception e) {
-            this.onError(e);
-            return;
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+
         this.run();
     }
 
@@ -56,14 +64,13 @@ public class EndpointTCP implements Endpoint {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                while( self.isOpen ) {
+                while( self.socket.isConnected() ) {
                     try {
                         String message = self.in.readUTF();
                         self.onData( message );
-                    } catch ( SocketTimeoutException se ) {
-                    } catch (IOException e) {
+                    } catch ( IOException e) {
+                        e.printStackTrace();
                         self.onError( e );
-                    } catch (Exception e) {
                     }
                 }
             }
@@ -74,14 +81,14 @@ public class EndpointTCP implements Endpoint {
         String message;
 
         if( e instanceof ConnectException || e instanceof EOFException ) {
-            message = String.format("Can\'t connect! Deepstream server unreachable on %s", this.url.getAuthority() );
+            message = String.format( "Can\'t connect! Deepstream server unreachable on %s:%s", this.host, this.port );
         } else {
             message = e.getMessage();
         }
-        connection.onError( message );
+       connection.onError( message );
     }
 
-    private void onData( String data ) throws Exception {
+    private void onData( String data ) {
         String message;
 
         // Incomplete message, write to buffer
@@ -112,15 +119,17 @@ public class EndpointTCP implements Endpoint {
         }
     }
 
-    public void close() throws Exception {
+    public void close() {
+        this.isOpen = false;
         try {
             this.socket.shutdownInput();
             this.socket.shutdownOutput();
             this.socket.close();
+            this.connection.onClose();
         } catch ( IOException e ) {
-
+            e.printStackTrace();
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
         }
-        this.isOpen = false;
-        this.connection.onClose();
     }
 }
