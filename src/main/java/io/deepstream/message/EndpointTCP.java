@@ -61,9 +61,9 @@ public class EndpointTCP implements Endpoint {
                         String message = self.in.readUTF();
                         self.onData( message );
                     } catch ( SocketTimeoutException se ) {
-                    } catch ( EOFException se ) {
                     } catch (IOException e) {
                         self.onError( e );
+                    } catch (Exception e) {
                     }
                 }
             }
@@ -73,7 +73,7 @@ public class EndpointTCP implements Endpoint {
     private void onError( Exception e ) {
         String message;
 
-        if( e instanceof ConnectException ) {
+        if( e instanceof ConnectException || e instanceof EOFException ) {
             message = String.format("Can\'t connect! Deepstream server unreachable on %s", this.url.getAuthority() );
         } else {
             message = e.getMessage();
@@ -81,7 +81,7 @@ public class EndpointTCP implements Endpoint {
         connection.onError( message );
     }
 
-    private void onData( String data ) {
+    private void onData( String data ) throws Exception {
         String message;
 
         // Incomplete message, write to buffer
@@ -110,5 +110,17 @@ public class EndpointTCP implements Endpoint {
         } catch (IOException e) {
             this.onError( e );
         }
+    }
+
+    public void close() throws Exception {
+        try {
+            this.socket.shutdownInput();
+            this.socket.shutdownOutput();
+            this.socket.close();
+        } catch ( IOException e ) {
+
+        }
+        this.isOpen = false;
+        this.connection.onClose();
     }
 }

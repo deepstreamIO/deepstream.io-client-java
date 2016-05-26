@@ -11,7 +11,7 @@ import org.junit.Assert;
 import java.util.Map;
 import java.util.Properties;
 
-public class ClientStepDefs {
+public class ConnectingStepDefs {
 
     private DeepstreamClient client;
     Properties options = new Properties();

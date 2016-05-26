@@ -31,7 +31,11 @@ class EndpointEngineIO implements Endpoint {
 
         this.socket.on( Socket.EVENT_MESSAGE, new Emitter.Listener() {
             public void call(Object... args) {
-                connection.onMessage( (String)args[0] );
+                try {
+                    connection.onMessage( (String)args[0] );
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         });
 
@@ -46,6 +50,11 @@ class EndpointEngineIO implements Endpoint {
     @Override
     public void send(String message) {
         this.socket.send( message );
+    }
+
+    @Override
+    public void close() {
+
     }
 }
 
