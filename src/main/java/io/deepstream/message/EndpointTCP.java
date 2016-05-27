@@ -15,7 +15,7 @@ public class EndpointTCP implements Endpoint {
     private Connection connection;
     private String messageBuffer;
 
-    private DataOutputStream out;
+    private OutputStreamWriter out;
     private DataInputStream in;
 
     public EndpointTCP(String url, Map options, Connection connection) throws URISyntaxException {
@@ -40,8 +40,8 @@ public class EndpointTCP implements Endpoint {
         }
 
         try {
-            this.in = new DataInputStream(this.socket.getInputStream());
-            this.out = new DataOutputStream(this.socket.getOutputStream());
+            this.in = new DataInputStream( this.socket.getInputStream() );
+            this.out = new OutputStreamWriter( this.socket.getOutputStream() );
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -57,8 +57,12 @@ public class EndpointTCP implements Endpoint {
             public void run() {
                 while( !self.socket.isClosed() ) {
                     try {
-                        String message = self.in.readUTF();
-                        self.onData( message );
+                        int length = in.available();
+                        if( length != 0 ) {
+                            byte[] buffer = new byte[ length ];
+                            in.readFully( buffer );
+                            self.onData( new String( buffer ) );
+                        }
                     } catch ( SocketTimeoutException se ) {
                     } catch ( IOException e ) {
                         self.onError( e );
@@ -105,7 +109,8 @@ public class EndpointTCP implements Endpoint {
 
     public void send(String message) {
         try {
-            this.out.writeUTF( message );
+            this.out.write( message, 0, message.length() );
+            this.out.flush();
         } catch (IOException e) {
             this.onError( e );
         }
