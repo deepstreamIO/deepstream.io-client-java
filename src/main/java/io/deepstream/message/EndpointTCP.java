@@ -13,38 +13,29 @@ public class EndpointTCP implements Endpoint {
     private String host;
     private Integer port;
     private Connection connection;
-    private boolean isOpen;
     private String messageBuffer;
 
     private DataOutputStream out;
     private DataInputStream in;
 
     public EndpointTCP(String url, Map options, Connection connection) throws URISyntaxException {
-
         this.host = url.substring( 0, url.indexOf( ':' ) );
         this.port = Integer.parseInt( url.substring( url.indexOf( ':' ) + 1 )  );
 
-        this.isOpen = false;
         this.connection = connection;
         this.messageBuffer = "";
 
-        this.socket = new Socket();
-
-        try {
-            this.socket.setSoTimeout(1);
-            this.open();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        this.open();
     }
 
-    private void open() {
+    public void open() {
         try {
-            this.socket.connect(new InetSocketAddress( host, port ) );
-            this.isOpen = true;
+            this.socket = new Socket();
+            this.socket.setSoTimeout(10);
+            this.socket.connect(new InetSocketAddress( host, port ));
             this.connection.onOpen();
         } catch (IOException e) {
-            e.printStackTrace();
+            this.onError( e );
             return;
         }
 
@@ -64,12 +55,12 @@ public class EndpointTCP implements Endpoint {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                while( self.socket.isConnected() ) {
+                while( !self.socket.isClosed() ) {
                     try {
                         String message = self.in.readUTF();
                         self.onData( message );
-                    } catch ( IOException e) {
-                        e.printStackTrace();
+                    } catch ( SocketTimeoutException se ) {
+                    } catch ( IOException e ) {
                         self.onError( e );
                     }
                 }
@@ -85,7 +76,8 @@ public class EndpointTCP implements Endpoint {
         } else {
             message = e.getMessage();
         }
-       connection.onError( message );
+        connection.onError( message );
+        this.close();
     }
 
     private void onData( String data ) {
@@ -120,14 +112,14 @@ public class EndpointTCP implements Endpoint {
     }
 
     public void close() {
-        this.isOpen = false;
         try {
             this.socket.shutdownInput();
             this.socket.shutdownOutput();
             this.socket.close();
+        } catch ( IOException e ) {}
+
+        try {
             this.connection.onClose();
-        } catch ( IOException e ) {
-            e.printStackTrace();
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
