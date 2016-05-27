@@ -5,7 +5,7 @@ Feature: Redirecting a client to another deepstream
   Scenario: The client attempts to connect to the other server when it recieves a redirect
     Given the test server is ready
     And the client is initialised
-    When the server sends the message C|RED|http://localhost:8898+
+    When the server sends the message C|RED|localhost:8898+
     And the server has 0 active connections
     When some time passes
     And the second server has 1 active connections

@@ -50,6 +50,8 @@ public class MessageParser {
 
     public static Object convertTyped( String value ) {
 
+        System.out.println( value );
+
         char type = value.charAt(0);
 
         if( Types.getType( type ) == Types.STRING ) {
@@ -72,8 +74,6 @@ public class MessageParser {
         }
         else if( Types.getType( type ) == Types.UNDEFINED ) {
             // Undefined isn't a thing in Java..
-        } else {
-
         }
         return null;
     }

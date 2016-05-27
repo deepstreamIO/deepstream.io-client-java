@@ -100,7 +100,7 @@ public class ConnectionTest {
     public void gettingInValidAuthenticationBack() throws Exception {
         this.sendingAuthentication();
 
-        endpointMock.sendMessage( MessageBuilder.getMsg(Topic.AUTH, Actions.ERROR, Event.NOT_AUTHENTICATED.toString(), "Fail" ));
+        endpointMock.sendMessage( MessageBuilder.getMsg(Topic.AUTH, Actions.ERROR, Event.NOT_AUTHENTICATED.toString(), "SFail" ));
 
         verifyConnectionState( ConnectionState.AWAITING_AUTHENTICATION );
         //verify( loginCallback, times( 1 ) ).loginSuccess(); //TODO: Any
@@ -111,14 +111,14 @@ public class ConnectionTest {
     public void errorsWhenTooManyAuthAttempts() throws  Exception {
         this.sendingAuthentication();
 
-        endpointMock.sendMessage( MessageBuilder.getMsg( Topic.AUTH, Actions.ERROR, Event.TOO_MANY_AUTH_ATTEMPTS.toString(), "TOO_MANY_AUTH_ATTEMPTS" ));
+        endpointMock.sendMessage( MessageBuilder.getMsg( Topic.AUTH, Actions.ERROR, Event.TOO_MANY_AUTH_ATTEMPTS.toString(), "STOO_MANY_AUTH_ATTEMPTS" ));
         verify( loginCallback, times( 1 ) ).loginFailed(  Event.TOO_MANY_AUTH_ATTEMPTS, "TOO_MANY_AUTH_ATTEMPTS" );
 
         JsonObject authParams = new JsonObject();
         authParams.addProperty( "name", "Yasser" );
 
         connection.authenticate( authParams, loginCallback );
-        verify( deepstreamClientMock, times( 1 ) ).onError( Topic.ERROR, Event.IS_CLOSED, "the client\'s connection was closed" );
+        verify( deepstreamClientMock, times( 1 ) ).onError( Topic.ERROR, Event.IS_CLOSED, "The client\'s connection was closed" );
     }
 
     private void verifyConnectionState( ConnectionState connectionState) {

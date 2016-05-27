@@ -9,6 +9,7 @@ import io.deepstream.message.Connection;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Properties;
 
 public class DeepstreamClient implements IDeepstreamClient {
@@ -17,27 +18,28 @@ public class DeepstreamClient implements IDeepstreamClient {
     public EventHandler event;
     public Properties config;
 
-    public DeepstreamClient( final String url, Properties options ) throws Exception {
+    public DeepstreamClient( final String url, Properties options ) throws URISyntaxException, IOException {
         this.config = getConfig( options );
         this.connection = new Connection( url, this.config, this );
         this.event = new EventHandler( options, this.connection, this );
     }
 
-    public DeepstreamClient( final String url ) throws Exception {
+    public DeepstreamClient( final String url ) throws URISyntaxException, IOException {
         this( url, new Properties() );
     }
 
-    public DeepstreamClient login( JsonObject data ) throws Exception {
+    public DeepstreamClient login( JsonObject data ) throws DeepstreamLoginException {
         this.connection.authenticate( data, null );
         return this;
     }
 
-    public DeepstreamClient login( JsonObject data, LoginCallback loginCallback ) throws Exception {
+    public DeepstreamClient login( JsonObject data, LoginCallback loginCallback ) throws DeepstreamLoginException {
         this.connection.authenticate( data, loginCallback );
         return this;
     }
 
     public DeepstreamClient close() {
+        this.connection.close();
         return this;
     }
 
@@ -57,11 +59,7 @@ public class DeepstreamClient implements IDeepstreamClient {
 
     public void onError(Topic topic, Event event, String message) throws DeepstreamException {
         System.out.println( "--- You can catch all deepstream errors by subscribing to the error event ---" );
-
-        String errorMsg = event + ": " + message;
-        errorMsg += " (" + topic + ")";
-
-        throw new DeepstreamException( errorMsg );
+        throw new DeepstreamException( topic, event, message );
     }
 
     private Properties getConfig( Properties properties ) throws IOException {
