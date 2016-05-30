@@ -16,13 +16,13 @@ public class EndpointTCP implements Endpoint {
     private String messageBuffer;
 
     private OutputStreamWriter out;
-    private DataInputStream in;
+    private InputStreamReader in;
 
     public EndpointTCP(String url, Map options, Connection connection) throws URISyntaxException {
         this.host = url.substring( 0, url.indexOf( ':' ) );
         this.port = Integer.parseInt( url.substring( url.indexOf( ':' ) + 1 )  );
-
         this.connection = connection;
+
         this.messageBuffer = "";
 
         this.open();
@@ -31,7 +31,7 @@ public class EndpointTCP implements Endpoint {
     public void open() {
         try {
             this.socket = new Socket();
-            this.socket.setSoTimeout(10);
+            this.socket.setSoTimeout(10000);
             this.socket.connect(new InetSocketAddress( host, port ));
             this.connection.onOpen();
         } catch (IOException e) {
@@ -40,7 +40,7 @@ public class EndpointTCP implements Endpoint {
         }
 
         try {
-            this.in = new DataInputStream( this.socket.getInputStream() );
+            this.in = new InputStreamReader( this.socket.getInputStream() );
             this.out = new OutputStreamWriter( this.socket.getOutputStream() );
         } catch (IOException e) {
             e.printStackTrace();
@@ -57,15 +57,11 @@ public class EndpointTCP implements Endpoint {
             public void run() {
                 while( !self.socket.isClosed() ) {
                     try {
-                        int length = in.available();
-                        if( length != 0 ) {
-                            byte[] buffer = new byte[ length ];
-                            in.readFully( buffer );
-                            self.onData( new String( buffer ) );
-                        }
-                    } catch ( SocketTimeoutException se ) {
+                        char[] buffer = new char[ 1024 ];
+                        int bytesRead = in.read( buffer, 0, 1024 );
+                        self.onData( new String( buffer, 0, bytesRead ) );
                     } catch ( IOException e ) {
-                        self.onError( e );
+                        System.out.println("CLIENT ERRORING " + e.toString());
                     }
                 }
             }

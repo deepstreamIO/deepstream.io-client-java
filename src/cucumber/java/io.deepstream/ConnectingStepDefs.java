@@ -30,7 +30,7 @@ public class ConnectingStepDefs {
     }
 
     @Then("^the clients connection state is \"(.*?)\"$")
-    public void the_clients_connection_state_is( String arg1 ) {
+    public void the_clients_connection_state_is( String arg1 ) throws InterruptedException {
         Assert.assertEquals( arg1, client.getConnectionState().name() );
     }
 
@@ -39,16 +39,14 @@ public class ConnectingStepDefs {
         JsonObject authData = new JsonObject();
         authData.addProperty( "password", password );
         authData.addProperty( "username", username );
-
         try {
             client.login(authData, status);
+            Thread.sleep(500);
         } catch ( DeepstreamException ex ) {
             deepstreamException = ex;
         } catch (DeepstreamLoginException e) {
             e.printStackTrace();
         }
-
-        Thread.sleep(200);
     }
 
     @Then("^the last login failed with error \"(.*?)\" and message \"(.*?)\"")

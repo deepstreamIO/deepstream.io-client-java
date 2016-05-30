@@ -1,9 +1,9 @@
 package io.deepstream.util;
 
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -13,10 +13,9 @@ public class MockTcpServer {
     ServerSocket serverSocket;
     ArrayList<Thread> threads;
     ArrayList<String> messages;
-    String lastMessage;
     Socket lastSocket;
-    DataInputStream in;
-    DataOutputStream out;
+    InputStreamReader in;
+    OutputStreamWriter out;
 
     public Boolean isOpen = false;
 
@@ -26,6 +25,8 @@ public class MockTcpServer {
 
         try {
             serverSocket = new ServerSocket( port );
+            serverSocket.setReuseAddress(true);
+            serverSocket.setSoTimeout(20000);
             isOpen = true;
         } catch (IOException e) {
             e.printStackTrace();
@@ -37,27 +38,25 @@ public class MockTcpServer {
     public void open() {
         final MockTcpServer self = this;
 
-        Thread thread = new Thread() {
+        new Thread(new Runnable() {
             @Override
             public void run() {
-            try {
-                Socket sock = serverSocket.accept();
-                self.lastSocket = sock;
-                self.handleConnection(sock);
-            } catch (IOException e) {
-                //e.printStackTrace();
+                try {
+                    Socket sock = serverSocket.accept();
+                    sock.setSoTimeout(20000);
+                    self.lastSocket = sock;
+                    self.handleConnection(sock);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-            }
-        };
-
-        thread.start();
+        }).start();
 
         try {
             Thread.sleep( 10 ); //Allow thread to open socket
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
         return;
     }
 
@@ -65,8 +64,8 @@ public class MockTcpServer {
         final MockTcpServer self = this;
 
         try {
-            in = new DataInputStream(socket.getInputStream());
-            out = new DataOutputStream(socket.getOutputStream());
+            in = new InputStreamReader(socket.getInputStream());
+            out = new OutputStreamWriter(socket.getOutputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -76,16 +75,15 @@ public class MockTcpServer {
             public void run() {
                 while( socket.isClosed() == false ) {
                     try {
-                        if( in.available() > 0 ) {
-                            String message = in.readUTF();
-                            self.lastMessage = message;
-                            self.messages.add( message );
+                        if( in.ready() ) {
+                            char[] buffer = new char[ 1024 ];
+                            int bytesRead = in.read( buffer, 0, 1024 );
+                            self.messages.add( new String( buffer, 0, bytesRead ) );
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
-
                 System.out.println( "Socket is now closed" );
 
                 try {
@@ -97,16 +95,14 @@ public class MockTcpServer {
                 }
             }
         };
-
         this.threads.add( connectionThread );
-        System.out.println( "Size:" + this.threads.size() );
-
         connectionThread.start();
     }
 
     public void send( String message ) {
         try {
-            this.out.writeUTF( message );
+            this.out.write( message, 0, message.length() );
+            this.out.flush();
         } catch (IOException e) {
             System.out.println( "Socket Has Been Closed By Client" );
         }
@@ -127,7 +123,7 @@ public class MockTcpServer {
     }
 
     public String getLastMessage() {
-        return lastMessage;
+        return this.messages.get( messages.size() - 1 );
     }
 
     public int getNumberOfConnections() {

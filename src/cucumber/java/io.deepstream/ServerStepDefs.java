@@ -22,7 +22,7 @@ public class ServerStepDefs {
     @Before
     public void beforeScenario() throws InterruptedException, IOException {
         server = new MockTcpServer(9696);
-        server2 = new MockTcpServer(8898);
+        server2 = new MockTcpServer(9878);
     }
 
     @After
@@ -43,13 +43,11 @@ public class ServerStepDefs {
 
     @Then("^the server has (\\d+) active connections$")
     public void The_server_has_connections(int connections) throws Throwable {
-        Thread.sleep(200);
         Assert.assertEquals( connections, server.getNumberOfConnections() );
     }
 
     @Then("^the server sends the message (.*?)$")
     public void The_server_sends_the_message(String message) throws Throwable {
-        Thread.sleep(200);
         message = message.replace( '|', MPS );
         message = message.replace( '+', MS );
         server.send( message );
@@ -57,7 +55,7 @@ public class ServerStepDefs {
     }
 
     @Then("^the last message the server recieved is (.*?)$")
-    public void The_last_message_the_server_received_is( String message ) {
+    public void The_last_message_the_server_received_is( String message ) throws InterruptedException {
         Assert.assertEquals( message, Util.matchMessage( server.getLastMessage() ) );
     }
 
