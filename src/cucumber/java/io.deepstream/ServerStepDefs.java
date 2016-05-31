@@ -21,8 +21,8 @@ public class ServerStepDefs {
 
     @Before
     public void beforeScenario() throws InterruptedException, IOException {
-        server = new MockTcpServer(9696);
-        server2 = new MockTcpServer(9878);
+        server = new MockTcpServer(9876);
+        server2 = new MockTcpServer(9568);
     }
 
     @After

@@ -4,8 +4,10 @@ package io.deepstream.util;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 
 public class MockTcpServer {
@@ -24,14 +26,14 @@ public class MockTcpServer {
         messages = new ArrayList<>();
 
         try {
-            serverSocket = new ServerSocket( port );
+            serverSocket = new ServerSocket();
             serverSocket.setReuseAddress(true);
             serverSocket.setSoTimeout(20000);
+            serverSocket.bind( new InetSocketAddress( port ) );
             isOpen = true;
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
-
         this.open();
     }
 
@@ -46,6 +48,8 @@ public class MockTcpServer {
                     sock.setSoTimeout(20000);
                     self.lastSocket = sock;
                     self.handleConnection(sock);
+                } catch (SocketException e) {
+                    //Most likely thrown when closing the serverSocket
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

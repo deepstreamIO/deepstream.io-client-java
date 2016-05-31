@@ -22,7 +22,7 @@ public class ConnectingStepDefs {
     public void the_client_is_initialised() {
         options.setProperty( "endpoint", EndpointType.TCP.name() );
         try {
-            client = new DeepstreamClient( "localhost:9696", options );
+            client = new DeepstreamClient( "localhost:9876", options );
             Thread.sleep(200);
         } catch( Exception e ) {
             Assert.fail( e.getMessage() );
