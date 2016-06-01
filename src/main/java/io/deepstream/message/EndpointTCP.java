@@ -31,7 +31,7 @@ public class EndpointTCP implements Endpoint {
     public void open() {
         try {
             this.socket = new Socket();
-            this.socket.setSoTimeout(10000);
+            this.socket.setSoTimeout(20000);
             this.socket.connect(new InetSocketAddress( host, port ));
             this.connection.onOpen();
         } catch (IOException e) {
@@ -61,7 +61,7 @@ public class EndpointTCP implements Endpoint {
                         int bytesRead = in.read( buffer, 0, 1024 );
                         self.onData( new String( buffer, 0, bytesRead ) );
                     } catch ( IOException e ) {
-                        System.out.println("CLIENT ERRORING " + e.toString());
+                        self.onError( e );
                     }
                 }
             }

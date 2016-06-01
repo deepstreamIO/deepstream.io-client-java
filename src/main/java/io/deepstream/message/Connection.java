@@ -94,11 +94,9 @@ public class Connection {
 
     public void close() {
         this.deliberateClose = true;
-
-        try {
-            this.endpoint.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+        if( this.endpoint != null ) {
+            endpoint.close();
+            endpoint = null;
         }
     }
 
@@ -217,9 +215,9 @@ public class Connection {
     private Endpoint createEndpoint() throws URISyntaxException {
         Endpoint endpoint = null;
 
-        System.out.println( options.get( "endpoint") );
         if( options.get( "endpoint" ).equals( EndpointType.TCP.name() ) ) {
-           endpoint = new EndpointTCP( url, options, this );
+            endpoint = new EndpointTCP( url, options, this );
+            this.endpoint = endpoint;
         } else if( options.get( "endpoint" ).equals( EndpointType.ENGINEIO.name() ) ) {
             System.out.println( "EngineIO doesn't transpile" );
         }

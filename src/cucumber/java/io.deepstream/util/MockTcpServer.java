@@ -28,7 +28,7 @@ public class MockTcpServer {
         try {
             serverSocket = new ServerSocket();
             serverSocket.setReuseAddress(true);
-            serverSocket.setSoTimeout(20000);
+            serverSocket.setSoTimeout(2500);
             serverSocket.bind( new InetSocketAddress( port ) );
             isOpen = true;
         } catch (IOException e) {
@@ -45,7 +45,7 @@ public class MockTcpServer {
             public void run() {
                 try {
                     Socket sock = serverSocket.accept();
-                    sock.setSoTimeout(20000);
+                    sock.setSoTimeout(2000);
                     self.lastSocket = sock;
                     self.handleConnection(sock);
                 } catch (SocketException e) {
@@ -85,7 +85,7 @@ public class MockTcpServer {
                             self.messages.add( new String( buffer, 0, bytesRead ) );
                         }
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        self.close();
                     }
                 }
                 System.out.println( "Socket is now closed" );
@@ -112,13 +112,15 @@ public class MockTcpServer {
         }
     }
 
-    public void close() throws InterruptedException {
+    public void close()  {
         try {
             for (Thread connectedThread : this.threads) {
                 connectedThread.join(1);
             }
             this.serverSocket.close();
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
 

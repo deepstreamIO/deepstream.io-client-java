@@ -21,12 +21,12 @@ public class ServerStepDefs {
 
     @Before
     public void beforeScenario() throws InterruptedException, IOException {
-        server = new MockTcpServer(9876);
-        server2 = new MockTcpServer(9568);
+        server = new MockTcpServer(9696);
+        server2 = new MockTcpServer(8898);
     }
 
     @After
-    public void afterScenario() throws InterruptedException, IOException {
+    public void afterScenario() {
         server.close();
         server2.close();
     }
@@ -54,9 +54,22 @@ public class ServerStepDefs {
         Thread.sleep(200);
     }
 
+    @Then("^the second server sends the message (.*?)$")
+    public void The_second_server_sends_the_message(String message) throws Throwable {
+        message = message.replace( '|', MPS );
+        message = message.replace( '+', MS );
+        server2.send( message );
+        Thread.sleep(200);
+    }
+
     @Then("^the last message the server recieved is (.*?)$")
     public void The_last_message_the_server_received_is( String message ) {
         Assert.assertEquals( message, Util.matchMessage( server.getLastMessage() ) );
+    }
+
+    @Then("^the last message the second server recieved is (.*?)$")
+    public void The_last_message_the_second_server_received_is( String message ) {
+        Assert.assertEquals( message, Util.matchMessage( server2.getLastMessage() ) );
     }
 
     @Then("^the server has received (\\d+) messages")
@@ -65,7 +78,7 @@ public class ServerStepDefs {
     }
 
     @Given("^the second test server is ready$")
-    public void Second_server_ready() throws Throwable {
+    public void Second_server_ready() {
         Assert.assertTrue( server2.isOpen );
     }
 
@@ -76,6 +89,6 @@ public class ServerStepDefs {
 
     @When("^some time passes$")
     public void Time_passes() throws InterruptedException {
-        Thread.sleep(500);
+        Thread.sleep(3000);
     }
 }
