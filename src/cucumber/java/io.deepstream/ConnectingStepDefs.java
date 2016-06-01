@@ -30,7 +30,7 @@ public class ConnectingStepDefs {
     }
 
     @Then("^the clients connection state is \"(.*?)\"$")
-    public void the_clients_connection_state_is( String arg1 ) throws InterruptedException {
+    public void the_clients_connection_state_is( String arg1 ) {
         Assert.assertEquals( arg1, client.getConnectionState().name() );
     }
 

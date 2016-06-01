@@ -32,7 +32,7 @@ public class MockTcpServer {
             serverSocket.bind( new InetSocketAddress( port ) );
             isOpen = true;
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
         this.open();
     }
