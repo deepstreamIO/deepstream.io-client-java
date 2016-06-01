@@ -26,33 +26,39 @@ public class ServerStepDefs {
     }
 
     @After
-    public void afterScenario() throws InterruptedException, IOException {
+    public void afterScenario() {
         server.close();
         server2.close();
     }
 
     @Given("^the test server is ready$")
-    public void The_test_server_is_ready() throws Throwable {
+    public void The_test_server_is_ready() {
         Assert.assertTrue( server.isOpen );
     }
 
     @Given("^the server resets its message count$")
-    public void Server_resets_message_count() throws Throwable {
+    public void Server_resets_message_count() {
         server.resetMessageCount();
     }
 
     @Then("^the server has (\\d+) active connections$")
-    public void The_server_has_connections(int connections) throws Throwable {
-        Thread.sleep(200);
+    public void The_server_has_connections(int connections) {
         Assert.assertEquals( connections, server.getNumberOfConnections() );
     }
 
     @Then("^the server sends the message (.*?)$")
     public void The_server_sends_the_message(String message) throws Throwable {
-        Thread.sleep(200);
         message = message.replace( '|', MPS );
         message = message.replace( '+', MS );
         server.send( message );
+        Thread.sleep(200);
+    }
+
+    @Then("^the second server sends the message (.*?)$")
+    public void The_second_server_sends_the_message(String message) throws Throwable {
+        message = message.replace( '|', MPS );
+        message = message.replace( '+', MS );
+        server2.send( message );
         Thread.sleep(200);
     }
 
@@ -61,13 +67,18 @@ public class ServerStepDefs {
         Assert.assertEquals( message, Util.matchMessage( server.getLastMessage() ) );
     }
 
+    @Then("^the last message the second server recieved is (.*?)$")
+    public void The_last_message_the_second_server_received_is( String message ) {
+        Assert.assertEquals( message, Util.matchMessage( server2.getLastMessage() ) );
+    }
+
     @Then("^the server has received (\\d+) messages")
     public void Server_has_received_messages( int messageCount ) {
         Assert.assertEquals( messageCount, server.getMessageCount() );
     }
 
     @Given("^the second test server is ready$")
-    public void Second_server_ready() throws Throwable {
+    public void Second_server_ready() {
         Assert.assertTrue( server2.isOpen );
     }
 
@@ -78,6 +89,6 @@ public class ServerStepDefs {
 
     @When("^some time passes$")
     public void Time_passes() throws InterruptedException {
-        Thread.sleep(500);
+        Thread.sleep(3000);
     }
 }

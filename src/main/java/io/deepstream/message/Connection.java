@@ -21,6 +21,8 @@ public class Connection {
     private boolean challengeDenied;
     private boolean deliberateClose;
     private boolean redirecting;
+    private Timer reconnectTimeout;
+    private int reconnectionAttempt;
     private StringBuilder messageBuffer;
 
     private LoginCallback loginCallback;
@@ -43,6 +45,8 @@ public class Connection {
         this.challengeDenied = false;
         this.deliberateClose = false;
         this.redirecting = false;
+        this.reconnectTimeout = null;
+        this.reconnectionAttempt = 0;
         this.options = options;
         this.endpoint = endpoint;
     }
@@ -90,11 +94,9 @@ public class Connection {
 
     public void close() {
         this.deliberateClose = true;
-
-        try {
-            this.endpoint.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+        if( this.endpoint != null ) {
+            endpoint.close();
+            endpoint = null;
         }
     }
 
@@ -102,8 +104,19 @@ public class Connection {
         this.setState( ConnectionState.AWAITING_CONNECTION );
     }
 
-    void onError( String error ) {
-        //System.out.println( error );
+    void onError(final String error ) {
+        this.setState( ConnectionState.ERROR );
+
+        /*
+         * If the implementation isn't listening on the error event this will throw
+         * an error. So let's defer it to allow the reconnection to kick in.
+         */
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            public void run() {
+                client.onError( null, Event.CONNECTION_ERROR, error);
+            }
+        }, 1000);
     }
 
     void onMessage(String rawMessage) {
@@ -129,9 +142,12 @@ public class Connection {
         else if( this.deliberateClose ) {
             this.setState( ConnectionState.CLOSED );
         }
-        else if( this.originalUrl.equals( this.url ) == false ) {
-            this.url = this.originalUrl;
-            this.createEndpoint();
+        else {
+            if( this.originalUrl.equals( this.url ) == false ) {
+                this.url = this.originalUrl;
+                this.createEndpoint();
+            }
+            this.tryReconnect();
         }
     }
 
@@ -199,12 +215,47 @@ public class Connection {
     private Endpoint createEndpoint() throws URISyntaxException {
         Endpoint endpoint = null;
 
-        System.out.println( options.get( "endpoint") );
         if( options.get( "endpoint" ).equals( EndpointType.TCP.name() ) ) {
-           endpoint = new EndpointTCP( url, options, this );
+            endpoint = new EndpointTCP( url, options, this );
+            this.endpoint = endpoint;
         } else if( options.get( "endpoint" ).equals( EndpointType.ENGINEIO.name() ) ) {
             System.out.println( "EngineIO doesn't transpile" );
         }
         return endpoint;
+    }
+
+    private void tryReconnect() {
+        if( this.reconnectTimeout != null ) {
+            return;
+        }
+
+        int maxReconnectAttempts = Integer.parseInt( (String) options.get( "maxReconnectAttempts" ) );
+        int reconnectIntervalIncrement = Integer.parseInt( (String) options.get( "reconnectIntervalIncrement" ) );
+
+        if( this.reconnectionAttempt < maxReconnectAttempts ) {
+            this.setState( ConnectionState.RECONNECTING );
+            this.reconnectTimeout = new Timer();
+            this.reconnectTimeout.schedule(new TimerTask() {
+                public void run() {
+                    tryOpen();
+                }
+            }, reconnectIntervalIncrement * this.reconnectionAttempt );
+            this.reconnectionAttempt++;
+
+        } else {
+            this.clearReconnect();
+            this.close();
+        }
+    }
+
+    private void tryOpen() {
+        this.reconnectTimeout.cancel();
+        this.reconnectTimeout = null;
+        this.endpoint.open();
+    }
+
+    private void clearReconnect() {
+        this.reconnectTimeout = null;
+        this.reconnectionAttempt = 0;
     }
 }

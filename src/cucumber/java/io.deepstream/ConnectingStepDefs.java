@@ -39,16 +39,14 @@ public class ConnectingStepDefs {
         JsonObject authData = new JsonObject();
         authData.addProperty( "password", password );
         authData.addProperty( "username", username );
-
         try {
             client.login(authData, status);
+            Thread.sleep(500);
         } catch ( DeepstreamException ex ) {
             deepstreamException = ex;
         } catch (DeepstreamLoginException e) {
             e.printStackTrace();
         }
-
-        Thread.sleep(200);
     }
 
     @Then("^the last login failed with error \"(.*?)\" and message \"(.*?)\"")

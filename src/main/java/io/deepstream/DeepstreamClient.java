@@ -59,6 +59,7 @@ public class DeepstreamClient implements IDeepstreamClient {
 
     public void onError(Topic topic, Event event, String message) throws DeepstreamException {
         System.out.println( "--- You can catch all deepstream errors by subscribing to the error event ---" );
+        this.close();
         throw new DeepstreamException( topic, event, message );
     }
 

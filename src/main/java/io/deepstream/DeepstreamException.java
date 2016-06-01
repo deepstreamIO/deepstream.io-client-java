@@ -9,8 +9,6 @@ public class DeepstreamException extends RuntimeException {
     }
 
     public DeepstreamException(Topic topic, Event event, String message) {
-        String errorMsg = event + ": " + message;
-        errorMsg += " (" + topic + ")";
-        new DeepstreamException( errorMsg );
+        super( event + ": " + message );
     }
 }

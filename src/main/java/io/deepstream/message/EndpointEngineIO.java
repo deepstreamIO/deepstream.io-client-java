@@ -56,6 +56,11 @@ class EndpointEngineIO implements Endpoint {
     public void close() {
 
     }
+
+    @Override
+    public void open() {
+
+    }
 }
 
 
