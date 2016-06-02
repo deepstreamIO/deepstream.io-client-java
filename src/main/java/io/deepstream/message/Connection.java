@@ -7,7 +7,7 @@ import io.deepstream.constants.*;
 import java.net.URISyntaxException;
 import java.util.*;
 
-public class Connection {
+public class Connection implements IConnection {
 
     Endpoint endpoint;
 
@@ -73,6 +73,10 @@ public class Connection {
             System.out.println( "Sending " + message );
             this.endpoint.send( message );
         }
+    }
+
+    public void sendMsg( Topic topic, Actions action, String data ) {
+        this.send( MessageBuilder.getMsg( topic, action, data ) );
     }
 
     private void sendAuthMessage() {
