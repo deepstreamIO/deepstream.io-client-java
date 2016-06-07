@@ -1,0 +1,65 @@
+package io.deepstream.rpc;
+
+import io.deepstream.DeepstreamClient;
+import io.deepstream.constants.Event;
+import io.deepstream.message.MessageParser;
+
+import java.util.Properties;
+import java.util.Timer;
+import java.util.TimerTask;
+
+
+public class Rpc {
+
+    Properties properties;
+    DeepstreamClient client;
+    RcpResponseCallback callback;
+    TimerTask ackTimeout;
+    TimerTask responseTimeout;
+
+    public Rpc(Properties properties, DeepstreamClient client, RcpResponseCallback callback ) {
+        this.properties = properties;
+        this.client = client;
+        this.callback = callback;
+        this.setTimeouts();
+    }
+
+    public void ack() {
+        this.ackTimeout.cancel();
+    }
+
+    public void respond( String data ) {
+        Object convertedData = MessageParser.convertTyped( data );
+        this.callback.onData( convertedData );
+        this.clearTimeouts();
+    }
+
+    private void onError( String err ) {
+        this.callback.onError( err );
+    }
+
+    private void clearTimeouts() {
+        this.ackTimeout.cancel();
+        this.responseTimeout.cancel();
+    }
+
+    private void setTimeouts() {
+        final Rpc self = this;
+        Timer timer = new Timer();
+        int ackTimeoutTime = (int) properties.get( "rpcAckTimeout" );
+        int responseTimeoutTime = (int) properties.get( "rpcResponseTimeout" );
+
+        this.ackTimeout = new TimerTask() {
+            public void run() {
+                self.onError( Event.ACK_TIMEOUT.name() );
+            }
+        };
+        this.responseTimeout = new TimerTask() {
+            public void run() {
+                self.onError(Event.RESPONSE_TIMEOUT.name());
+            }
+        };
+        timer.schedule( this.ackTimeout, ackTimeoutTime );
+        timer.schedule( this.responseTimeout, responseTimeoutTime );
+    }
+}
