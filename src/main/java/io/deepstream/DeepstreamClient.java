@@ -10,6 +10,7 @@ import io.deepstream.message.Connection;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Date;
 import java.util.Properties;
 
 public class DeepstreamClient implements IDeepstreamClient {
@@ -55,6 +56,12 @@ public class DeepstreamClient implements IDeepstreamClient {
 
     public ConnectionState getConnectionState() {
         return this.connection.getConnectionState();
+    }
+
+    public String getUid() {
+        Long timestamp = new Date().getTime();
+        Double randomNumber = Math.random() * 10000000000000000D;
+        return timestamp + "-" + randomNumber.toString().replace(".", "");
     }
 
     public void onError(Topic topic, Event event, String message) throws DeepstreamException {
