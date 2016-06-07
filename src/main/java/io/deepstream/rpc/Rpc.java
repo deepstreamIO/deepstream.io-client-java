@@ -4,20 +4,20 @@ import io.deepstream.DeepstreamClient;
 import io.deepstream.constants.Event;
 import io.deepstream.message.MessageParser;
 
-import java.util.Properties;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
 
 public class Rpc {
 
-    Properties properties;
+    Map properties;
     DeepstreamClient client;
-    RcpResponseCallback callback;
+    RpcResponseCallback callback;
     TimerTask ackTimeout;
     TimerTask responseTimeout;
 
-    public Rpc(Properties properties, DeepstreamClient client, RcpResponseCallback callback ) {
+    public Rpc(Map properties, DeepstreamClient client, RpcResponseCallback callback ) {
         this.properties = properties;
         this.client = client;
         this.callback = callback;

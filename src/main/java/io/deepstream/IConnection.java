@@ -8,5 +8,5 @@ import io.deepstream.constants.Topic;
  */
 public interface IConnection {
 
-    void sendMsg( Topic topic, Actions action, String data );
+    void sendMsg( Topic topic, Actions action, Object data );
 }

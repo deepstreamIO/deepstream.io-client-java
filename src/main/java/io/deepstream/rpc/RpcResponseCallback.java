@@ -1,6 +1,6 @@
 package io.deepstream.rpc;
 
-public interface RcpResponseCallback {
+public interface RpcResponseCallback {
 
     void onData( Object data );
 
