@@ -6,6 +6,7 @@ import io.deepstream.DeepstreamException;
 import io.deepstream.IConnection;
 import io.deepstream.constants.Actions;
 import io.deepstream.constants.Topic;
+import io.deepstream.message.Message;
 import io.deepstream.message.MessageBuilder;
 import io.deepstream.utils.AckTimeoutRegistry;
 import io.deepstream.utils.ResubscribeNotifier;
@@ -58,5 +59,62 @@ public class RpcHandler {
 
         this.rpcs.put( uid, new Rpc( this.options, this.client, callback ) );
         this.connection.sendMsg( Topic.RPC, Actions.REQUEST, Arrays.asList( name, uid, typedData ) );
+    }
+
+    protected void handle( Message message ) {
+        String rpcName, correlationId;
+        Rpc rpc;
+
+        // RPC Requests
+        if( message.action == Actions.REQUEST ) {
+            this.respondToRpc( message );
+            return;
+        }
+        // RPC subscription Acks
+        if( message.action == Actions.ACK &&
+                ( message.data[ 0 ].equals( Actions.SUBSCRIBE.name() ) || message.data[ 0 ].equals( Actions.UNSUBSCRIBE.name() ) ) ) {
+            this.ackTimeoutRegistry.clear( message );
+        }
+
+        /*
+         * Error messages always have the error as first parameter. So the
+         * order is different to ack and response messages
+         */
+        if( message.action == Actions.ERROR ) {
+            rpcName = message.data[ 1 ];
+            correlationId = message.data[ 2 ];
+        } else {
+            rpcName = message.data[ 0 ];
+            correlationId = message.data[ 1 ];
+        }
+
+        /*
+        * Retrieve the rpc object
+        */
+        rpc = this.getRpc( correlationId, rpcName, message.raw );
+        if( rpc === null ) {
+            return;
+        }
+
+        // RPC Responses
+        if( message.action === C.ACTIONS.ACK ) {
+            rpc.ack();
+        }
+        else if( message.action === C.ACTIONS.RESPONSE ) {
+            rpc.respond( message.data[ 2 ] );
+            delete this._rpcs[ correlationId ];
+        }
+        else if( message.action === C.ACTIONS.ERROR ) {
+            message.processedError = true;
+            rpc.error( message.data[ 0 ] );
+            delete this._rpcs[ correlationId ];
+        }
+    }
+
+    private Rpc getRpc(String correlationId, String rpcName, String raw) {
+        gf
+    }
+
+    private void respondToRpc( Message message ) {
     }
 }

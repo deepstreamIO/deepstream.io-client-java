@@ -6,8 +6,6 @@ import io.deepstream.constants.Actions;
 import io.deepstream.constants.Topic;
 import io.deepstream.constants.Types;
 
-import java.util.List;
-
 public class MessageBuilder {
 
     static private final String MPS = Character.toString( '\u001f' );
@@ -17,7 +15,11 @@ public class MessageBuilder {
         return topic.toString() + MPS + action.toString() + MPS + name + MPS +  data + MS;
     }
 
-    public static String getMsg( Topic topic, Actions action, Object data ) {
+    public static String getMsg( Topic topic, Actions action, String data ) {
+        return topic.toString() + MPS + action.toString() + MPS +  data + MS;
+    }
+
+    public static String getMsg( Topic topic, Actions action, String[] data ) {
         return topic.toString() + MPS + action.toString() + MPS + join( data, MPS ) + MS;
     }
 
@@ -57,22 +59,18 @@ public class MessageBuilder {
     /**
      * Joins all the elements of the list together with the given sequence
      *
-     * @param obj
+     * @param list
      * @param sequence
      * @return
      */
-    private static String join( Object obj, String sequence ) {
+    private static String join( String[] list, String sequence ) {
 
-        if( obj instanceof String )
-            return (String) obj;
-
-        List<String> list = ( List<String> ) obj;
         StringBuilder sb = new StringBuilder();
-        for ( int i = 0; i < list.size(); i++ ) {
-            if( i == list.size() - 1 ) {
-                sb.append( list.get( i ) );
+        for ( int i = 0; i < list.length; i++ ) {
+            if( i == list.length - 1 ) {
+                sb.append( list[ i ] );
             } else {
-                sb.append( list.get( i ) );
+                sb.append( list[ i ] );
                 sb.append( sequence );
             }
         }
