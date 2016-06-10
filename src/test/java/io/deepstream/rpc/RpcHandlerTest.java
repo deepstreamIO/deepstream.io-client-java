@@ -103,4 +103,31 @@ public class RpcHandlerTest {
         ));
         Assert.assertEquals( Util.convertChars( "P|RES|addTwo|123|N10.0+" ), connectionMock.lastSentMessage );
     }
+
+    @Test
+    public void sendsRejectionIfNoProviderExists() {
+        rpcHandler.handle(
+                new Message(
+                        "raw",
+                        Topic.RPC,
+                        Actions.REQUEST,
+                        new String[] { "doesNotExist", "123", "O{\"numA\":7,\"numB\":3}" })
+        );
+        Assert.assertEquals( Util.convertChars( "P|REJ|doesNotExist|123+" ), connectionMock.lastSentMessage );
+    }
+
+    @Test
+    public void doesntCallDeregisteredProvider() {
+        rpcHandler.provide( "addTwo", addTwoCallback );
+        rpcHandler.unprovide( "addTwo" );
+
+        rpcHandler.handle(
+                new Message(
+                        "raw",
+                        Topic.RPC,
+                        Actions.REQUEST,
+                        new String[] { "doesNotExist", "123", "O{\"numA\":7,\"numB\":3}" })
+        );
+        Assert.assertEquals( Util.convertChars( "P|REJ|doesNotExist|123+" ), connectionMock.lastSentMessage );
+    }
 }
