@@ -2,20 +2,20 @@ package io.deepstream.rpc;
 
 
 import io.deepstream.DeepstreamException;
+import io.deepstream.IConnection;
 import io.deepstream.constants.Actions;
 import io.deepstream.constants.Topic;
-import io.deepstream.message.Connection;
 import io.deepstream.message.MessageBuilder;
 
 public class RpcResponse {
 
-    private Connection connection;
+    private IConnection connection;
     private String name;
     private String correlationId;
     private boolean isAcknowledged;
     private boolean isComplete;
 
-    public RpcResponse( Connection connection, String name, String correlationId ) {
+    public RpcResponse( IConnection connection, String name, String correlationId ) {
         this.connection = connection;
         this.name = name;
         this.correlationId = correlationId;
@@ -35,7 +35,7 @@ public class RpcResponse {
         this.connection.sendMsg( Topic.RPC, Actions.REJECTION, new String[] { this.name, this.correlationId } );
     }
 
-    public void send( String data ) {
+    public void send( Object data ) {
         if( this.isComplete == true ) {
             throw new DeepstreamException( "Rpc " + this.name + " already completed" );
         }

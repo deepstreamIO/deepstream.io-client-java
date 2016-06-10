@@ -75,7 +75,7 @@ public class Connection implements IConnection {
         }
     }
 
-    public void sendMsg( Topic topic, Actions action, Object data ) {
+    public void sendMsg( Topic topic, Actions action, String[] data ) {
         this.send( MessageBuilder.getMsg( topic, action, data ) );
     }
 

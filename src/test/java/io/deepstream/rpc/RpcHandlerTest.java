@@ -3,6 +3,9 @@ package io.deepstream.rpc;
 import com.google.gson.JsonObject;
 import io.deepstream.ConnectionMock;
 import io.deepstream.DeepstreamClient;
+import io.deepstream.constants.Actions;
+import io.deepstream.constants.Topic;
+import io.deepstream.message.Message;
 import io.deepstream.util.Util;
 import org.junit.After;
 import org.junit.Assert;
@@ -26,8 +29,11 @@ public class RpcHandlerTest {
     RpcHandler rpcHandler;
     RpcCallback addTwoCallback = new RpcCallback() {
         @Override
-        public void Call(Map data, String RpcResponse) {
-
+        public void Call(Object data, RpcResponse response) {
+            Map m = (Map) data;
+            double numA = (double) m.get( "numA" );
+            double numB = (double) m.get( "numB" );
+            response.send( numA + numB );
         }
     };
     int rpcCalls = 0;
@@ -85,5 +91,16 @@ public class RpcHandlerTest {
         Assert.assertEquals( Util.convertChars("P|REQ|addTwo|1|O{\"numA\":3,\"numB\":8}+"), connectionMock.lastSentMessage );
     }
 
+    @Test
+    public void repliesToSyncRpcRequest() {
+        rpcHandler.provide( "addTwo", addTwoCallback );
 
+        rpcHandler.handle( new Message(
+                "raw",
+                Topic.RPC,
+                Actions.REQUEST,
+                new String[] { "addTwo", "123", "O{\"numA\":7,\"numB\":3}" }
+        ));
+        Assert.assertEquals( Util.convertChars( "P|RES|addTwo|123|N10.0+" ), connectionMock.lastSentMessage );
+    }
 }

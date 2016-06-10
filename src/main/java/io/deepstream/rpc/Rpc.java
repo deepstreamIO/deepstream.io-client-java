@@ -34,7 +34,7 @@ public class Rpc {
         this.clearTimeouts();
     }
 
-    private void onError( String err ) {
+    public void onError( String err ) {
         this.callback.onError( err );
     }
 

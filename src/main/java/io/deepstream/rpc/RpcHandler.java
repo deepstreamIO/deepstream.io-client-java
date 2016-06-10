@@ -5,13 +5,14 @@ import io.deepstream.DeepstreamClient;
 import io.deepstream.DeepstreamException;
 import io.deepstream.IConnection;
 import io.deepstream.constants.Actions;
+import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
 import io.deepstream.message.Message;
 import io.deepstream.message.MessageBuilder;
+import io.deepstream.message.MessageParser;
 import io.deepstream.utils.AckTimeoutRegistry;
 import io.deepstream.utils.ResubscribeNotifier;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,14 +43,14 @@ public class RpcHandler {
 
         this.ackTimeoutRegistry.add( name, Actions.SUBSCRIBE );
         this.providers.put( name, callback );
-        this.connection.sendMsg( Topic.RPC, Actions.SUBSCRIBE, name );
+        this.connection.sendMsg( Topic.RPC, Actions.SUBSCRIBE, new String[] { name } );
     }
 
     public void unprovide( String name ) {
         if( this.providers.containsKey( name ) ) {
             this.providers.remove( name );
             this.ackTimeoutRegistry.add( name, Actions.UNSUBSCRIBE );
-            this.connection.sendMsg( Topic.RPC, Actions.UNSUBSCRIBE, name );
+            this.connection.sendMsg( Topic.RPC, Actions.UNSUBSCRIBE, new String[] { name } );
         }
     }
 
@@ -58,7 +59,7 @@ public class RpcHandler {
         String typedData = MessageBuilder.typed( data );
 
         this.rpcs.put( uid, new Rpc( this.options, this.client, callback ) );
-        this.connection.sendMsg( Topic.RPC, Actions.REQUEST, Arrays.asList( name, uid, typedData ) );
+        this.connection.sendMsg( Topic.RPC, Actions.REQUEST, new String[] { name, uid, typedData } );
     }
 
     protected void handle( Message message ) {
@@ -92,29 +93,50 @@ public class RpcHandler {
         * Retrieve the rpc object
         */
         rpc = this.getRpc( correlationId, rpcName, message.raw );
-        if( rpc === null ) {
+        if( rpc == null ) {
             return;
         }
 
         // RPC Responses
-        if( message.action === C.ACTIONS.ACK ) {
+        if( message.action == Actions.ACK ) {
             rpc.ack();
         }
-        else if( message.action === C.ACTIONS.RESPONSE ) {
+        else if( message.action == Actions.RESPONSE ) {
             rpc.respond( message.data[ 2 ] );
-            delete this._rpcs[ correlationId ];
+            this.rpcs.remove( correlationId );
         }
-        else if( message.action === C.ACTIONS.ERROR ) {
-            message.processedError = true;
-            rpc.error( message.data[ 0 ] );
-            delete this._rpcs[ correlationId ];
+        else if( message.action == Actions.ERROR ) {
+            rpc.onError( message.data[ 0 ] );
+            this.rpcs.remove( correlationId );
         }
     }
 
     private Rpc getRpc(String correlationId, String rpcName, String raw) {
-        gf
+        Rpc rpc = this.rpcs.get( correlationId );
+
+        if( rpc == null ) {
+            this.client.onError( Topic.RPC, Event.UNSOLICITED_MESSAGE, raw );
+        }
+
+        return rpc;
     }
 
     private void respondToRpc( Message message ) {
+        String name = message.data[ 0 ],
+                correlationId = message.data[ 1 ];
+        RpcResponse response;
+        Object data = null;
+
+        if( message.data[ 2 ] != null ) {
+            data = MessageParser.convertTyped( message.data[ 2 ] );
+        }
+
+        RpcCallback callback = this.providers.get( name );
+        if( callback != null ) {
+            response = new RpcResponse( this.connection, name, correlationId );
+            callback.Call( data, response );
+        } else {
+            this.connection.sendMsg( Topic.RPC, Actions.REJECTION, new String[] { name, correlationId } );
+        }
     }
 }
