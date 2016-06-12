@@ -63,7 +63,7 @@ public class MessageBuilder {
      * @param sequence
      * @return
      */
-    public static String join( String[] list, String sequence ) {
+    private static String join( String[] list, String sequence ) {
 
         StringBuilder sb = new StringBuilder();
         for ( int i = 0; i < list.length; i++ ) {
