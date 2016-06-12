@@ -21,11 +21,13 @@ public class RpcResponse {
         this.correlationId = correlationId;
         this.isAcknowledged = false;
         this.isComplete = false;
+        this.ack();
     }
 
-    public void ack() {
+    private void ack() {
         if( this.isAcknowledged == false ) {
             this.connection.sendMsg( Topic.RPC, Actions.ACK, new String[] { this.name, this.correlationId } );
+            this.isAcknowledged = true;
         }
     }
 
@@ -44,5 +46,11 @@ public class RpcResponse {
                 this.name, this.correlationId, typedData
         } );
         this.isComplete = true;
+    }
+
+    public void error( String err ) {
+        this.isComplete = true;
+        this.isAcknowledged = true;
+        this.connection.sendMsg( Topic.RPC, Actions.ERROR, new String[] { err, this.name, this.correlationId } );
     }
 }
