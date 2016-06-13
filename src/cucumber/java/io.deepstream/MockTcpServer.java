@@ -1,4 +1,4 @@
-package io.deepstream.util;
+package io.deepstream;
 
 
 import java.io.IOException;
