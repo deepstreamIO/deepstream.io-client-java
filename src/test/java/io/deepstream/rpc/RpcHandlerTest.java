@@ -8,7 +8,7 @@ import io.deepstream.constants.ConnectionState;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
 import io.deepstream.message.Message;
-import io.deepstream.util.Util;
+import io.deepstream.utils.Util;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

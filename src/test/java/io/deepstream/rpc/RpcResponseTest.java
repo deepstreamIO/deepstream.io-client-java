@@ -4,7 +4,7 @@ package io.deepstream.rpc;
 import io.deepstream.ConnectionMock;
 import io.deepstream.DeepstreamClient;
 import io.deepstream.DeepstreamException;
-import io.deepstream.util.Util;
+import io.deepstream.utils.Util;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
