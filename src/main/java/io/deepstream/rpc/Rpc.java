@@ -47,8 +47,8 @@ public class Rpc {
     private void setTimeouts() {
         final Rpc self = this;
         Timer timer = new Timer();
-        int ackTimeoutTime = (int) properties.get( "rpcAckTimeout" );
-        int responseTimeoutTime = (int) properties.get( "rpcResponseTimeout" );
+        int ackTimeoutTime = Integer.parseInt( (String) properties.get( "rpcAckTimeout" ) );
+        int responseTimeoutTime = Integer.parseInt( (String) properties.get( "rpcResponseTimeout" ) );
 
         this.ackTimeout = new TimerTask() {
             public void run() {

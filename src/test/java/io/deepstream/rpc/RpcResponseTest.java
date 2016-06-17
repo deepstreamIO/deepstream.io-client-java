@@ -30,9 +30,9 @@ public class RpcResponseTest {
         this.connectionMock = new ConnectionMock();
 
         Properties options = new Properties();
-        options.put("subscriptionTimeout", 2000);
-        options.put("rpcAckTimeout", 6000);
-        options.put("rpcResponseTimeout", 10000);
+        options.put("subscriptionTimeout", "2000");
+        options.put("rpcAckTimeout", "6000");
+        options.put("rpcResponseTimeout", "10000");
 
         this.rpcHandler = new RpcHandler(options, connectionMock, deepstreamClientMock);
     }

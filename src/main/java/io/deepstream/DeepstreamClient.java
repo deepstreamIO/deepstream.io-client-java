@@ -25,7 +25,7 @@ public class DeepstreamClient implements IDeepstreamClient {
         this.config = getConfig( options );
         this.connection = new Connection( url, this.config, this );
         this.event = new EventHandler( options, this.connection, this );
-        this.rpc = new RpcHandler( options, this.connection, this );
+        this.rpc = new RpcHandler( config, this.connection, this );
     }
 
     public DeepstreamClient( final String url ) throws URISyntaxException, IOException {

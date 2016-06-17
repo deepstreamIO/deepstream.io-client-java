@@ -26,13 +26,13 @@ public class RpcHandler {
     private ResubscribeNotifier resubscribeNotifier;
     private Map<String, Rpc> rpcs;
 
-    public RpcHandler(Map options, IConnection connection, DeepstreamClient client ) {
+    public RpcHandler( Map options, IConnection connection, DeepstreamClient client ) {
         this.options = options;
         this.connection = connection;
         this.client = client;
         this.providers = new HashMap<>();
         this.rpcs = new HashMap<>();
-        int timeoutDuration = (int) this.options.get( "subscriptionTimeout" );
+        int timeoutDuration = Integer.parseInt( (String) this.options.get( "subscriptionTimeout" ) );
         this.ackTimeoutRegistry = new AckTimeoutRegistry( this.client, Topic.RPC, timeoutDuration );
     }
 

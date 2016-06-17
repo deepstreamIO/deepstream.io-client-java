@@ -51,9 +51,9 @@ public class RpcHandlerTest {
         when( this.deepstreamClientMock.getConnectionState() ).thenReturn( ConnectionState.OPEN );
 
         Properties options = new Properties();
-        options.put( "subscriptionTimeout", 2000 );
-        options.put( "rpcAckTimeout", 6000 );
-        options.put( "rpcResponseTimeout", 10000 );
+        options.put( "subscriptionTimeout", "2000" );
+        options.put( "rpcAckTimeout", "6000" );
+        options.put( "rpcResponseTimeout", "10000" );
         this.rpcHandler = new RpcHandler( options, connectionMock, deepstreamClientMock );
     }
 
