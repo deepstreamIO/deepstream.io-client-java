@@ -51,9 +51,9 @@ public class RpcHandlerTest {
         when( this.deepstreamClientMock.getConnectionState() ).thenReturn( ConnectionState.OPEN );
 
         Properties options = new Properties();
-        options.put( "subscriptionTimeout", "2000" );
-        options.put( "rpcAckTimeout", "6000" );
-        options.put( "rpcResponseTimeout", "10000" );
+        options.put( "subscriptionTimeout", "10" );
+        options.put( "rpcAckTimeout", "10" );
+        options.put( "rpcResponseTimeout", "30" );
         this.rpcHandler = new RpcHandler( options, connectionMock, deepstreamClientMock );
     }
 
@@ -73,7 +73,7 @@ public class RpcHandlerTest {
     @Test
     public void errorsIfNoAckReceivedForProvide() throws InterruptedException {
         rpcHandler.provide( "addTwo", addTwoCallback );
-        Thread.sleep(6500);
+        Thread.sleep(30);
         verify( deepstreamClientMock, times(1) ).onError( Topic.RPC, Event.ACK_TIMEOUT, "No ACK message received in time for SaddTwo" );
     }
 
@@ -169,7 +169,7 @@ public class RpcHandlerTest {
 
         Assert.assertEquals(Util.convertChars("P|REQ|addTwo|1|O{\"numA\":3,\"numB\":8}+"), connectionMock.lastSentMessage);
 
-        Thread.sleep(7000);
+        Thread.sleep(40);
         verify(callbackMock, times(1)).onError( "ACK_TIMEOUT" );
     }
 }
