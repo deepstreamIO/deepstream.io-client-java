@@ -3,6 +3,9 @@ package io.deepstream;
 import com.google.gson.JsonObject;
 import io.deepstream.constants.ConnectionState;
 import io.deepstream.constants.Event;
+import io.deepstream.rpc.RpcCallback;
+import io.deepstream.rpc.RpcResponse;
+import io.deepstream.rpc.RpcResponseCallback;
 import io.deepstream.utils.Emitter;
 
 import java.util.Map;
@@ -31,6 +34,25 @@ class Application implements ConnectionChangeListener, LoginCallback {
                     System.out.println( "Received event bob with arguments: " + args[ 0 ] );
                 }
             } );
+
+            ds.rpc.provide( "rpcName", new RpcCallback() {
+                @Override
+                public void Call( Object data, RpcResponse response ) {
+                    response.send( "Success!" );
+                }
+            });
+
+            ds.rpc.make("boib", new JsonObject(), new RpcResponseCallback() {
+                @Override
+                public void onData(Object data) {
+                    System.out.println( data );
+                }
+
+                @Override
+                public void onError(String err) {
+                    System.out.println( err );
+                }
+            });
         }
         catch( Exception e ) {
             System.out.println( e );
