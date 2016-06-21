@@ -132,6 +132,8 @@ public class Connection implements IConnection {
                 handleAuthResponse(message);
             } else if (message.topic == Topic.EVENT) {
                 this.client.event.handle(message);
+            } else if (message.topic == Topic.RPC) {
+                this.client.rpc.handle(message);
             } else {
                 System.out.println("Normal message of type " + message.topic);
             }

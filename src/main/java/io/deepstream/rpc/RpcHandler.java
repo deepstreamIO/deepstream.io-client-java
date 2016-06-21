@@ -62,7 +62,7 @@ public class RpcHandler {
         this.connection.sendMsg( Topic.RPC, Actions.REQUEST, new String[] { name, uid, typedData } );
     }
 
-    protected void handle( Message message ) {
+    public void handle( Message message ) {
         String rpcName, correlationId;
         Rpc rpc;
 
@@ -73,8 +73,9 @@ public class RpcHandler {
         }
         // RPC subscription Acks
         if( message.action == Actions.ACK &&
-                ( message.data[ 0 ].equals( Actions.SUBSCRIBE.name() ) || message.data[ 0 ].equals( Actions.UNSUBSCRIBE.name() ) ) ) {
+                ( message.data[ 0 ].equals( Actions.SUBSCRIBE.toString() ) || message.data[ 0 ].equals( Actions.UNSUBSCRIBE.toString() ) ) ) {
             this.ackTimeoutRegistry.clear( message );
+            return;
         }
 
         /*

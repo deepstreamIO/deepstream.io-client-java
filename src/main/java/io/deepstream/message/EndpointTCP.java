@@ -31,7 +31,7 @@ public class EndpointTCP implements Endpoint {
     public void open() {
         try {
             this.socket = new Socket();
-            this.socket.setSoTimeout(20000);
+            this.socket.setKeepAlive( true );
             this.socket.connect(new InetSocketAddress( host, port ));
             this.connection.onOpen();
         } catch (IOException e) {
