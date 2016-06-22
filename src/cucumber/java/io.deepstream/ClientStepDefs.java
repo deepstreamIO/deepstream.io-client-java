@@ -6,6 +6,8 @@ import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
 import io.deepstream.constants.EndpointType;
 import io.deepstream.constants.Event;
+import io.deepstream.rpc.RpcRequested;
+import io.deepstream.rpc.RpcResponse;
 import org.junit.Assert;
 
 import java.util.Map;
@@ -16,6 +18,7 @@ public class ClientStepDefs {
     private DeepstreamClient client;
     Properties options = new Properties();
     LoginStatus status = new LoginStatus();
+    RpcRequestedMock toUpperCaseMock = new RpcRequestedMock();
     DeepstreamException deepstreamException;
 
     @Given("^the client is initialised$")
@@ -82,4 +85,41 @@ public class ClientStepDefs {
     /**
      * Rpc step defs
      */
+
+    @Then("^the client provides a RPC called \"(.*?)\"$")
+    public void the_client_provides_a_RPC_called( String rpcName ) throws InterruptedException {
+        client.rpc.provide( rpcName, toUpperCaseMock );
+        Thread.sleep(500);
+    }
+
+    @Then("^the client stops providing a RPC called \"(.*?)\"$")
+    public void the_client_stops_providing_a_RPC_called( String rpcName ) throws InterruptedException {
+        client.rpc.unprovide( rpcName );
+        Thread.sleep(500);
+    }
+
+
+    class RpcRequestedMock implements RpcRequested {
+
+        Object data;
+        String err;
+
+        @Override
+        public void Call(Object data, RpcResponse response) {
+            String msg = (String) data;
+
+            //Success
+            if( msg.equals( "abc" ) ) {
+                response.send( msg.toUpperCase() );
+            }
+            //Error
+            else if( msg.equals( "def" ) ) {
+                response.error( "An Error Occured" );
+            }
+            //Rejection when supported
+            else if( msg.equals( "ghi" ) ) {
+                response.reject();
+            }
+        }
+    }
 }

@@ -28,7 +28,6 @@ public class MockTcpServer {
         try {
             serverSocket = new ServerSocket();
             serverSocket.setReuseAddress(true);
-            serverSocket.setSoTimeout(2500);
             serverSocket.bind( new InetSocketAddress( port ) );
             isOpen = true;
         } catch (IOException e) {
@@ -45,7 +44,6 @@ public class MockTcpServer {
             public void run() {
                 try {
                     Socket sock = serverSocket.accept();
-                    sock.setSoTimeout(2000);
                     self.lastSocket = sock;
                     self.handleConnection(sock);
                 } catch (SocketException e) {
@@ -82,7 +80,7 @@ public class MockTcpServer {
                         if( in.ready() ) {
                             char[] buffer = new char[ 1024 ];
                             int bytesRead = in.read( buffer, 0, 1024 );
-                            self.messages.add( new String( buffer, 0, bytesRead ) );
+                            self.handleMessages( new String( buffer, 0, bytesRead ) );
                         }
                     } catch (IOException e) {
                         self.close();
@@ -101,6 +99,13 @@ public class MockTcpServer {
         };
         this.threads.add( connectionThread );
         connectionThread.start();
+    }
+
+    private void handleMessages( String rawMsgs ) {
+        String[] msgs = rawMsgs.split( "\u001e" );
+        for (String m : msgs) {
+            this.messages.add( m + "\u001e" );
+        }
     }
 
     public void send( String message ) {
