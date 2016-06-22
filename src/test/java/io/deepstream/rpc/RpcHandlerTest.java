@@ -30,7 +30,7 @@ public class RpcHandlerTest {
     RpcHandler rpcHandler;
     RpcResponseCallback callbackMock;
     int rpcCalls = 0;
-    RpcCallback addTwoCallback = new RpcCallback() {
+    RpcRequested addTwoCallback = new RpcRequested() {
         @Override
         public void Call(Object data, RpcResponse response) {
             rpcCalls++;

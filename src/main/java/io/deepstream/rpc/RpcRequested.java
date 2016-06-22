@@ -1,7 +1,7 @@
 package io.deepstream.rpc;
 
 
-public interface RpcCallback {
+public interface RpcRequested {
 
     void Call( Object data, RpcResponse response );
 }

@@ -21,7 +21,7 @@ public class RpcHandler {
     private Map options;
     private IConnection connection;
     private DeepstreamClient client;
-    private Map<String, RpcCallback> providers;
+    private Map<String, RpcRequested> providers;
     private AckTimeoutRegistry ackTimeoutRegistry;
     private ResubscribeNotifier resubscribeNotifier;
     private Map<String, Rpc> rpcs;
@@ -36,7 +36,7 @@ public class RpcHandler {
         this.ackTimeoutRegistry = new AckTimeoutRegistry( this.client, Topic.RPC, timeoutDuration );
     }
 
-    public void provide( String name, RpcCallback callback ) {
+    public void provide( String name, RpcRequested callback ) {
         if( this.providers.containsKey( name ) ) {
             throw new DeepstreamException( "RPC " + name + " already registered" );
         }
@@ -132,7 +132,7 @@ public class RpcHandler {
             data = MessageParser.convertTyped( message.data[ 2 ] );
         }
 
-        RpcCallback callback = this.providers.get( name );
+        RpcRequested callback = this.providers.get( name );
         if( callback != null ) {
             response = new RpcResponse( this.connection, name, correlationId );
             callback.Call( data, response );
