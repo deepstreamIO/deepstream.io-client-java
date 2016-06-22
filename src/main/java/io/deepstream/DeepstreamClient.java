@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.Properties;
+import java.util.UUID;
 
 public class DeepstreamClient implements IDeepstreamClient {
 
@@ -63,8 +64,7 @@ public class DeepstreamClient implements IDeepstreamClient {
 
     public String getUid() {
         Long timestamp = new Date().getTime();
-        Double randomNumber = Math.random() * 10000000000000000D;
-        return timestamp + "-" + randomNumber.toString().replace(".", "");
+        return timestamp + "-" + UUID.randomUUID().toString();
     }
 
     public void onError(Topic topic, Event event, String message) throws DeepstreamException {
