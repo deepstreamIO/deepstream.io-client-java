@@ -6,22 +6,26 @@ import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
 import io.deepstream.event.EventHandler;
 import io.deepstream.message.Connection;
+import io.deepstream.rpc.RpcHandler;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Date;
 import java.util.Properties;
 
 public class DeepstreamClient implements IDeepstreamClient {
 
     private Connection connection;
     public EventHandler event;
+    public RpcHandler rpc;
     public Properties config;
 
     public DeepstreamClient( final String url, Properties options ) throws URISyntaxException, IOException {
         this.config = getConfig( options );
         this.connection = new Connection( url, this.config, this );
         this.event = new EventHandler( options, this.connection, this );
+        this.rpc = new RpcHandler( config, this.connection, this );
     }
 
     public DeepstreamClient( final String url ) throws URISyntaxException, IOException {
@@ -55,6 +59,12 @@ public class DeepstreamClient implements IDeepstreamClient {
 
     public ConnectionState getConnectionState() {
         return this.connection.getConnectionState();
+    }
+
+    public String getUid() {
+        Long timestamp = new Date().getTime();
+        Double randomNumber = Math.random() * 10000000000000000D;
+        return timestamp + "-" + randomNumber.toString().replace(".", "");
     }
 
     public void onError(Topic topic, Event event, String message) throws DeepstreamException {

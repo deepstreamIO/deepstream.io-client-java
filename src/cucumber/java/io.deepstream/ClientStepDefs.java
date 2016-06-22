@@ -11,7 +11,7 @@ import org.junit.Assert;
 import java.util.Map;
 import java.util.Properties;
 
-public class ConnectingStepDefs {
+public class ClientStepDefs {
 
     private DeepstreamClient client;
     Properties options = new Properties();
@@ -78,4 +78,8 @@ public class ConnectingStepDefs {
             this.errorMessage = errorMessage.toString();
         }
     }
+
+    /**
+     * Rpc step defs
+     */
 }

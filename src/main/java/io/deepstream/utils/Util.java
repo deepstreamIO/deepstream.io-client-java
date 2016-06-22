@@ -1,8 +1,5 @@
-package io.deepstream.util;
+package io.deepstream.utils;
 
-/**
- * Created by Alex on 23/05/2016.
- */
 public class Util {
 
     private static final char MPS =  '\u001f';

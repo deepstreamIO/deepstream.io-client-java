@@ -7,7 +7,7 @@ import io.deepstream.constants.*;
 import java.net.URISyntaxException;
 import java.util.*;
 
-public class Connection {
+public class Connection implements IConnection {
 
     Endpoint endpoint;
 
@@ -75,6 +75,10 @@ public class Connection {
         }
     }
 
+    public void sendMsg( Topic topic, Actions action, String[] data ) {
+        this.send( MessageBuilder.getMsg( topic, action, data ) );
+    }
+
     private void sendAuthMessage() {
         String authMessage = MessageBuilder.getMsg( Topic.AUTH, Actions.REQUEST, this.authParameters.toString() );
         this.endpoint.send( authMessage );
@@ -128,6 +132,8 @@ public class Connection {
                 handleAuthResponse(message);
             } else if (message.topic == Topic.EVENT) {
                 this.client.event.handle(message);
+            } else if (message.topic == Topic.RPC) {
+                this.client.rpc.handle(message);
             } else {
                 System.out.println("Normal message of type " + message.topic);
             }
