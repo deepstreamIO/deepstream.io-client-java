@@ -67,10 +67,25 @@ public class DeepstreamClient implements IDeepstreamClient {
         return timestamp + "-" + UUID.randomUUID().toString();
     }
 
-    public void onError(Topic topic, Event event, String message) throws DeepstreamException {
-        System.out.println( "--- You can catch all deepstream errors by subscribing to the error event ---" );
+    public void onError(Topic topic, Event event, String msg) throws DeepstreamException {
+        String errMsg;
+
+        /*
+         * Help to diagnose the problem quicker by checking for
+         * some mon problems
+         */
+        if( event.equals( Event.ACK_TIMEOUT ) || event.equals( Event.RESPONSE_TIMEOUT ) ) {
+            if( getConnectionState().equals( ConnectionState.AWAITING_AUTHENTICATION ) ) {
+                errMsg = "Your message timed out because you\'re not authenticated. Have you called login()?";
+                onError( Topic.ERROR, Event.NOT_AUTHENTICATED, errMsg );
+                return;
+            }
+        }
+
         this.close();
-        throw new DeepstreamException( topic, event, message );
+        errMsg = msg;
+        System.out.println( "--- You can catch all deepstream errors by subscribing to the error event ---" );
+        throw new DeepstreamException( topic, event, errMsg );
     }
 
     private Properties getConfig( Properties properties ) throws IOException {

@@ -2,6 +2,7 @@ package io.deepstream.rpc;
 
 import io.deepstream.DeepstreamClient;
 import io.deepstream.constants.Event;
+import io.deepstream.constants.Topic;
 import io.deepstream.message.MessageParser;
 
 import java.util.Map;
@@ -46,20 +47,19 @@ public class Rpc {
 
     private void setTimeouts() {
         final Rpc self = this;
-        Timer timer = new Timer();
-        int ackTimeoutTime = Integer.parseInt( (String) properties.get( "rpcAckTimeout" ) );
-        int responseTimeoutTime = Integer.parseInt( (String) properties.get( "rpcResponseTimeout" ) );
-
         this.ackTimeout = new TimerTask() {
             public void run() {
-                self.onError( Event.ACK_TIMEOUT.name() );
+                client.onError( Topic.RPC, Event.ACK_TIMEOUT, null );
             }
         };
         this.responseTimeout = new TimerTask() {
-            public void run() {
-                self.onError(Event.RESPONSE_TIMEOUT.name());
+            public void run() {client.onError( Topic.RPC, Event.RESPONSE_TIMEOUT, null );
             }
         };
+
+        Timer timer = new Timer();
+        int ackTimeoutTime = Integer.parseInt( (String) properties.get( "rpcAckTimeout" ) );
+        int responseTimeoutTime = Integer.parseInt( (String) properties.get( "rpcResponseTimeout" ) );
         timer.schedule( this.ackTimeout, ackTimeoutTime );
         timer.schedule( this.responseTimeout, responseTimeoutTime );
     }
