@@ -107,7 +107,7 @@ public class RpcHandler {
             this.rpcs.remove( correlationId );
         }
         else if( message.action == Actions.ERROR ) {
-            rpc.onError( message.data[ 0 ] );
+            rpc.error( message.data[ 0 ] );
             this.rpcs.remove( correlationId );
         }
     }
