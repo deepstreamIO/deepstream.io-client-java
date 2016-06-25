@@ -55,11 +55,11 @@ public class RpcHandler {
     }
 
     public void make(String name, JsonObject data, RpcResponseCallback callback ) {
-        String uid = this.client.getUid();
-        String typedData = MessageBuilder.typed( data );
+        _make( name, MessageBuilder.typed( data ), callback );
+    }
 
-        this.rpcs.put( uid, new Rpc( this.options, this.client, callback ) );
-        this.connection.sendMsg( Topic.RPC, Actions.REQUEST, new String[] { name, uid, typedData } );
+    public void make(String name, String data, RpcResponseCallback callback ) {
+        _make( name, MessageBuilder.typed( data ), callback );
     }
 
     public void handle( Message message ) {
@@ -110,6 +110,12 @@ public class RpcHandler {
             rpc.error( message.data[ 0 ] );
             this.rpcs.remove( correlationId );
         }
+    }
+
+    private void _make(String name, String data, RpcResponseCallback callback ) {
+        String uid = this.client.getUid();
+        this.rpcs.put( uid, new Rpc( this.options, this.client, callback ) );
+        this.connection.sendMsg( Topic.RPC, Actions.REQUEST, new String[] { name, uid, data } );
     }
 
     private Rpc getRpc(String correlationId, String rpcName, String raw) {
