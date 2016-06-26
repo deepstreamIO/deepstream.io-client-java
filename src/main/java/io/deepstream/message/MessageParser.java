@@ -50,8 +50,6 @@ public class MessageParser {
 
     public static Object convertTyped( String value ) {
 
-        System.out.println( value );
-
         char type = value.charAt(0);
 
         if( Types.getType( type ) == Types.STRING ) {

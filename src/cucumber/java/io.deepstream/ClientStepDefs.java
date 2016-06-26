@@ -8,6 +8,7 @@ import io.deepstream.constants.EndpointType;
 import io.deepstream.constants.Event;
 import io.deepstream.rpc.RpcRequested;
 import io.deepstream.rpc.RpcResponse;
+import io.deepstream.rpc.RpcResponseCallback;
 import org.junit.Assert;
 
 import java.util.Map;
@@ -18,12 +19,12 @@ public class ClientStepDefs {
     private DeepstreamClient client;
     Properties options = new Properties();
     LoginStatus status = new LoginStatus();
-    RpcRequestedMock toUpperCaseMock = new RpcRequestedMock();
     DeepstreamException deepstreamException;
 
     @Given("^the client is initialised$")
     public void the_client_is_initialised() {
         options.setProperty( "endpoint", EndpointType.TCP.name() );
+        options.setProperty( "debug", "true" );
         try {
             client = new DeepstreamClient( "localhost:9696", options );
             Thread.sleep(200);
@@ -86,6 +87,10 @@ public class ClientStepDefs {
      * Rpc step defs
      */
 
+    RpcRequestedMock toUpperCaseMock = new RpcRequestedMock();
+    ResponseCallback responseCallback = new ResponseCallback();
+    String response;
+
     @Then("^the client provides a RPC called \"(.*?)\"$")
     public void the_client_provides_a_RPC_called( String rpcName ) throws InterruptedException {
         client.rpc.provide( rpcName, toUpperCaseMock );
@@ -98,11 +103,19 @@ public class ClientStepDefs {
         Thread.sleep(500);
     }
 
+    @Then("^the client requests RPC \"(.*?)\" with data \"(.*?)\"$")
+    public void client_makes_an_rpc( String rpcName, String data ) throws InterruptedException {
+        client.rpc.make( rpcName, data, responseCallback );
+        Thread.sleep(500);
+    }
+
+    @When("^the client recieves an error RPC callback for \"([^\"]*)\" with the message \"([^\"]*)\"$")
+    @Then("^the client recieves a successful RPC callback for \"(.*?)\" with data \"(.*?)\"$")
+    public void client_receives_rpc( String rpcName, String data ) throws InterruptedException {
+        Assert.assertEquals( data, response );
+    }
 
     class RpcRequestedMock implements RpcRequested {
-
-        Object data;
-        String err;
 
         @Override
         public void Call(Object data, RpcResponse response) {
@@ -120,6 +133,19 @@ public class ClientStepDefs {
             else if( msg.equals( "ghi" ) ) {
                 response.reject();
             }
+        }
+    }
+
+    class ResponseCallback implements RpcResponseCallback {
+
+        @Override
+        public void onData(Object data) {
+            response = (String) data;
+        }
+
+        @Override
+        public void onError(String err) {
+            response = err;
         }
     }
 }

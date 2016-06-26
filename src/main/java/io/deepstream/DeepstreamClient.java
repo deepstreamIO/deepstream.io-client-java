@@ -11,7 +11,6 @@ import io.deepstream.rpc.RpcHandler;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.Date;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -63,8 +62,10 @@ public class DeepstreamClient implements IDeepstreamClient {
     }
 
     public String getUid() {
-        Long timestamp = new Date().getTime();
-        return timestamp + "-" + UUID.randomUUID().toString();
+        if( config.get( "debug" ).equals( "true" ) ) {
+            return "123";
+        }
+        return UUID.randomUUID().toString();
     }
 
     public void onError(Topic topic, Event event, String msg) throws DeepstreamException {
