@@ -90,4 +90,21 @@ public class ServerStepDefs {
     public void Time_passes() throws InterruptedException {
         Thread.sleep(3000);
     }
+
+    @Given("^two seconds later$")
+    public void two_seconds_later() throws InterruptedException {
+        Thread.sleep(2000);
+    }
+
+    @When("^the connection to the server is lost$")
+    public void connection_is_lost() throws InterruptedException {
+        server.close();
+        Thread.sleep(500);
+    }
+
+    @When("^the connection to the server is reestablished$")
+    public void connection_is_reestablished$() throws InterruptedException {
+        server = new MockTcpServer( 9696 );
+        Thread.sleep(500);
+    }
 }

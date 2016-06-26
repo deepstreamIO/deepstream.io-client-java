@@ -21,7 +21,7 @@ public class MockTcpServer {
 
     public Boolean isOpen = false;
 
-    public MockTcpServer( int port ) {
+    MockTcpServer( int port ) {
         threads = new ArrayList<>();
         messages = new ArrayList<>();
 
@@ -122,6 +122,7 @@ public class MockTcpServer {
             for (Thread connectedThread : this.threads) {
                 connectedThread.join(1);
             }
+            this.lastSocket.close();
             this.serverSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
