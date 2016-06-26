@@ -152,6 +152,7 @@ public class Connection implements IConnection {
             if( this.originalUrl.equals( this.url ) == false ) {
                 this.url = this.originalUrl;
                 this.createEndpoint();
+                return;
             }
             this.tryReconnect();
         }

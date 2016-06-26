@@ -83,7 +83,6 @@ public class DeepstreamClient implements IDeepstreamClient {
             }
         }
 
-        this.close();
         errMsg = msg;
         System.out.println( "--- You can catch all deepstream errors by subscribing to the error event ---" );
         throw new DeepstreamException( topic, event, errMsg );
