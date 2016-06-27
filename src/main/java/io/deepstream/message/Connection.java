@@ -81,7 +81,7 @@ public class Connection implements IConnection {
     private void sendAuthMessage() {
         setState( ConnectionState.AUTHENTICATING );
         String authMessage = MessageBuilder.getMsg( Topic.AUTH, Actions.REQUEST, this.authParameters.toString() );
-        this.send( authMessage );
+        this.endpoint.send( authMessage );
     }
 
     public void addConnectionChangeListener( ConnectionChangeListener connectionChangeListener ) {
