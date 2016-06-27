@@ -22,24 +22,24 @@ Feature: Requesting an RPC
 
   #Scenario: The client makes an RPC that will succeed
     When the client requests RPC "toUppercase" with data "abc"
-    Then the last message the server recieved is P|REQ|toUppercase|123|Sabc+
+    Then the last message the server recieved is P|REQ|toUppercase|<UID>|Sabc+
 
   #Scenario: The client gets a request ACK ( 1 )
-    When the server sends the message P|A|toUpperCase|123+
+    When the server sends the message P|A|toUpperCase|<UID>+
 
   #Scenario: The client receives a succesful response
-    When the server sends the message P|RES|toUppercase|123|SABC+
+    When the server sends the message P|RES|toUppercase|<UID>|SABC+
     Then the client recieves a successful RPC callback for "toUppercase" with data "ABC"
 
 # Error
 
   #Scenario: The client makes an RPC that will fail
     When the client requests RPC "toUppercase" with data "abc"
-    Then the last message the server recieved is P|REQ|toUppercase|123|Sabc+
+    Then the last message the server recieved is P|REQ|toUppercase|<UID>|Sabc+
 
   #Scenario: The client gets a request ACK ( 2 )
-    When the server sends the message P|A|toUppercase|123+
+    When the server sends the message P|A|toUppercase|<UID>+
 
   #Scenario: The client receives an error response
-    When the server sends the message P|E|RPC Error Message|toUppercase|123+
+    When the server sends the message P|E|RPC Error Message|toUppercase|<UID>+
     Then the client recieves an error RPC callback for "toUppercase" with the message "RPC Error Message"

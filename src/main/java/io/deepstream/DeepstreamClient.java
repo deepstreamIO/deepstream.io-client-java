@@ -16,6 +16,7 @@ import java.util.UUID;
 
 public class DeepstreamClient implements IDeepstreamClient {
 
+    private String uuid;
     private Connection connection;
     public EventHandler event;
     public RpcHandler rpc;
@@ -62,7 +63,11 @@ public class DeepstreamClient implements IDeepstreamClient {
     }
 
     public String getUid() {
-        return UUID.randomUUID().toString();
+        if( uuid == null ) {
+            uuid = UUID.randomUUID().toString();
+            return uuid;
+        }
+        return uuid;
     }
 
     public void onError(Topic topic, Event event, String msg) throws DeepstreamException {
