@@ -1,3 +1,4 @@
+@rpc
 Feature: Providing RPC
   Remote Procedure Calls are deepstream's concept of request-response
   communication. This requires a client that makes the RPC
@@ -34,26 +35,35 @@ Feature: Providing RPC
 # Success
 
   #Scenario: The client gets a request that will succeed
-    When the server sends the message P|REQ|toUppercase|123|Sabc+
+    When the server sends the message P|REQ|toUppercase|<UID>|Ssuccess+
+
+  #Scenario: The client responds with an ack and processes message ( 1 )
+    Then the server received the message P|A|toUppercase|<UID>+
 
   #Scenario: The client responds with a success
-    Then the last message the server recieved is P|RES|toUppercase|123|SABC+
+    Then the last message the server recieved is P|RES|toUppercase|<UID>|SSUCCESS+
 
 # Error
 
   #Scenario: The client gets a request that will error
-    When the server sends the message P|REQ|toUppercase|123|Sdef+
+    When the server sends the message P|REQ|toUppercase|<UID>|Serror+
+
+  #Scenario: The client responds with an ack and processes message ( 2 )
+    Then the server received the message P|A|toUppercase|<UID>+
 
   #Scenario: The client responds with an error
-    Then the last message the server recieved is P|E|An Error Occured|toUppercase|123+
+    Then the last message the server recieved is P|E|An Error Occured|toUppercase|<UID>+
 
 # Rejection when supported
 
   #Scenario: The client gets another supported request
-    When the server sends the message P|REQ|toUppercase|123|Sghi+
+    When the server sends the message P|REQ|toUppercase|<UID>|Sreject+
+
+  #Scenario: The client responds with an ack and processes message ( 3 )
+    Then the server received the message P|A|toUppercase|<UID>+
 
   #Scenario: The client responds with an explicit rejection
-    Then the last message the server recieved is P|REJ|toUppercase|123+
+    Then the last message the server recieved is P|REJ|toUppercase|<UID>+
 
 # Unproviding
 

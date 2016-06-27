@@ -24,7 +24,6 @@ public class ClientStepDefs {
     @Given("^the client is initialised$")
     public void the_client_is_initialised() {
         options.setProperty( "endpoint", EndpointType.TCP.name() );
-        options.setProperty( "debug", "true" );
         try {
             client = new DeepstreamClient( "localhost:9696", options );
             Thread.sleep(200);
@@ -122,15 +121,15 @@ public class ClientStepDefs {
             String msg = (String) data;
 
             //Success
-            if( msg.equals( "abc" ) ) {
+            if( msg.equals( "success" ) ) {
                 response.send( msg.toUpperCase() );
             }
             //Error
-            else if( msg.equals( "def" ) ) {
+            else if( msg.equals( "error" ) ) {
                 response.error( "An Error Occured" );
             }
             //Rejection when supported
-            else if( msg.equals( "ghi" ) ) {
+            else if( msg.equals( "reject" ) ) {
                 response.reject();
             }
         }
