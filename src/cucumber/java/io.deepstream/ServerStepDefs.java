@@ -9,6 +9,8 @@ import io.deepstream.utils.Util;
 import org.junit.Assert;
 
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ServerStepDefs {
 
@@ -17,6 +19,8 @@ public class ServerStepDefs {
 
     private MockTcpServer server;
     private MockTcpServer server2;
+
+    String clientUid = "";
 
     @Before
     public void beforeScenario() throws InterruptedException, IOException {
@@ -47,6 +51,9 @@ public class ServerStepDefs {
 
     @Then("^the server sends the message (.*?)$")
     public void The_server_sends_the_message(String message) throws Throwable {
+        if( message.contains( "<UID>" ) && !clientUid.equals( "" ) ) {
+            message = message.replace( "<UID>", clientUid );
+        }
         message = message.replace( '|', MPS );
         message = message.replace( '+', MS );
         server.send( message );
@@ -63,7 +70,9 @@ public class ServerStepDefs {
 
     @Then("^the last message the server recieved is (.*?)$")
     public void The_last_message_the_server_received_is( String message ) {
-        Assert.assertEquals( message, Util.matchMessage( server.getLastMessage() ) );
+        String lastMsg = server.getLastMessage();
+        tryGetClientUid( lastMsg );
+        Assert.assertTrue( lastMsg.matches( Util.convertChars( message ) ) );
     }
 
     @Then("^the last message the second server recieved is (.*?)$")
@@ -106,5 +115,14 @@ public class ServerStepDefs {
     public void connection_is_reestablished$() throws InterruptedException {
         server = new MockTcpServer( 9696 );
         Thread.sleep(500);
+    }
+
+    public void tryGetClientUid( String input ) {
+        Pattern pattern = Pattern.compile("[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}");
+        Matcher matcher = pattern.matcher(input);
+        if (matcher.find())
+        {
+            clientUid = matcher.group();
+        }
     }
 }

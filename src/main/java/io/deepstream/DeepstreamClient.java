@@ -62,9 +62,6 @@ public class DeepstreamClient implements IDeepstreamClient {
     }
 
     public String getUid() {
-        if( config.get( "debug" ).equals( "true" ) ) {
-            return "123";
-        }
         return UUID.randomUUID().toString();
     }
 

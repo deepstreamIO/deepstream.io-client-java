@@ -122,7 +122,10 @@ public class MockTcpServer {
             for (Thread connectedThread : this.threads) {
                 connectedThread.join(1);
             }
-            this.lastSocket.close();
+            try {
+                this.lastSocket.close();
+            } catch (NullPointerException np) {
+            }
             this.serverSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
