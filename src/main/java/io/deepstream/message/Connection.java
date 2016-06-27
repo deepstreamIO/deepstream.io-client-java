@@ -60,7 +60,6 @@ public class Connection implements IConnection {
         this.authParameters = authParameters;
 
         if( this.connectionState == ConnectionState.AWAITING_AUTHENTICATION ) {
-            this.setState( ConnectionState.AUTHENTICATING );
             this.sendAuthMessage();
         }
     }
@@ -82,7 +81,7 @@ public class Connection implements IConnection {
     private void sendAuthMessage() {
         setState( ConnectionState.AUTHENTICATING );
         String authMessage = MessageBuilder.getMsg( Topic.AUTH, Actions.REQUEST, this.authParameters.toString() );
-        this.endpoint.send( authMessage );
+        this.send( authMessage );
     }
 
     public void addConnectionChangeListener( ConnectionChangeListener connectionChangeListener ) {
@@ -162,6 +161,9 @@ public class Connection implements IConnection {
     private void handleConnectionResponse( Message message ) {
         if( message.action == Actions.ACK ) {
             this.setState( ConnectionState.AWAITING_AUTHENTICATION );
+            if( this.authParameters != null ) {
+                this.sendAuthMessage();
+            }
         }
         else if( message.action == Actions.CHALLENGE ) {
             this.setState( ConnectionState.CHALLENGING );
@@ -210,7 +212,7 @@ public class Connection implements IConnection {
     private void setState( ConnectionState connectionState ) {
         this.connectionState = connectionState;
 
-        if( connectionState == ConnectionState.AWAITING_AUTHENTICATION && this.authParameters != null ) {
+        if( connectionState == ConnectionState.AWAITING_CONNECTION && this.authParameters != null ) {
             this.sendAuthMessage();
         }
 
