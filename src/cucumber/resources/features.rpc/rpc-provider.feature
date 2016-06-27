@@ -39,6 +39,7 @@ Feature: Providing RPC
 
   #Scenario: The client responds with an ack and processes message ( 1 )
     Then the server received the message P|A|toUppercase|<UID>+
+    And the client recieves a request for a RPC called "toUppercase" with data "success"
 
   #Scenario: The client responds with a success
     Then the last message the server recieved is P|RES|toUppercase|<UID>|SSUCCESS+
@@ -50,6 +51,7 @@ Feature: Providing RPC
 
   #Scenario: The client responds with an ack and processes message ( 2 )
     Then the server received the message P|A|toUppercase|<UID>+
+    And the client recieves a request for a RPC called "toUppercase" with data "error"
 
   #Scenario: The client responds with an error
     Then the last message the server recieved is P|E|An Error Occured|toUppercase|<UID>+
@@ -61,6 +63,7 @@ Feature: Providing RPC
 
   #Scenario: The client responds with an ack and processes message ( 3 )
     Then the server received the message P|A|toUppercase|<UID>+
+    And the client recieves a request for a RPC called "toUppercase" with data "reject"
 
   #Scenario: The client responds with an explicit rejection
     Then the last message the server recieved is P|REJ|toUppercase|<UID>+

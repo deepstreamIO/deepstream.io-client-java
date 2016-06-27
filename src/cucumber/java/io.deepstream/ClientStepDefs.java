@@ -89,6 +89,7 @@ public class ClientStepDefs {
     RpcRequestedMock toUpperCaseMock = new RpcRequestedMock();
     ResponseCallback responseCallback = new ResponseCallback();
     String response;
+    String request;
 
     @Then("^the client provides a RPC called \"(.*?)\"$")
     public void the_client_provides_a_RPC_called( String rpcName ) throws InterruptedException {
@@ -114,22 +115,27 @@ public class ClientStepDefs {
         Assert.assertEquals( data, response );
     }
 
+    @Then("^the client recieves a request for a RPC called \"(.*?)\" with data \"(.*?)\"$")
+    public void client_receives_request( String rpcName, String data ) throws InterruptedException {
+        Assert.assertEquals( data, request );
+    }
+
     class RpcRequestedMock implements RpcRequested {
 
         @Override
         public void Call(Object data, RpcResponse response) {
-            String msg = (String) data;
+            request = (String) data;
 
             //Success
-            if( msg.equals( "success" ) ) {
-                response.send( msg.toUpperCase() );
+            if( request.equals( "success" ) ) {
+                response.send( request.toUpperCase() );
             }
             //Error
-            else if( msg.equals( "error" ) ) {
+            else if( request.equals( "error" ) ) {
                 response.error( "An Error Occured" );
             }
             //Rejection when supported
-            else if( msg.equals( "reject" ) ) {
+            else if( request.equals( "reject" ) ) {
                 response.reject();
             }
         }
