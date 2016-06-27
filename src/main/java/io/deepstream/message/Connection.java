@@ -80,6 +80,7 @@ public class Connection implements IConnection {
     }
 
     private void sendAuthMessage() {
+        setState( ConnectionState.AUTHENTICATING );
         String authMessage = MessageBuilder.getMsg( Topic.AUTH, Actions.REQUEST, this.authParameters.toString() );
         this.endpoint.send( authMessage );
     }
@@ -209,7 +210,7 @@ public class Connection implements IConnection {
     private void setState( ConnectionState connectionState ) {
         this.connectionState = connectionState;
 
-        if( connectionState == ConnectionState.AWAITING_CONNECTION && this.authParameters != null ) {
+        if( connectionState == ConnectionState.AWAITING_AUTHENTICATION && this.authParameters != null ) {
             this.sendAuthMessage();
         }
 
