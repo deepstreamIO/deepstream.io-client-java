@@ -11,12 +11,13 @@ import io.deepstream.message.Message;
 import io.deepstream.message.MessageBuilder;
 import io.deepstream.message.MessageParser;
 import io.deepstream.utils.AckTimeoutRegistry;
+import io.deepstream.utils.ResubscribeCallback;
 import io.deepstream.utils.ResubscribeNotifier;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class RpcHandler {
+public class RpcHandler implements ResubscribeCallback {
 
     private Map options;
     private IConnection connection;
@@ -34,6 +35,7 @@ public class RpcHandler {
         this.rpcs = new HashMap<>();
         int timeoutDuration = Integer.parseInt( (String) this.options.get( "subscriptionTimeout" ) );
         this.ackTimeoutRegistry = new AckTimeoutRegistry( this.client, Topic.RPC, timeoutDuration );
+        this.resubscribeNotifier = new ResubscribeNotifier( this.client, this );
     }
 
     public void provide( String name, RpcRequested callback ) {
@@ -144,6 +146,12 @@ public class RpcHandler {
             callback.Call( data, response );
         } else {
             this.connection.sendMsg( Topic.RPC, Actions.REJECTION, new String[] { name, correlationId } );
+        }
+    }
+
+    public void resubscribe() {
+        for ( String name : providers.keySet() ) {
+            connection.sendMsg( Topic.RPC, Actions.SUBSCRIBE, new String[] { name } );
         }
     }
 }
