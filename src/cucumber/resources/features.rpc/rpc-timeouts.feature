@@ -1,4 +1,3 @@
-@rpc
 Feature: RPC Timeouts
   Remote Procedure Calls are deepstream's concept of request-response
   communication. This requires a client that makes the RPC
@@ -18,12 +17,12 @@ Feature: RPC Timeouts
 # Making
 
   #Scenario: The client makes an RPC
-    When the client requests RPC "toUppercase" with data "abc"
-    Then the last message the server recieved is P|REQ|toUppercase|<UID>|Sabc+
+    #When the client requests RPC "toUppercase" with data "abc"
+    #Then the last message the server recieved is P|REQ|toUppercase|<UID>|Sabc+
 
   #Scenario: The client receives a timeout
-    When some time passes
-    Then the client recieves an error RPC callback for "toUppercase" with the message "RESPONSE_TIMEOUT"
+    #When some time passes
+    #Then the client recieves an error RPC callback for "toUppercase" with the message "RESPONSE_TIMEOUT"
 
 # Providing
 
