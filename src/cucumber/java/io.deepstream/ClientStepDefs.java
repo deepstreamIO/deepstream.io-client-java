@@ -16,7 +16,7 @@ import java.util.Properties;
 
 public class ClientStepDefs {
 
-    private DeepstreamClient client;
+    public static DeepstreamClient client;
     Properties options = new Properties();
     LoginStatus status = new LoginStatus();
     DeepstreamException deepstreamException;

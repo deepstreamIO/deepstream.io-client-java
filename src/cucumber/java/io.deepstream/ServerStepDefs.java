@@ -9,8 +9,6 @@ import io.deepstream.utils.Util;
 import org.junit.Assert;
 
 import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ServerStepDefs {
 
@@ -51,8 +49,8 @@ public class ServerStepDefs {
 
     @Then("^the server sends the message (.*?)$")
     public void The_server_sends_the_message(String message) throws Throwable {
-        if( message.contains( "<UID>" ) && !clientUid.equals( "" ) ) {
-            message = message.replace( "<UID>", clientUid );
+        if( message.contains( "<UID>" ) ) {
+            message = message.replace( "<UID>", ClientStepDefs.client.getUid() );
         }
         message = message.replace( '|', MPS );
         message = message.replace( '+', MS );
@@ -71,8 +69,18 @@ public class ServerStepDefs {
     @Then("^the last message the server recieved is (.*?)$")
     public void The_last_message_the_server_received_is( String message ) {
         String lastMsg = server.getLastMessage();
-        tryGetClientUid( lastMsg );
         Assert.assertTrue( lastMsg.matches( Util.convertChars( message ) ) );
+    }
+
+    @Then("^the server received the message (.*?)$")
+    public void server_received_message( String message ) {
+        for ( String msg : server.messages) {
+            if( msg.matches(Util.convertChars( message )) ) {
+                Assert.assertTrue( true );
+                return;
+            }
+        }
+        Assert.assertTrue( false );
     }
 
     @Then("^the last message the second server recieved is (.*?)$")
@@ -115,14 +123,5 @@ public class ServerStepDefs {
     public void connection_is_reestablished$() throws InterruptedException {
         server = new MockTcpServer( 9696 );
         Thread.sleep(500);
-    }
-
-    public void tryGetClientUid( String input ) {
-        Pattern pattern = Pattern.compile("[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}");
-        Matcher matcher = pattern.matcher(input);
-        if (matcher.find())
-        {
-            clientUid = matcher.group();
-        }
     }
 }
