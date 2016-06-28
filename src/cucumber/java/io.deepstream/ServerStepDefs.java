@@ -1,14 +1,11 @@
 package io.deepstream;
 
 import cucumber.api.java.After;
-import cucumber.api.java.Before;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
 import io.deepstream.utils.Util;
 import org.junit.Assert;
-
-import java.io.IOException;
 
 public class ServerStepDefs {
 
@@ -16,14 +13,18 @@ public class ServerStepDefs {
     private final char MS = '\u001e';
 
     private MockTcpServer server;
+    int serverPort;
     private MockTcpServer server2;
+    int server2Port;
 
-    String clientUid = "";
+    String clientUid;
 
-    @Before
-    public void beforeScenario() throws InterruptedException, IOException {
-        server = new MockTcpServer(9696);
-        server2 = new MockTcpServer(8898);
+    public ServerStepDefs( Context context ) {
+        this.clientUid = context.getUuid();
+        this.server = context.server;
+        this.server2 = context.server2;
+        this.serverPort = context.serverPort;
+        this.server2Port = context.server2port;
     }
 
     @After
@@ -50,7 +51,7 @@ public class ServerStepDefs {
     @Then("^the server sends the message (.*?)$")
     public void The_server_sends_the_message(String message) throws Throwable {
         if( message.contains( "<UID>" ) ) {
-            message = message.replace( "<UID>", ClientStepDefs.client.getUid() );
+            message = message.replace( "<UID>", clientUid );
         }
         message = message.replace( '|', MPS );
         message = message.replace( '+', MS );

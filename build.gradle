@@ -29,6 +29,7 @@ dependencies {
     testCompile "org.mockito:mockito-core:1.+"
     testCompile  "info.cukes:cucumber-java:1.2.4"
     testCompile  "info.cukes:cucumber-junit:1.2.4"
+    testCompile  "info.cukes:cucumber-picocontainer:1.2.4"
 }
 
 cucumber {
