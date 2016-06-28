@@ -123,6 +123,6 @@ public class ServerStepDefs {
     @When("^the connection to the server is reestablished$")
     public void connection_is_reestablished$() throws InterruptedException {
         server = new MockTcpServer( 9696 );
-        Thread.sleep(2000);
+        Thread.sleep(4000);
     }
 }
