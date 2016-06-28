@@ -28,7 +28,7 @@ public class ConnectingStepDefs {
     }
 
     @Then("^the clients connection state is \"(.*?)\"$")
-    public void the_clients_connection_state_is( String arg1 ) {
+    public void the_clients_connection_state_is( String arg1 ) throws InterruptedException {
         Assert.assertEquals( arg1, client.getConnectionState().name() );
     }
 
@@ -49,7 +49,8 @@ public class ConnectingStepDefs {
 
 
     @Then("^the last login failed with error \"(.*?)\" and message \"(.*?)\"")
-    public void The_last_login_failed_with_error_and_message( String expectedError, String expectedMessage ) {
+    public void The_last_login_failed_with_error_and_message( String expectedError, String expectedMessage ) throws InterruptedException {
+        Thread.sleep(200);
         Assert.assertEquals( expectedError, status.errorEvent.name() );
         Assert.assertEquals( expectedMessage, status.errorMessage );
     }

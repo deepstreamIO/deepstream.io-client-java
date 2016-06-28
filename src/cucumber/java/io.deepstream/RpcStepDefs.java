@@ -7,12 +7,9 @@ import io.deepstream.rpc.RpcResponse;
 import io.deepstream.rpc.RpcResponseCallback;
 import org.junit.Assert;
 
-import java.util.Properties;
-
 public class RpcStepDefs {
 
     DeepstreamClient client;
-    Properties options = new Properties();
     int serverPort;
     int server2Port;
 
