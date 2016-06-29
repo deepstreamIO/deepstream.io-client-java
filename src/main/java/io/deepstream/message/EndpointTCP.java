@@ -33,7 +33,6 @@ public class EndpointTCP implements Endpoint {
             this.socket = new Socket();
             this.socket.setKeepAlive( true );
             this.socket.connect(new InetSocketAddress( host, port ));
-            this.connection.onOpen();
         } catch (IOException e) {
             this.onError( e );
             return;
@@ -42,8 +41,10 @@ public class EndpointTCP implements Endpoint {
         try {
             this.in = new InputStreamReader( this.socket.getInputStream() );
             this.out = new OutputStreamWriter( this.socket.getOutputStream() );
+            this.connection.onOpen();
         } catch (IOException e) {
-            e.printStackTrace();
+            onError( new ConnectException() );
+            return;
         }
 
         this.run();
@@ -59,6 +60,11 @@ public class EndpointTCP implements Endpoint {
                     try {
                         char[] buffer = new char[ 1024 ];
                         int bytesRead = in.read( buffer, 0, 1024 );
+
+                        if( bytesRead == -1 ) {
+                            self.onError( new ConnectException() );
+                            return;
+                        }
                         self.onData( new String( buffer, 0, bytesRead ) );
                     } catch ( IOException e ) {
                         self.onError( e );
@@ -114,10 +120,10 @@ public class EndpointTCP implements Endpoint {
 
     public void close() {
         try {
-            this.socket.shutdownInput();
-            this.socket.shutdownOutput();
             this.socket.close();
-        } catch ( IOException e ) {}
+        } catch ( IOException e ) {
+            e.printStackTrace();
+        }
 
         try {
             this.connection.onClose();

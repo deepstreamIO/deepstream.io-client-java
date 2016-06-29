@@ -11,11 +11,12 @@ import io.deepstream.rpc.RpcHandler;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.Date;
 import java.util.Properties;
+import java.util.UUID;
 
 public class DeepstreamClient implements IDeepstreamClient {
 
+    private String uuid;
     private Connection connection;
     public EventHandler event;
     public RpcHandler rpc;
@@ -62,15 +63,31 @@ public class DeepstreamClient implements IDeepstreamClient {
     }
 
     public String getUid() {
-        Long timestamp = new Date().getTime();
-        Double randomNumber = Math.random() * 10000000000000000D;
-        return timestamp + "-" + randomNumber.toString().replace(".", "");
+        if( uuid == null ) {
+            uuid = UUID.randomUUID().toString();
+            return uuid;
+        }
+        return uuid;
     }
 
-    public void onError(Topic topic, Event event, String message) throws DeepstreamException {
+    public void onError(Topic topic, Event event, String msg) throws DeepstreamException {
+        String errMsg;
+
+        /*
+         * Help to diagnose the problem quicker by checking for
+         * some mon problems
+         */
+        if( event.equals( Event.ACK_TIMEOUT ) || event.equals( Event.RESPONSE_TIMEOUT ) ) {
+            if( getConnectionState().equals( ConnectionState.AWAITING_AUTHENTICATION ) ) {
+                errMsg = "Your message timed out because you\'re not authenticated. Have you called login()?";
+                onError( Topic.ERROR, Event.NOT_AUTHENTICATED, errMsg );
+                return;
+            }
+        }
+
+        errMsg = msg;
         System.out.println( "--- You can catch all deepstream errors by subscribing to the error event ---" );
-        this.close();
-        throw new DeepstreamException( topic, event, message );
+        throw new DeepstreamException( topic, event, errMsg );
     }
 
     private Properties getConfig( Properties properties ) throws IOException {

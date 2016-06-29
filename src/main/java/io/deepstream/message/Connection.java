@@ -60,7 +60,6 @@ public class Connection implements IConnection {
         this.authParameters = authParameters;
 
         if( this.connectionState == ConnectionState.AWAITING_AUTHENTICATION ) {
-            this.setState( ConnectionState.AUTHENTICATING );
             this.sendAuthMessage();
         }
     }
@@ -80,6 +79,7 @@ public class Connection implements IConnection {
     }
 
     private void sendAuthMessage() {
+        setState( ConnectionState.AUTHENTICATING );
         String authMessage = MessageBuilder.getMsg( Topic.AUTH, Actions.REQUEST, this.authParameters.toString() );
         this.endpoint.send( authMessage );
     }
@@ -152,6 +152,7 @@ public class Connection implements IConnection {
             if( this.originalUrl.equals( this.url ) == false ) {
                 this.url = this.originalUrl;
                 this.createEndpoint();
+                return;
             }
             this.tryReconnect();
         }
@@ -160,6 +161,9 @@ public class Connection implements IConnection {
     private void handleConnectionResponse( Message message ) {
         if( message.action == Actions.ACK ) {
             this.setState( ConnectionState.AWAITING_AUTHENTICATION );
+            if( this.authParameters != null ) {
+                this.sendAuthMessage();
+            }
         }
         else if( message.action == Actions.CHALLENGE ) {
             this.setState( ConnectionState.CHALLENGING );
@@ -179,6 +183,7 @@ public class Connection implements IConnection {
     private void handleAuthResponse( Message message ) {
         if( message.action == Actions.ERROR ) {
             if( message.data[0].equals( Event.TOO_MANY_AUTH_ATTEMPTS.name() ) ) {
+                this.deliberateClose = true;
                 this.tooManyAuthAttempts = true;
             } else {
                 this.setState( ConnectionState.AWAITING_AUTHENTICATION );

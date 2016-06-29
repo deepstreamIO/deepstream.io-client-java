@@ -18,6 +18,8 @@ public class ServerStepDefs {
     private MockTcpServer server;
     private MockTcpServer server2;
 
+    String clientUid = "";
+
     @Before
     public void beforeScenario() throws InterruptedException, IOException {
         server = new MockTcpServer(9696);
@@ -47,6 +49,9 @@ public class ServerStepDefs {
 
     @Then("^the server sends the message (.*?)$")
     public void The_server_sends_the_message(String message) throws Throwable {
+        if( message.contains( "<UID>" ) ) {
+            message = message.replace( "<UID>", ClientStepDefs.client.getUid() );
+        }
         message = message.replace( '|', MPS );
         message = message.replace( '+', MS );
         server.send( message );
@@ -63,7 +68,19 @@ public class ServerStepDefs {
 
     @Then("^the last message the server recieved is (.*?)$")
     public void The_last_message_the_server_received_is( String message ) {
-        Assert.assertEquals( message, Util.matchMessage( server.getLastMessage() ) );
+        String lastMsg = server.getLastMessage();
+        Assert.assertTrue( lastMsg.matches( Util.convertChars( message ) ) );
+    }
+
+    @Then("^the server received the message (.*?)$")
+    public void server_received_message( String message ) {
+        for ( String msg : server.messages) {
+            if( msg.matches(Util.convertChars( message )) ) {
+                Assert.assertTrue( true );
+                return;
+            }
+        }
+        Assert.assertTrue( false );
     }
 
     @Then("^the last message the second server recieved is (.*?)$")
@@ -89,5 +106,22 @@ public class ServerStepDefs {
     @When("^some time passes$")
     public void Time_passes() throws InterruptedException {
         Thread.sleep(3000);
+    }
+
+    @Given("^two seconds later$")
+    public void two_seconds_later() throws InterruptedException {
+        Thread.sleep(2000);
+    }
+
+    @When("^the connection to the server is lost$")
+    public void connection_is_lost() throws InterruptedException {
+        server.close();
+        Thread.sleep(500);
+    }
+
+    @When("^the connection to the server is reestablished$")
+    public void connection_is_reestablished$() throws InterruptedException {
+        server = new MockTcpServer( 9696 );
+        Thread.sleep(5000);
     }
 }
