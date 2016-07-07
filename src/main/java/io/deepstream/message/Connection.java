@@ -183,6 +183,7 @@ public class Connection implements IConnection {
     private void handleAuthResponse( Message message ) {
         if( message.action == Actions.ERROR ) {
             if( message.data[0].equals( Event.TOO_MANY_AUTH_ATTEMPTS.name() ) ) {
+                this.deliberateClose = true;
                 this.tooManyAuthAttempts = true;
             } else {
                 this.setState( ConnectionState.AWAITING_AUTHENTICATION );
