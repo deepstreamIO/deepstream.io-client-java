@@ -30,9 +30,10 @@ public class EventHandler implements ResubscribeCallback {
         this.emitter = new Emitter();
         this.connection = connection;
         this.client = client;
+        this.options = options;
         this.listeners = new HashMap<>();
         this.subscriptions = new ArrayList<>();
-        int subscriptionTimeout = (int) options.get( "subscriptionTimeout" );
+        int subscriptionTimeout = Integer.parseInt( (String) options.get( "subscriptionTimeout" ) );
         this.ackTimeoutRegistry = new AckTimeoutRegistry( client, Topic.EVENT, subscriptionTimeout );
         this.resubscribeNotifier = new ResubscribeNotifier( this.client, this );
     }

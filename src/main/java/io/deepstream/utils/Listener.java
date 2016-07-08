@@ -47,7 +47,7 @@ public class Listener implements ResubscribeCallback {
         this.timer = null;
     }
 
-    private void onMessage( Message message ) {
+    public void onMessage( Message message ) {
         if( message.action.equals( Actions.ACK ) ) {
             this.timer.cancel();
         } else {
@@ -61,7 +61,7 @@ public class Listener implements ResubscribeCallback {
     }
 
     private void scheduleAckTimeout() {
-        int subscriptionTimeout = (int) options.get( "subscriptionTimeout" );
+        int subscriptionTimeout = Integer.parseInt( (String) options.get( "subscriptionTimeout" ) );
         this.timer.schedule(new TimerTask() {
             public void run() {
                 client.onError( type, Event.ACK_TIMEOUT, "No ACK message received in time for " + pattern );
