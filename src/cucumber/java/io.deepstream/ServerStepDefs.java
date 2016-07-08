@@ -1,14 +1,11 @@
 package io.deepstream;
 
 import cucumber.api.java.After;
-import cucumber.api.java.Before;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
 import io.deepstream.utils.Util;
 import org.junit.Assert;
-
-import java.io.IOException;
 
 public class ServerStepDefs {
 
@@ -16,12 +13,18 @@ public class ServerStepDefs {
     private final char MS = '\u001e';
 
     private MockTcpServer server;
+    int serverPort;
     private MockTcpServer server2;
+    int server2Port;
 
-    @Before
-    public void beforeScenario() throws InterruptedException, IOException {
-        server = new MockTcpServer(9696);
-        server2 = new MockTcpServer(8898);
+    String clientUid;
+
+    public ServerStepDefs( Context context ) {
+        this.clientUid = context.getUuid();
+        this.server = context.server;
+        this.server2 = context.server2;
+        this.serverPort = context.serverPort;
+        this.server2Port = context.server2port;
     }
 
     @After
@@ -47,6 +50,9 @@ public class ServerStepDefs {
 
     @Then("^the server sends the message (.*?)$")
     public void The_server_sends_the_message(String message) throws Throwable {
+        if( message.contains( "<UID>" ) ) {
+            message = message.replace( "<UID>", clientUid );
+        }
         message = message.replace( '|', MPS );
         message = message.replace( '+', MS );
         server.send( message );
@@ -63,7 +69,19 @@ public class ServerStepDefs {
 
     @Then("^the last message the server recieved is (.*?)$")
     public void The_last_message_the_server_received_is( String message ) {
-        Assert.assertEquals( message, Util.matchMessage( server.getLastMessage() ) );
+        String lastMsg = server.getLastMessage();
+        Assert.assertTrue( lastMsg.matches( Util.convertChars( message ) ) );
+    }
+
+    @Then("^the server received the message (.*?)$")
+    public void server_received_message( String message ) throws InterruptedException {
+        for ( String msg : server.messages) {
+            if( msg.matches(Util.convertChars( message )) ) {
+                Assert.assertTrue( true );
+                return;
+            }
+        }
+        Assert.assertTrue( false );
     }
 
     @Then("^the last message the second server recieved is (.*?)$")
@@ -89,5 +107,22 @@ public class ServerStepDefs {
     @When("^some time passes$")
     public void Time_passes() throws InterruptedException {
         Thread.sleep(3000);
+    }
+
+    @Given("^two seconds later$")
+    public void two_seconds_later() throws InterruptedException {
+        Thread.sleep(2000);
+    }
+
+    @When("^the connection to the server is lost$")
+    public void connection_is_lost() throws InterruptedException {
+        server.close();
+        Thread.sleep(500);
+    }
+
+    @When("^the connection to the server is reestablished$")
+    public void connection_is_reestablished$() throws InterruptedException {
+        server = new MockTcpServer( 9696 );
+        Thread.sleep(4000);
     }
 }

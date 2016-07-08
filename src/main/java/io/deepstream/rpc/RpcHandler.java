@@ -11,12 +11,13 @@ import io.deepstream.message.Message;
 import io.deepstream.message.MessageBuilder;
 import io.deepstream.message.MessageParser;
 import io.deepstream.utils.AckTimeoutRegistry;
+import io.deepstream.utils.ResubscribeCallback;
 import io.deepstream.utils.ResubscribeNotifier;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class RpcHandler {
+public class RpcHandler implements ResubscribeCallback {
 
     private Map options;
     private IConnection connection;
@@ -34,6 +35,7 @@ public class RpcHandler {
         this.rpcs = new HashMap<>();
         int timeoutDuration = Integer.parseInt( (String) this.options.get( "subscriptionTimeout" ) );
         this.ackTimeoutRegistry = new AckTimeoutRegistry( this.client, Topic.RPC, timeoutDuration );
+        this.resubscribeNotifier = new ResubscribeNotifier( this.client, this );
     }
 
     public void provide( String name, RpcRequested callback ) {
@@ -55,11 +57,11 @@ public class RpcHandler {
     }
 
     public void make(String name, JsonObject data, RpcResponseCallback callback ) {
-        String uid = this.client.getUid();
-        String typedData = MessageBuilder.typed( data );
+        _make( name, MessageBuilder.typed( data ), callback );
+    }
 
-        this.rpcs.put( uid, new Rpc( this.options, this.client, callback ) );
-        this.connection.sendMsg( Topic.RPC, Actions.REQUEST, new String[] { name, uid, typedData } );
+    public void make(String name, String data, RpcResponseCallback callback ) {
+        _make( name, MessageBuilder.typed( data ), callback );
     }
 
     public void handle( Message message ) {
@@ -107,9 +109,15 @@ public class RpcHandler {
             this.rpcs.remove( correlationId );
         }
         else if( message.action == Actions.ERROR ) {
-            rpc.onError( message.data[ 0 ] );
+            rpc.error( message.data[ 0 ] );
             this.rpcs.remove( correlationId );
         }
+    }
+
+    private void _make(String name, String data, RpcResponseCallback callback ) {
+        String uid = this.client.getUid();
+        this.rpcs.put( uid, new Rpc( this.options, this.client, callback ) );
+        this.connection.sendMsg( Topic.RPC, Actions.REQUEST, new String[] { name, uid, data } );
     }
 
     private Rpc getRpc(String correlationId, String rpcName, String raw) {
@@ -138,6 +146,12 @@ public class RpcHandler {
             callback.Call( data, response );
         } else {
             this.connection.sendMsg( Topic.RPC, Actions.REJECTION, new String[] { name, correlationId } );
+        }
+    }
+
+    public void resubscribe() {
+        for ( String name : providers.keySet() ) {
+            connection.sendMsg( Topic.RPC, Actions.SUBSCRIBE, new String[] { name } );
         }
     }
 }

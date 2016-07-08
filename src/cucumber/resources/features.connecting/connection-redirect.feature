@@ -19,7 +19,7 @@ Feature: Redirecting a client to another deepstream
     And the clients connection state is "CHALLENGING"
 
   #Scenario: The client attempts to connect to the other server when it recieves a redirect
-    When the server sends the message C|RED|localhost:8898+
+    When the server sends the message C|RED|localhost:9898+
     When some time passes
     Then the second server has 1 active connections
     And the clients connection state is "AWAITING_CONNECTION"

@@ -1,36 +1,34 @@
 package io.deepstream;
 
+
 import com.google.gson.JsonObject;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
-import io.deepstream.constants.EndpointType;
+import io.deepstream.constants.ConnectionState;
 import io.deepstream.constants.Event;
 import org.junit.Assert;
 
 import java.util.Map;
-import java.util.Properties;
 
-public class ClientStepDefs {
+public class ConnectingStepDefs {
 
-    private DeepstreamClient client;
-    Properties options = new Properties();
-    LoginStatus status = new LoginStatus();
+    DeepstreamClient client;
     DeepstreamException deepstreamException;
+    LoginStatus status = new LoginStatus();
+
+    public ConnectingStepDefs( Context context ) {
+        this.client = context.client;
+    }
+
 
     @Given("^the client is initialised$")
     public void the_client_is_initialised() {
-        options.setProperty( "endpoint", EndpointType.TCP.name() );
-        try {
-            client = new DeepstreamClient( "localhost:9696", options );
-            Thread.sleep(200);
-        } catch( Exception e ) {
-            Assert.fail( e.getMessage() );
-        }
+        Assert.assertEquals(ConnectionState.AWAITING_CONNECTION, client.getConnectionState());
     }
 
     @Then("^the clients connection state is \"(.*?)\"$")
-    public void the_clients_connection_state_is( String arg1 ) {
+    public void the_clients_connection_state_is( String arg1 ) throws InterruptedException {
         Assert.assertEquals( arg1, client.getConnectionState().name() );
     }
 
@@ -49,8 +47,10 @@ public class ClientStepDefs {
         }
     }
 
+
     @Then("^the last login failed with error \"(.*?)\" and message \"(.*?)\"")
-    public void The_last_login_failed_with_error_and_message( String expectedError, String expectedMessage ) {
+    public void The_last_login_failed_with_error_and_message( String expectedError, String expectedMessage ) throws InterruptedException {
+        Thread.sleep(200);
         Assert.assertEquals( expectedError, status.errorEvent.name() );
         Assert.assertEquals( expectedMessage, status.errorMessage );
     }
@@ -61,7 +61,6 @@ public class ClientStepDefs {
         Assert.assertTrue( message.contains( expectedError ));
         Assert.assertTrue( message.contains( expectedMessage ));
     }
-
 
     class LoginStatus implements LoginCallback {
 
@@ -78,8 +77,4 @@ public class ClientStepDefs {
             this.errorMessage = errorMessage.toString();
         }
     }
-
-    /**
-     * Rpc step defs
-     */
 }
