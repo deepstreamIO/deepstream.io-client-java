@@ -14,12 +14,12 @@ Feature: Events Misc
   #only triggers a single subscribe message to the server and the incoming events should
   #be multiplexed on the client
 
-    #Given the server resets its message count
-    #When the client subscribes to an event named "test2"
-    #And the server sends the message E|A|S|test2+
-    #And the client subscribes to an event named "test2"
-    #Then the server received the message E|S|test2+
-    #And the server has received 1 messages
+    Given the server resets its message count
+    When the client subscribes to an event named "test2"
+    And the server sends the message E|A|S|test2+
+    And the client subscribes to an event named "test2"
+    Then the server received the message E|S|test2+
+    And the server has received 1 messages
 
 #TODO: This does not clear the timeout, which means the following test throws an error
 #Scenario: The client tries to unsubscribe from an event it wasn't previously subscribed to

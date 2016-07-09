@@ -1,4 +1,3 @@
-@events
 Feature: Event Listen Timeouts
   Whenever a listen subscribe or unsubscribe event does not recieve
   an acknolowdgement from the server the client should emit an ack
@@ -20,8 +19,8 @@ Feature: Event Listen Timeouts
     #Then the client throws a "ACK_TIMEOUT" error with message "No ACK message received in time for eventPrefix/.*"
 
   #Scenario: The client unlistens to eventPrefix
-    #When the client unlistens to events matching "eventPrefix/.*"
-    #Then the last message the server recieved is E|UL|eventPrefix/.*+
+    When the client unlistens to events matching "eventPrefix/.*"
+    Then the last message the server recieved is E|UL|eventPrefix/.*+
 
   #Scenario: The server does not respond in time with an unlisten ACK
     #When some time passes

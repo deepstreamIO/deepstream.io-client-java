@@ -40,10 +40,10 @@ public class EventHandler implements ResubscribeCallback {
 
     public void subscribe( String eventName, Emitter.Listener eventListener ) {
         if( this.emitter.hasListeners( eventName ) == false ) {
+            this.subscriptions.add( eventName );
             this.ackTimeoutRegistry.add( eventName, Actions.SUBSCRIBE );
             this.connection.send( MessageBuilder.getMsg( Topic.EVENT, Actions.SUBSCRIBE, eventName ) );
         }
-        this.subscriptions.add( eventName );
         this.emitter.on( eventName, eventListener );
     }
 
