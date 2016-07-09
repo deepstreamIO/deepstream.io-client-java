@@ -30,7 +30,7 @@ public class Rpc {
     }
 
     public void respond( String data ) {
-        Object convertedData = MessageParser.convertTyped( data );
+        Object convertedData = MessageParser.convertTyped( data, this.client );
         this.callback.onData( convertedData );
         this.clearTimeouts();
     }

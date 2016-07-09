@@ -1,10 +1,10 @@
 package io.deepstream.event;
 
 import io.deepstream.DeepstreamClient;
+import io.deepstream.IConnection;
 import io.deepstream.constants.Actions;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
-import io.deepstream.message.Connection;
 import io.deepstream.message.Message;
 import io.deepstream.message.MessageBuilder;
 import io.deepstream.message.MessageParser;
@@ -19,14 +19,14 @@ public class EventHandler implements ResubscribeCallback {
 
     private Emitter emitter;
     private Map options;
-    private Connection connection;
+    private IConnection connection;
     private DeepstreamClient client;
     private AckTimeoutRegistry ackTimeoutRegistry;
     private ResubscribeNotifier resubscribeNotifier;
     private Map<String, Listener> listeners;
     private List<String> subscriptions;
 
-    public EventHandler(Map options, Connection connection, DeepstreamClient client ) {
+    public EventHandler(Map options, IConnection connection, DeepstreamClient client ) {
         this.emitter = new Emitter();
         this.connection = connection;
         this.client = client;
@@ -97,8 +97,8 @@ public class EventHandler implements ResubscribeCallback {
         }
 
         if( message.action == Actions.EVENT ) {
-            if( message.data[ 1 ] != null ) {
-                this.emitter.emit( eventName, MessageParser.convertTyped( message.data[ 1 ] ) );
+            if( message.data.length == 2 ) {
+                this.emitter.emit( eventName, MessageParser.convertTyped( message.data[ 1 ], this.client ) );
             } else {
                 this.emitter.emit( eventName );
             }

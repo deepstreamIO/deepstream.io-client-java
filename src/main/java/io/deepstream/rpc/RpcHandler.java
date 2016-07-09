@@ -137,7 +137,7 @@ public class RpcHandler implements ResubscribeCallback {
         Object data = null;
 
         if( message.data[ 2 ] != null ) {
-            data = MessageParser.convertTyped( message.data[ 2 ] );
+            data = MessageParser.convertTyped( message.data[ 2 ], this.client );
         }
 
         RpcRequested callback = this.providers.get( name );
