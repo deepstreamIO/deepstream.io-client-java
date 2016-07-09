@@ -132,7 +132,7 @@ public class MockTcpServer {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
+        this.resetMessageCount();
         this.isOpen = false;
         this.threads = new ArrayList<>();
     }

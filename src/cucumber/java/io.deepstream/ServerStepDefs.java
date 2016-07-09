@@ -122,7 +122,12 @@ public class ServerStepDefs {
 
     @When("^the connection to the server is reestablished$")
     public void connection_is_reestablished$() throws InterruptedException {
-        server = new MockTcpServer( 9696 );
+        server = new MockTcpServer( serverPort );
         Thread.sleep(4000);
+    }
+
+    @When("^the server did not recieve any messages$")
+    public void server_received_no_messages() throws InterruptedException {
+        Assert.assertEquals( 0, server.getMessageCount() );
     }
 }
