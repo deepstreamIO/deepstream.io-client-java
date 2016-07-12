@@ -192,7 +192,7 @@ public class Connection implements IConnection {
             if( this.loginCallback != null ) {
                 this.loginCallback.loginFailed(
                         Event.getEvent( message.data[ 0 ] ),
-                        MessageParser.convertTyped( message.data[ 1 ] )
+                        MessageParser.convertTyped( message.data[ 1 ], this.client )
                 );
             }
         }

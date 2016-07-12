@@ -17,8 +17,8 @@ Feature: RPC Timeouts
 # Making
 
   #Scenario: The client makes an RPC
-    #When the client requests RPC "toUppercase" with data "abc"
-    #Then the last message the server recieved is P|REQ|toUppercase|<UID>|Sabc+
+    When the client requests RPC "toUppercase" with data "abc"
+    Then the last message the server recieved is P|REQ|toUppercase|<UID>|Sabc+
 
   #Scenario: The client receives a timeout
     #When some time passes
@@ -27,8 +27,8 @@ Feature: RPC Timeouts
 # Providing
 
   #Scenario: The client provides a RPC
-    #When the client provides a RPC called "toUppercase"
-    #Then the last message the server recieved is P|S|toUppercase+
+    When the client provides a RPC called "toUppercase"
+    Then the last message the server recieved is P|S|toUppercase+
 
   #@timeout
   #Scenario: The server does not respond in time with a subscribe ACK
@@ -38,10 +38,10 @@ Feature: RPC Timeouts
 # Unproviding
 
   #Scenario: The client stops providing a RPC
-    #When the client stops providing a RPC called "toUppercase"
-    #Then the last message the server recieved is P|US|toUppercase+
+    When the client stops providing a RPC called "toUppercase"
+    Then the last message the server recieved is P|US|toUppercase+
 
   #@timeout
   #Scenario: The server does not respond in time with an unsubscribe ACK
     #When some time passes
-    #Then the client throws a "ACK_TIMEOUT" error with message "No ACK message received in time for toUppercase"
+    #Then the client throws a "ACK_TIMEOUT" error with message "No ACK message received in time for

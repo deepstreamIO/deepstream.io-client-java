@@ -1,6 +1,7 @@
 package io.deepstream.message;
 
 import com.google.gson.Gson;
+import io.deepstream.IDeepstreamClient;
 import io.deepstream.constants.Actions;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
@@ -48,7 +49,7 @@ public class MessageParser {
         return new Message( message, Topic.getTopic( parts[ 0 ] ), Actions.getAction( parts[ 1 ] ), Arrays.copyOfRange( parts, 2, parts.length ) );
     }
 
-    public static Object convertTyped( String value ) {
+    public static Object convertTyped( String value, IDeepstreamClient client ) {
 
         char type = value.charAt(0);
 
@@ -73,6 +74,8 @@ public class MessageParser {
         else if( Types.getType( type ) == Types.UNDEFINED ) {
             // Undefined isn't a thing in Java..
         }
+
+        client.onError( Topic.ERROR, Event.MESSAGE_PARSE_ERROR, "UNKNOWN_TYPE (" + value + ")" );
         return null;
     }
 
