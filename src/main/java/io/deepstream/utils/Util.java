@@ -19,4 +19,10 @@ public class Util {
                 .replace( '|', MPS )
                 .replace( '+', MS );
     }
+
+    public static String replaceSeparators( String input ) {
+        return input
+                .replace( '|', MPS )
+                .replace( '+', MS );
+    }
 }
