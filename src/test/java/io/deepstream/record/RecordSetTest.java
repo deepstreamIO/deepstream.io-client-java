@@ -60,7 +60,7 @@ public class RecordSetTest {
                 Actions.READ,
                 new String[] { "testRecord", String.valueOf( 0 ), "{\"firstName\":\"Fred\",\"lastName\":\"Weasley\"}" }
         ));
-        Person person = (Person) record.get( Person.class );
+        Person person = record.get( Person.class );
         Assert.assertTrue( person.equals( personMock )  );
         Assert.assertEquals( Util.convertChars("R|CR|testRecord+"), connectionMock.lastSentMessage );
     }

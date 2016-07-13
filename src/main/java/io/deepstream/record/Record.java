@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class Record<T> extends Emitter {
+public class Record extends Emitter {
 
     private IConnection connection;
     IDeepstreamClient client;
@@ -26,7 +26,7 @@ public class Record<T> extends Emitter {
     public int version;
     private String rawData;
     private Gson gson;
-    Class<T> clazz;
+    Class clazz;
     private TimerTask readAckTimeout;
     private TimerTask readTimeout;
 
@@ -45,7 +45,7 @@ public class Record<T> extends Emitter {
         this.sendRead();
     }
 
-    public void set( T obj ) {
+    public void set( Object obj ) {
         this.version++;
         this.rawData = gson.toJson( obj );
         this.connection.sendMsg( Topic.RECORD, Actions.UPDATE, new String[] {
@@ -70,10 +70,10 @@ public class Record<T> extends Emitter {
      * @param clazz type of class to deserialize json into
      * @return a deserialized object of type T
      */
-    public T get( Class<T> clazz ) {
+    public <T> T get( Class<T> clazz ) {
         if( this.rawData != null ) {
             this.clazz = clazz;
-            return gson.fromJson( this.rawData, this.clazz );
+            return gson.fromJson( this.rawData, clazz );
         }
 
         return null;
@@ -86,7 +86,7 @@ public class Record<T> extends Emitter {
      * @param clazz type of class to deserialize the path into
      * @return a deserialized object of type T
      */
-    public T get( String path, Class<T> clazz ) {
+    public <T> T get( String path, Class<T> clazz ) {
         throw new NotImplementedException();
     }
 
