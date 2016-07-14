@@ -7,7 +7,7 @@ import io.deepstream.constants.Topic;
 import java.util.Map;
 
 
-class Rpc {
+class Rpc implements TimeoutListener {
 
     private String uid;
     private UtilAckTimeoutRegistry ackTimeoutRegistry;
@@ -39,6 +39,11 @@ class Rpc {
         this.clearTimeouts();
     }
 
+    @Override
+    public void onTimeout(Topic topic, Actions action, Event event, String name) {
+        this.error( event.toString() );
+    }
+
     private void clearTimeouts() {
         this.ackTimeoutRegistry.clear( Topic.RPC, Actions.REQUEST, this.uid );
         this.ackTimeoutRegistry.clear( Topic.RPC, Actions.RESPONSE, this.uid );
@@ -49,6 +54,6 @@ class Rpc {
         this.ackTimeoutRegistry.add( Topic.RPC, Actions.REQUEST, this.uid, Event.ACK_TIMEOUT, ackTimeoutTime );
 
         int responseTimeoutTime = Integer.parseInt( (String) properties.get( "rpcResponseTimeout" ) );
-        this.ackTimeoutRegistry.add( Topic.RPC, Actions.RESPONSE, this.uid, Event.RESPONSE_TIMEOUT, responseTimeoutTime );
+        this.ackTimeoutRegistry.add( Topic.RPC, Actions.RESPONSE, this.uid, Event.RESPONSE_TIMEOUT, this, responseTimeoutTime );
     }
 }

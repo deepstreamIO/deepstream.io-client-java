@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
 
-class UtilAckTimeoutRegistry implements ConnectionChangeListener {
+class UtilAckTimeoutRegistry implements ConnectionChangeListener, TimeoutListener {
 
     private Map<String, ScheduledFuture> register;
     private ScheduledExecutorService executor;
@@ -38,7 +38,7 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener {
         this.client = client;
         this.register = new HashMap<String, ScheduledFuture>();
         this.ackTimers = new LinkedBlockingQueue<AckTimeout>();
-        this.executor = Executors.newSingleThreadScheduledExecutor();
+        this.executor = new ErrorReportingThreadPoolExecutor( 1 );
 
         this.state = client.getConnectionState();
         this.client.addConnectionChangeListener( this );
@@ -82,8 +82,8 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener {
      * @param name The name to be added to the register
      * @param action The action to be added to the register
      */
-    public void add( Topic topic, Actions action, String name, int timeout ) {
-        this.add( topic, action, name, Event.ACK_TIMEOUT, timeout );
+    public void add( Topic topic, Actions action, String name, Event event, int timeout ) {
+        this.add( topic, action, name, event, this, timeout );
     }
 
     /**
@@ -93,11 +93,22 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener {
      * @param name The name to be added to the register
      * @param action The action to be added to the register
      */
-    public void add( Topic topic, Actions action, String name, Event event, int timeout ) {
+    public void add( Topic topic, Actions action, String name, int timeout ) {
+        this.add( topic, action, name, Event.ACK_TIMEOUT, this, timeout );
+    }
+
+    /**
+     * Checks to see if an ack timer already exists in the register for
+     * the given name and action. If it does, it clears it, then starts a new one.
+     *
+     * @param name The name to be added to the register
+     * @param action The action to be added to the register
+     */
+    public void add( Topic topic, Actions action, String name, Event event, TimeoutListener timeoutListener, int timeout ) {
         String uniqueName = this.getUniqueName( topic, action, name );
         this.clear( uniqueName );
 
-        addToRegister( topic, action, name, event, timeout );
+        addToRegister( topic, action, name, event, timeoutListener, timeout );
     }
 
     @Override
@@ -127,8 +138,8 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener {
      * Adds the uniqueName to the register. Only schedules the timer if
      * the connection state is OPEN, otherwise it adds to the queue of waiting acks.
      */
-    private void addToRegister( Topic topic, Actions action, String name, Event event, int timeoutDuration ) {
-        AckTimeout task = new AckTimeout( topic, action, name, event, timeoutDuration, this );
+    private void addToRegister( Topic topic, Actions action, String name, Event event, TimeoutListener timeoutListener, int timeoutDuration ) {
+        AckTimeout task = new AckTimeout( topic, action, name, event, timeoutListener, timeoutDuration );
 
         if( this.state == ConnectionState.OPEN ) {
             ScheduledFuture scheduledFuture = executor.schedule( task, timeoutDuration, TimeUnit.MICROSECONDS);
@@ -140,11 +151,12 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener {
         }
     }
 
-    private void onTimeout( AckTimeout ackTimeout ) {
-        String uniqueName = this.getUniqueName( ackTimeout.topic, ackTimeout.action, ackTimeout.name );
+    @Override
+    public void onTimeout(Topic topic, Actions action, Event event, String name) {
+        String uniqueName = this.getUniqueName( topic, action, name );
         this.register.remove( uniqueName );
-        String msg = "No ACK message received in time for " + ackTimeout.action + ackTimeout.name;
-        this.client.onError( ackTimeout.topic, ackTimeout.event, msg );
+        String msg = "No ACK message received in time for " + action + name;
+        this.client.onError( topic, event, msg );
     }
 
     private void scheduleAcks() {
@@ -168,26 +180,55 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener {
     }
 
     private class AckTimeout implements Runnable {
+        private TimeoutListener timeoutListener;
         private Topic topic;
         private Actions action;
         private String name;
         private Event event;
         private int timeout;
 
-        private UtilAckTimeoutRegistry callback;
-
-        AckTimeout( Topic topic, Actions action, String name,  Event event, int timeout, UtilAckTimeoutRegistry callback ) {
+        AckTimeout( Topic topic, Actions action, String name,  Event event, TimeoutListener timeoutListener, int timeout ) {
             this.topic = topic;
             this.action = action;
             this.name = name;
             this.event = event;
+            this.timeoutListener = timeoutListener;
             this.timeout = timeout;
-            this.callback = callback;
         }
 
         @Override
         public void run() {
-            this.callback.onTimeout( this );
+            this.timeoutListener.onTimeout( topic, action, event, name );
+        }
+
+    }
+
+
+    private class ErrorReportingThreadPoolExecutor extends ScheduledThreadPoolExecutor {
+
+        public ErrorReportingThreadPoolExecutor(int corePoolSize) {
+            super(corePoolSize);
+        }
+
+        @Override
+        protected void afterExecute(Runnable r, Throwable t) {
+            super.afterExecute(r, t);
+        /*if (t == null && r instanceof Future<?>) {
+            try {
+                Object result = ((Future<?>) r).get();
+                System.out.println( result );
+            } catch (CancellationException ce) {
+                t = ce;
+            } catch (ExecutionException ee) {
+                t = ee.getCause();
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt(); // ignore/reset
+            }
+        }
+        if (t != null)
+            System.out.println(t);
+        }*/
         }
     }
+
 }
