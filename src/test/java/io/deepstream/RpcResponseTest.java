@@ -40,21 +40,21 @@ public class RpcResponseTest {
     @Test
     public void sendsAckMessageAutomatically() {
         RpcResponse response = new RpcResponse( connectionMock, "addTwo", "123" );
-        Assert.assertEquals(Util.replaceSeperators("P|A|addTwo|123+"), connectionMock.lastSentMessage);
+        Assert.assertEquals(TestUtil.replaceSeperators("P|A|addTwo|123+"), connectionMock.lastSentMessage);
     }
 
     @Test
     public void sendsTheResponse() {
         RpcResponse response = new RpcResponse( connectionMock, "addTwo", "123" );
         response.send( 14 );
-        Assert.assertEquals(Util.replaceSeperators("P|RES|addTwo|123|N14+"), connectionMock.lastSentMessage);
+        Assert.assertEquals(TestUtil.replaceSeperators("P|RES|addTwo|123|N14+"), connectionMock.lastSentMessage);
     }
 
     @Test
     public void rejectsTheMessage() {
         RpcResponse response = new RpcResponse( connectionMock, "addTwo", "123" );
         response.reject();
-        Assert.assertEquals(Util.replaceSeperators("P|REJ|addTwo|123+"), connectionMock.lastSentMessage);
+        Assert.assertEquals(TestUtil.replaceSeperators("P|REJ|addTwo|123+"), connectionMock.lastSentMessage);
     }
 
     @Test
@@ -72,7 +72,7 @@ public class RpcResponseTest {
     public void errorsTheMessage() {
         RpcResponse response = new RpcResponse( connectionMock, "addTwo", "123" );
         response.error( "Error Message" );
-        Assert.assertEquals(Util.replaceSeperators("P|E|Error Message|addTwo|123+"), connectionMock.lastSentMessage);
+        Assert.assertEquals(TestUtil.replaceSeperators("P|E|Error Message|addTwo|123+"), connectionMock.lastSentMessage);
     }
 
     @Test

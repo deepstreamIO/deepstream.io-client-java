@@ -49,13 +49,13 @@ public class EventHandlerTest {
     public void emitsEventItHasNoListenersFor() {
         Assert.assertNull( connectionMock.lastSentMessage );
         eventHandler.emit( "myEvent", 8 );
-        Assert.assertEquals( Util.replaceSeperators("E|EVT|myEvent|N8+"), connectionMock.lastSentMessage );
+        Assert.assertEquals( TestUtil.replaceSeperators("E|EVT|myEvent|N8+"), connectionMock.lastSentMessage );
     };
 
     @Test
     public void subscribesToEvent() {
         eventHandler.subscribe( "myEvent", callbackMock );
-        Assert.assertEquals( Util.replaceSeperators("E|S|myEvent+"), connectionMock.lastSentMessage );
+        Assert.assertEquals( TestUtil.replaceSeperators("E|S|myEvent+"), connectionMock.lastSentMessage );
     }
 
     @Test

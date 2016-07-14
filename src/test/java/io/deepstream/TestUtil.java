@@ -1,6 +1,6 @@
 package io.deepstream;
 
-class Util {
+class TestUtil {
 
     private static final char MPS =  '\u001f';
     private static final char MS = '\u001e';

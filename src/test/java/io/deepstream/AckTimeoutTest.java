@@ -47,6 +47,7 @@ public class AckTimeoutTest {
     @Test
     public void onTimeoutNotCalledWhenAckReceived() throws InterruptedException {
         message.topic = Topic.EVENT;
+        message.action = Actions.ACK;
         message.data[0] = Actions.SUBSCRIBE.toString();
         message.data[1] = "Event1";
 

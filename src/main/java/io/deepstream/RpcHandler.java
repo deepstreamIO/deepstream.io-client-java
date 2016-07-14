@@ -55,7 +55,7 @@ class RpcHandler implements UtilResubscribeCallback {
 
     public void make(String name, String data, RpcResponseCallback callback ) {
         String uid = this.client.getUid();
-        this.rpcs.put( uid, new Rpc( this.options, this.client, callback ) );
+        this.rpcs.put( uid, new Rpc( this.options, this.client, uid, callback ) );
         this.connection.sendMsg( Topic.RPC, Actions.REQUEST, new String[] { name, uid, data } );
     }
 

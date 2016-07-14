@@ -57,7 +57,7 @@ public class RecordSetTest {
         ));
         Person person = record.get( Person.class );
         Assert.assertTrue( person.equals( personMock )  );
-        Assert.assertEquals( Util.replaceSeperators("R|CR|testRecord+"), connectionMock.lastSentMessage );
+        Assert.assertEquals( TestUtil.replaceSeperators("R|CR|testRecord+"), connectionMock.lastSentMessage );
     }
 
     @Test
@@ -69,7 +69,7 @@ public class RecordSetTest {
                 new String[] { "testRecord", String.valueOf( 0 ), "{\"firstName\":\"Fred\",\"lastName\":\"Weasley\"}" }
         ));
         record.set( new Person( "Harry" ) );
-        Assert.assertEquals( Util.replaceSeperators("R|U|testRecord|1|{\"firstName\":\"Harry\"}+"), connectionMock.lastSentMessage );
+        Assert.assertEquals( TestUtil.replaceSeperators("R|U|testRecord|1|{\"firstName\":\"Harry\"}+"), connectionMock.lastSentMessage );
     }
 
     //Todo: once paths have been done

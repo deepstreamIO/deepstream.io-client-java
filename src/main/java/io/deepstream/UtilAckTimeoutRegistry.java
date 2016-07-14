@@ -50,10 +50,29 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener {
      * @param message The message received to remove the ack timer for
      */
     public void clear( Message message ) {
-        String uniqueName = this.getUniqueName( message.topic, Actions.getAction( message.data[ 0 ] ), message.data[ 1 ] );
+        Actions action;
+        String name;
+        if( message.action == Actions.ACK ) {
+            action = Actions.getAction( message.data[ 0 ] );
+            name = message.data[ 1 ];
+        } else {
+            action = message.action;
+            name = message.data[ 0 ];
+        }
+
+        String uniqueName = this.getUniqueName( message.topic, action, name );
         if( this.clear( uniqueName ) == false ) {
             this.client.onError( message.topic, Event.UNSOLICITED_MESSAGE, message.raw );
         }
+    }
+
+    /**
+     * Clears the ack timeout for a message.
+
+     */
+    public void clear(  Topic topic, Actions action, String name ) {
+        String uniqueName = this.getUniqueName( topic, action, name );
+        this.clear( uniqueName );
     }
 
     /**
@@ -64,10 +83,21 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener {
      * @param action The action to be added to the register
      */
     public void add( Topic topic, Actions action, String name, int timeout ) {
+        this.add( topic, action, name, Event.ACK_TIMEOUT, timeout );
+    }
+
+    /**
+     * Checks to see if an ack timer already exists in the register for
+     * the given name and action. If it does, it clears it, then starts a new one.
+     *
+     * @param name The name to be added to the register
+     * @param action The action to be added to the register
+     */
+    public void add( Topic topic, Actions action, String name, Event event, int timeout ) {
         String uniqueName = this.getUniqueName( topic, action, name );
         this.clear( uniqueName );
 
-        addToRegister( topic, action, name, timeout );
+        addToRegister( topic, action, name, event, timeout );
     }
 
     @Override
@@ -97,8 +127,8 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener {
      * Adds the uniqueName to the register. Only schedules the timer if
      * the connection state is OPEN, otherwise it adds to the queue of waiting acks.
      */
-    private void addToRegister( Topic topic, Actions action, String name, int timeoutDuration ) {
-        AckTimeout task = new AckTimeout( topic, action, name, timeoutDuration, this );
+    private void addToRegister( Topic topic, Actions action, String name, Event event, int timeoutDuration ) {
+        AckTimeout task = new AckTimeout( topic, action, name, event, timeoutDuration, this );
 
         if( this.state == ConnectionState.OPEN ) {
             ScheduledFuture scheduledFuture = executor.schedule( task, timeoutDuration, TimeUnit.MICROSECONDS);
@@ -110,11 +140,11 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener {
         }
     }
 
-    private void onTimeout( Topic topic, Actions action, String name ) {
-        String uniqueName = this.getUniqueName( topic, action, name );
+    private void onTimeout( AckTimeout ackTimeout ) {
+        String uniqueName = this.getUniqueName( ackTimeout.topic, ackTimeout.action, ackTimeout.name );
         this.register.remove( uniqueName );
-        String msg = "No ACK message received in time for " + action + name;
-        this.client.onError( topic, Event.ACK_TIMEOUT, msg );
+        String msg = "No ACK message received in time for " + ackTimeout.action + ackTimeout.name;
+        this.client.onError( ackTimeout.topic, ackTimeout.event, msg );
     }
 
     private void scheduleAcks() {
@@ -141,21 +171,23 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener {
         private Topic topic;
         private Actions action;
         private String name;
+        private Event event;
         private int timeout;
 
         private UtilAckTimeoutRegistry callback;
 
-        AckTimeout( Topic topic, Actions action, String name, int timeout, UtilAckTimeoutRegistry callback ) {
+        AckTimeout( Topic topic, Actions action, String name,  Event event, int timeout, UtilAckTimeoutRegistry callback ) {
             this.topic = topic;
             this.action = action;
             this.name = name;
+            this.event = event;
             this.timeout = timeout;
             this.callback = callback;
         }
 
         @Override
         public void run() {
-            this.callback.onTimeout( this.topic, this.action, this.name );
+            this.callback.onTimeout( this );
         }
     }
 }

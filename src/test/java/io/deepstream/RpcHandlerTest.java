@@ -64,7 +64,7 @@ public class RpcHandlerTest {
     public void registersAProvider() {
         Assert.assertNull( connectionMock.lastSentMessage );
         rpcHandler.provide( "addTwo", addTwoCallback );
-        Assert.assertEquals( Util.replaceSeperators("P|S|addTwo+"), connectionMock.lastSentMessage );
+        Assert.assertEquals( TestUtil.replaceSeperators("P|S|addTwo+"), connectionMock.lastSentMessage );
         Assert.assertEquals( rpcCalls, 0 );
     }
 
@@ -85,7 +85,7 @@ public class RpcHandlerTest {
                 Actions.REQUEST,
                 new String[] { "addTwo", "123", "O{\"numA\":7,\"numB\":3}" }
         ));
-        Assert.assertEquals( Util.replaceSeperators( "P|RES|addTwo|123|N10.0+" ), connectionMock.lastSentMessage );
+        Assert.assertEquals( TestUtil.replaceSeperators( "P|RES|addTwo|123|N10.0+" ), connectionMock.lastSentMessage );
     }
 
     @Test
@@ -97,14 +97,14 @@ public class RpcHandlerTest {
                         Actions.REQUEST,
                         new String[] { "doesNotExist", "123", "O{\"numA\":7,\"numB\":3}" })
         );
-        Assert.assertEquals( Util.replaceSeperators( "P|REJ|doesNotExist|123+" ), connectionMock.lastSentMessage );
+        Assert.assertEquals( TestUtil.replaceSeperators( "P|REJ|doesNotExist|123+" ), connectionMock.lastSentMessage );
     }
 
     @Test
     public void deregistersAProvider() {
         rpcHandler.provide( "addTwo", addTwoCallback );
         rpcHandler.unprovide( "addTwo" );
-        Assert.assertEquals( Util.replaceSeperators("P|US|addTwo+"), connectionMock.lastSentMessage );
+        Assert.assertEquals( TestUtil.replaceSeperators("P|US|addTwo+"), connectionMock.lastSentMessage );
     }
 
     @Test
@@ -119,7 +119,7 @@ public class RpcHandlerTest {
                         Actions.REQUEST,
                         new String[] { "doesNotExist", "123", "O{\"numA\":7,\"numB\":3}" })
         );
-        Assert.assertEquals( Util.replaceSeperators( "P|REJ|doesNotExist|123+" ), connectionMock.lastSentMessage );
+        Assert.assertEquals( TestUtil.replaceSeperators( "P|REJ|doesNotExist|123+" ), connectionMock.lastSentMessage );
     }
 
     @Test
@@ -129,7 +129,7 @@ public class RpcHandlerTest {
         data.addProperty("numB", 8);
         rpcHandler.make("addTwo", data, this.callbackMock);
 
-        Assert.assertEquals(Util.replaceSeperators("P|REQ|addTwo|1|O{\"numA\":3,\"numB\":8}+"), connectionMock.lastSentMessage);
+        Assert.assertEquals(TestUtil.replaceSeperators("P|REQ|addTwo|1|O{\"numA\":3,\"numB\":8}+"), connectionMock.lastSentMessage);
 
         rpcHandler.handle(new Message(
                 "raw",
@@ -147,7 +147,7 @@ public class RpcHandlerTest {
         data.addProperty("numB", 8);
         rpcHandler.make("addTwo", data, this.callbackMock);
 
-        Assert.assertEquals(Util.replaceSeperators("P|REQ|addTwo|1|O{\"numA\":3,\"numB\":8}+"), connectionMock.lastSentMessage);
+        Assert.assertEquals(TestUtil.replaceSeperators("P|REQ|addTwo|1|O{\"numA\":3,\"numB\":8}+"), connectionMock.lastSentMessage);
 
         rpcHandler.handle(new Message(
                 "raw",

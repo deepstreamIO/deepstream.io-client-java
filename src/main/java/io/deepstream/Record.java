@@ -8,11 +8,11 @@ import io.deepstream.constants.Topic;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+
 
 public class Record extends Emitter {
 
+    private UtilAckTimeoutRegistry ackTimeoutRegistry;
     private IConnection connection;
     IDeepstreamClient client;
     private String name;
@@ -23,11 +23,10 @@ public class Record extends Emitter {
     private String rawData;
     private Gson gson;
     Class clazz;
-    private TimerTask readAckTimeout;
-    private TimerTask readTimeout;
 
 
     public Record(String name, Map recordOptions, IConnection connection, Map options, IDeepstreamClient client) {
+        this.ackTimeoutRegistry = UtilAckTimeoutRegistry.getAckTimeoutRegistry( client );
         this.name = name;
         this.recordOptions = recordOptions;
         this.options = options;
@@ -94,7 +93,7 @@ public class Record extends Emitter {
     public void onMessage( Message message ) {
         if( message.action == Actions.READ ) {
             if( this.version == 0 ) {
-                this.readTimeout.cancel();
+                this.ackTimeoutRegistry.clear( message );
                 this.onRead( message );
             } else {
                 this.applyUpdate( message, this.client );
@@ -116,22 +115,11 @@ public class Record extends Emitter {
     }
 
     private void scheduleAcks() {
-        Timer timer = new Timer();
-        this.readAckTimeout = new TimerTask() {
-            public void run() {
-                onTimeout( Event.ACK_TIMEOUT );
-            }
-        };
-        this.readTimeout = new TimerTask() {
-            public void run() {
-                onTimeout( Event.RESPONSE_TIMEOUT );
-            }
-        };
-        
         int readAckTimeout = Integer.parseInt( (String) this.options.get( "recordReadAckTimeout" ) );
+        this.ackTimeoutRegistry.add( Topic.RECORD, Actions.SUBSCRIBE, this.name, Event.ACK_TIMEOUT, readAckTimeout );
+
         int readResponseTimeout = Integer.parseInt( (String) this.options.get( "recordReadTimeout" ) );
-        timer.schedule( this.readAckTimeout, readAckTimeout );
-        timer.schedule( this.readTimeout, readResponseTimeout );
+        this.ackTimeoutRegistry.add( Topic.RECORD, Actions.READ, this.name, Event.RESPONSE_TIMEOUT, readResponseTimeout );
     }
 
     private void onTimeout( Event timeoutType ) {
@@ -140,8 +128,8 @@ public class Record extends Emitter {
     }
 
     private void clearTimeouts() {
-        this.readAckTimeout.cancel();
-        this.readTimeout.cancel();
+        this.ackTimeoutRegistry.clear( Topic.RECORD, Actions.READ, this.name );
+        this.ackTimeoutRegistry.clear( Topic.RECORD, Actions.READ, this.name );
     }
 
     private void applyUpdate(Message message, IDeepstreamClient client) {
@@ -152,7 +140,7 @@ public class Record extends Emitter {
         Actions action = Actions.getAction( message.data[ 0 ] );
 
         if( action.equals( Actions.SUBSCRIBE ) ) {
-            this.readAckTimeout.cancel();
+            this.ackTimeoutRegistry.clear( message );
         }
         else if( action.equals( Actions.DELETE ) ) {
             this.emit( "delete" );
