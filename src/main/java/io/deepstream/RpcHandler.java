@@ -10,23 +10,25 @@ import java.util.Map;
 
 class RpcHandler implements UtilResubscribeCallback {
 
+    private int timeoutDuration;
     private Map options;
     private IConnection connection;
-    private DeepstreamClient client;
+    private IDeepstreamClient client;
     private Map<String, RpcRequested> providers;
     private UtilAckTimeoutRegistry ackTimeoutRegistry;
     private UtilResubscribeNotifier resubscribeNotifier;
     private Map<String, Rpc> rpcs;
 
-    public RpcHandler( Map options, IConnection connection, DeepstreamClient client ) {
+    public RpcHandler( Map options, IConnection connection, IDeepstreamClient client ) {
         this.options = options;
         this.connection = connection;
         this.client = client;
         this.providers = new HashMap<>();
         this.rpcs = new HashMap<>();
-        int timeoutDuration = Integer.parseInt( (String) this.options.get( "subscriptionTimeout" ) );
-        this.ackTimeoutRegistry = new UtilAckTimeoutRegistry( this.client, Topic.RPC, timeoutDuration );
+        this.ackTimeoutRegistry = UtilAckTimeoutRegistry.getAckTimeoutRegistry( this.client );
         this.resubscribeNotifier = new UtilResubscribeNotifier( this.client, this );
+
+        this.timeoutDuration = Integer.parseInt( (String) this.options.get( "subscriptionTimeout" ) );
     }
 
     public void provide( String name, RpcRequested callback ) {
@@ -34,7 +36,7 @@ class RpcHandler implements UtilResubscribeCallback {
             throw new DeepstreamException( "RPC " + name + " already registered" );
         }
 
-        this.ackTimeoutRegistry.add( name, Actions.SUBSCRIBE );
+        this.ackTimeoutRegistry.add( Topic.RPC, Actions.SUBSCRIBE, name, this.timeoutDuration );
         this.providers.put( name, callback );
         this.connection.sendMsg( Topic.RPC, Actions.SUBSCRIBE, new String[] { name } );
     }
@@ -42,7 +44,7 @@ class RpcHandler implements UtilResubscribeCallback {
     public void unprovide( String name ) {
         if( this.providers.containsKey( name ) ) {
             this.providers.remove( name );
-            this.ackTimeoutRegistry.add( name, Actions.UNSUBSCRIBE );
+            this.ackTimeoutRegistry.add( Topic.RPC, Actions.UNSUBSCRIBE, name, this.timeoutDuration);
             this.connection.sendMsg( Topic.RPC, Actions.UNSUBSCRIBE, new String[] { name } );
         }
     }

@@ -5,34 +5,40 @@ import io.deepstream.constants.ConnectionState;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
 
-import java.util.*;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.TimerTask;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.*;
 
 class UtilAckTimeoutRegistry implements ConnectionChangeListener {
 
-    private Map<String, AckTimeoutTask> register;
-    private Timer timer;
-    private Topic topic;
-    private long timeoutDuration;
+    private Map<String, ScheduledFuture> register;
+    private ScheduledExecutorService executor;
     private IDeepstreamClient client;
     private ConnectionState state;
-    private LinkedBlockingQueue<AckTimeoutTask> ackTimers;
+    private LinkedBlockingQueue<AckTimeout> ackTimers;
+
+    static UtilAckTimeoutRegistry utilAckTimeoutRegistry;
+    static UtilAckTimeoutRegistry getAckTimeoutRegistry( IDeepstreamClient client ) {
+        if(  utilAckTimeoutRegistry == null ) {
+            utilAckTimeoutRegistry = new UtilAckTimeoutRegistry( client );
+        }
+        return utilAckTimeoutRegistry;
+    }
+
+    static void resetAckTimeoutRegistry( IDeepstreamClient client ) {
+        utilAckTimeoutRegistry = new UtilAckTimeoutRegistry( client );
+    }
 
     /**
      * The registry for all ack timeouts.
      *
      * @param client The client it sends errors to
-     * @param topic The topic for all acks in the register
-     * @param timeoutDuration The timeout duration for acks in milliseconds
      */
-    public UtilAckTimeoutRegistry(IDeepstreamClient client, Topic topic, long timeoutDuration ) {
+    public UtilAckTimeoutRegistry(IDeepstreamClient client) {
         this.client = client;
-        this.register = new HashMap<String, AckTimeoutTask>();
-        this.ackTimers = new LinkedBlockingQueue<AckTimeoutTask>();
-        this.timer = new Timer();
-        this.topic = topic;
-        this.timeoutDuration = timeoutDuration;
+        this.register = new HashMap<String, ScheduledFuture>();
+        this.ackTimers = new LinkedBlockingQueue<AckTimeout>();
+        this.executor = Executors.newSingleThreadScheduledExecutor();
 
         this.state = client.getConnectionState();
         this.client.addConnectionChangeListener( this );
@@ -44,9 +50,9 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener {
      * @param message The message received to remove the ack timer for
      */
     public void clear( Message message ) {
-        String uniqueName = this.getUniqueName( Actions.getAction( message.data[ 0 ] ), message.data[ 1 ] );
+        String uniqueName = this.getUniqueName( message.topic, Actions.getAction( message.data[ 0 ] ), message.data[ 1 ] );
         if( this.clear( uniqueName ) == false ) {
-            this.client.onError( this.topic, Event.UNSOLICITED_MESSAGE, message.raw );
+            this.client.onError( message.topic, Event.UNSOLICITED_MESSAGE, message.raw );
         }
     }
 
@@ -57,13 +63,11 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener {
      * @param name The name to be added to the register
      * @param action The action to be added to the register
      */
-    public void add( String name, Actions action ) {
-        String uniqueName = this.getUniqueName( action, name );
-        AckTimeoutTask task = this.register.get( uniqueName );
-        if( task != null ) {
-            clear( uniqueName );
-        }
-        addToRegister( uniqueName );
+    public void add( Topic topic, Actions action, String name, int timeout ) {
+        String uniqueName = this.getUniqueName( topic, action, name );
+        this.clear( uniqueName );
+
+        addToRegister( topic, action, name, timeout );
     }
 
     @Override
@@ -80,9 +84,9 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener {
      * @param uniqueName The name of the message ( and possible action ) to remove the timeout for
      */
     private boolean clear( String uniqueName ) {
-        AckTimeoutTask task = register.get( uniqueName );
-        if( task != null ) {
-            task.cancel();
+        ScheduledFuture scheduledFuture = register.get( uniqueName );
+        if( scheduledFuture != null ) {
+            scheduledFuture.cancel( false );
             return true;
         } else {
             return false;
@@ -92,28 +96,29 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener {
     /**
      * Adds the uniqueName to the register. Only schedules the timer if
      * the connection state is OPEN, otherwise it adds to the queue of waiting acks.
-     *
-     * @param uniqueName The name to be added to the register
      */
-    private void addToRegister( String uniqueName ) {
-        AckTimeoutTask task = new AckTimeoutTask( uniqueName, this );
-        register.put( uniqueName, task );
+    private void addToRegister( Topic topic, Actions action, String name, int timeoutDuration ) {
+        AckTimeout task = new AckTimeout( topic, action, name, timeoutDuration, this );
 
         if( this.state == ConnectionState.OPEN ) {
-            timer.schedule( task, this.timeoutDuration );
+            ScheduledFuture scheduledFuture = executor.schedule( task, timeoutDuration, TimeUnit.MICROSECONDS);
+
+            String uniqueName = this.getUniqueName( topic, action, name );
+            register.put( uniqueName, scheduledFuture );
         } else {
             this.ackTimers.add( task );
         }
     }
 
-    private void onTimeout( String name ) {
-        this.register.remove( name );
-        String msg = "No ACK message received in time for " + name;
-        this.client.onError( this.topic, Event.ACK_TIMEOUT, msg );
+    private void onTimeout( Topic topic, Actions action, String name ) {
+        String uniqueName = this.getUniqueName( topic, action, name );
+        this.register.remove( uniqueName );
+        String msg = "No ACK message received in time for " + action + name;
+        this.client.onError( topic, Event.ACK_TIMEOUT, msg );
     }
 
     private void scheduleAcks() {
-        AckTimeoutTask task = null;
+        AckTimeout task = null;
         while( this.ackTimers.peek() != null ) {
             try {
                 task = this.ackTimers.take();
@@ -122,32 +127,35 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener {
             }
 
             if( task != null ) {
-                this.timer.schedule( task, this.timeoutDuration );
+                this.executor.schedule( task, task.timeout, TimeUnit.MICROSECONDS );
             }
             task = null;
         }
     }
 
-    private String getUniqueName( Actions action, String name ) {
-        if( action != null ) {
-            return action.toString() + name;
-        } else {
-            return name;
-        }
+    private String getUniqueName( Topic topic, Actions action, String name ) {
+        return topic.toString() + action.toString() + name;
     }
 
-    private class AckTimeoutTask extends TimerTask {
+    private class AckTimeout implements Runnable {
+        private Topic topic;
+        private Actions action;
         private String name;
+        private int timeout;
+
         private UtilAckTimeoutRegistry callback;
 
-        AckTimeoutTask( String name, UtilAckTimeoutRegistry callback ) {
+        AckTimeout( Topic topic, Actions action, String name, int timeout, UtilAckTimeoutRegistry callback ) {
+            this.topic = topic;
+            this.action = action;
             this.name = name;
+            this.timeout = timeout;
             this.callback = callback;
         }
 
         @Override
         public void run() {
-            this.callback.onTimeout( this.name );
+            this.callback.onTimeout( this.topic, this.action, this.name );
         }
     }
 }

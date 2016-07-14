@@ -16,7 +16,7 @@ public class EventStepDefs {DeepstreamClient client;
         this.server2Port = context.server2port;
     }
 
-    UtilEmitter.Listener callback = mock( UtilEmitter.Listener.class );
+    Emitter.Listener callback = mock( Emitter.Listener.class );
 
     @Then("^the client subscribes to an event named \"(.*?)\"$")
     public void the_client_subscribes_to_event( String eventName ) throws InterruptedException {

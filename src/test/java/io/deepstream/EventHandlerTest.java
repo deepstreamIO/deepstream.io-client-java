@@ -18,17 +18,21 @@ import static org.mockito.Mockito.*;
 
 public class EventHandlerTest {
 
-    DeepstreamClient deepstreamClientMock;
+    DeepstreamClientMock deepstreamClientMock;
     ConnectionMock connectionMock;
     EventHandler eventHandler;
-    UtilEmitter.Listener callbackMock;
+    Emitter.Listener callbackMock;
+    ErrorCallback errorCallbackMock;
 
     @Before
     public void setUp() throws URISyntaxException {
-        callbackMock = mock( UtilEmitter.Listener.class );
-        connectionMock = new ConnectionMock();
-        deepstreamClientMock = mock( DeepstreamClient.class );
-        when( deepstreamClientMock.getConnectionState() ).thenReturn( ConnectionState.OPEN );
+        callbackMock = mock( Emitter.Listener.class );
+
+        this.connectionMock = new ConnectionMock();
+        this.errorCallbackMock = mock( ErrorCallback.class );
+        this.deepstreamClientMock = new DeepstreamClientMock( this.errorCallbackMock );
+        this.deepstreamClientMock.setConnectionState( ConnectionState.OPEN );
+        UtilAckTimeoutRegistry.resetAckTimeoutRegistry( this.deepstreamClientMock );
 
         Map options = new Properties();
         options.put( "subscriptionTimeout", "10" );
@@ -45,20 +49,20 @@ public class EventHandlerTest {
     public void emitsEventItHasNoListenersFor() {
         Assert.assertNull( connectionMock.lastSentMessage );
         eventHandler.emit( "myEvent", 8 );
-        Assert.assertEquals( Util.convertChars("E|EVT|myEvent|N8+"), connectionMock.lastSentMessage );
+        Assert.assertEquals( Util.replaceSeperators("E|EVT|myEvent|N8+"), connectionMock.lastSentMessage );
     };
 
     @Test
     public void subscribesToEvent() {
         eventHandler.subscribe( "myEvent", callbackMock );
-        Assert.assertEquals( Util.convertChars("E|S|myEvent+"), connectionMock.lastSentMessage );
+        Assert.assertEquals( Util.replaceSeperators("E|S|myEvent+"), connectionMock.lastSentMessage );
     }
 
     @Test
     public void emitsErrorIfNotAckReceivedForSubscribe() throws InterruptedException {
         eventHandler.subscribe( "myEvent", callbackMock );
         Thread.sleep(30);
-        verify( deepstreamClientMock, times(1) ).onError(Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for SmyEvent");
+        verify( errorCallbackMock, times(1) ).onError(Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for SmyEvent");
     }
 
     @Test
@@ -109,7 +113,7 @@ public class EventHandlerTest {
                 Actions.EVENT,
                 new String[] { "myEvent", "notTyped" }
         ));
-        verify( deepstreamClientMock, times(1) ).onError( Topic.ERROR, Event.MESSAGE_PARSE_ERROR, "UNKNOWN_TYPE (notTyped)" );
+        verify( errorCallbackMock, times(1) ).onError( Topic.ERROR, Event.MESSAGE_PARSE_ERROR, "UNKNOWN_TYPE (notTyped)" );
     }
 
     @Test
@@ -131,7 +135,7 @@ public class EventHandlerTest {
         ));
         eventHandler.unsubscribe( "myEvent", callbackMock );
         Thread.sleep(30);
-        verify( deepstreamClientMock, times(1) ).onError(Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for USmyEvent");
+        verify( errorCallbackMock, times(1) ).onError(Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for USmyEvent");
     }
 
     @Test
@@ -142,6 +146,6 @@ public class EventHandlerTest {
                 Actions.LISTEN,
                 new String[] { "myEvent" }
         ));
-        verify( deepstreamClientMock, times(1) ).onError( Topic.EVENT, Event.UNSOLICITED_MESSAGE, "myEvent" );
+        verify( errorCallbackMock, times(1) ).onError( Topic.EVENT, Event.UNSOLICITED_MESSAGE, "myEvent" );
     }
 }

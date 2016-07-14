@@ -13,7 +13,7 @@ public class DeepstreamClientMock implements IDeepstreamClient, ErrorCallback {
     private ErrorCallback errorCallback;
 
     public DeepstreamClientMock( ErrorCallback errorCallback ) {
-        connectionListeners = new ArrayList();
+        this.connectionListeners = new ArrayList();
         this.errorCallback = errorCallback;
     }
 
@@ -28,6 +28,10 @@ public class DeepstreamClientMock implements IDeepstreamClient, ErrorCallback {
 
     public ConnectionState getConnectionState() {
         return this.connectionState;
+    }
+
+    public String getUid() {
+        return "1";
     }
 
     public void setConnectionState( ConnectionState state ) {

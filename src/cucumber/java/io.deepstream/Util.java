@@ -13,15 +13,8 @@ class Util {
 
     public static String convertChars( String input ) {
         return input
-//                .replace("{", "\\{")
-//                .replace("}", "\\}")
                 .replaceAll( "<UID>", "[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}")
-                .replace( '|', MPS )
-                .replace( '+', MS );
-    }
-
-    public static String replaceSeparators( String input ) {
-        return input
+                .replaceAll( "<FIRST_SERVER_URL>", "localhost:[0-9]{4}")
                 .replace( '|', MPS )
                 .replace( '+', MS );
     }

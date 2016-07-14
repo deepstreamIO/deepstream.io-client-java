@@ -29,4 +29,4 @@ Scenario: Redirecting the client to another deepstream gets rejected
 # Throws an error if the user attempts to login
 	When the client logs in with username "XXX" and password "YYY"
 	Then the server has received 1 messages
-		And the client throws a "IS_CLOSED" error with message "this client's connection was closed"
+		And the client throws a "IS_CLOSED" error with message "The client's connection was closed"

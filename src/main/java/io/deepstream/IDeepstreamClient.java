@@ -9,4 +9,5 @@ interface IDeepstreamClient {
     IDeepstreamClient removeConnectionChangeListener( ConnectionChangeListener connectionChangeListener );
     void onError(Topic topic, Event event, String message);
     ConnectionState getConnectionState();
+    String getUid();
 }

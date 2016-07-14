@@ -1,7 +1,4 @@
 package io.deepstream;
-import io.deepstream.Connection;
-import io.deepstream.Endpoint;
-
 import java.util.ArrayList;
 
 public class EndpointMock implements Endpoint {

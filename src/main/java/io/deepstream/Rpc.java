@@ -1,30 +1,28 @@
 package io.deepstream;
 
-import io.deepstream.constants.Event;
+import io.deepstream.constants.Actions;
 import io.deepstream.constants.Topic;
 
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 
 
 class Rpc {
 
+    private UtilAckTimeoutRegistry ackTimeoutRegistry;
     Map properties;
-    DeepstreamClient client;
+    IDeepstreamClient client;
     RpcResponseCallback callback;
-    TimerTask ackTimeout;
-    TimerTask responseTimeout;
 
-    public Rpc(Map properties, DeepstreamClient client, RpcResponseCallback callback ) {
+    public Rpc(Map properties, IDeepstreamClient client, RpcResponseCallback callback ) {
         this.properties = properties;
         this.client = client;
         this.callback = callback;
+        this.ackTimeoutRegistry = UtilAckTimeoutRegistry.getAckTimeoutRegistry( this.client );
         this.setTimeouts();
     }
 
     public void ack() {
-        this.ackTimeout.cancel();
+//        this.ackTimeout.cancel();
     }
 
     public void respond( String data ) {
@@ -39,26 +37,18 @@ class Rpc {
     }
 
     private void clearTimeouts() {
-        this.ackTimeout.cancel();
-        this.responseTimeout.cancel();
+//        this.ackTimeoutRegistry.clear( );
+//        this.responseTimeout.cancel();
     }
 
     private void setTimeouts() {
-        final Rpc self = this;
-        this.ackTimeout = new TimerTask() {
-            public void run() {
-                client.onError( Topic.RPC, Event.ACK_TIMEOUT, null );
-            }
-        };
-        this.responseTimeout = new TimerTask() {
-            public void run() {client.onError( Topic.RPC, Event.RESPONSE_TIMEOUT, null );
-            }
-        };
-
-        Timer timer = new Timer();
         int ackTimeoutTime = Integer.parseInt( (String) properties.get( "rpcAckTimeout" ) );
         int responseTimeoutTime = Integer.parseInt( (String) properties.get( "rpcResponseTimeout" ) );
-        timer.schedule( this.ackTimeout, ackTimeoutTime );
-        timer.schedule( this.responseTimeout, responseTimeoutTime );
+
+        //Event.ACK_TIMEOUT
+        this.ackTimeoutRegistry.add( Topic.RPC, Actions.REQUEST, "", ackTimeoutTime );
+
+        //RESPONSE_TIMEOUT
+        this.ackTimeoutRegistry.add( Topic.RPC, Actions.REQUEST, "", responseTimeoutTime );
     }
 }

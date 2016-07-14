@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentMap;
  *
  * @see <a href="https://github.com/component/emitter">https://github.com/component/emitter</a>
  */
-public class UtilEmitter {
+public class Emitter {
 
     private ConcurrentMap<String, ConcurrentLinkedQueue<Listener>> callbacks
             = new ConcurrentHashMap<String, ConcurrentLinkedQueue<Listener>>();
@@ -25,7 +25,7 @@ public class UtilEmitter {
      * @param fn
      * @return a reference to this object.
      */
-    public UtilEmitter on(String event, Listener fn) {
+    public Emitter on(String event, Listener fn) {
         ConcurrentLinkedQueue<Listener> callbacks = this.callbacks.get(event);
         if (callbacks == null) {
             callbacks = new ConcurrentLinkedQueue <Listener>();
@@ -45,7 +45,7 @@ public class UtilEmitter {
      * @param fn
      * @return a reference to this object.
      */
-    public UtilEmitter once(final String event, final Listener fn) {
+    public Emitter once(final String event, final Listener fn) {
         this.on(event, new OnceListener(event, fn));
         return this;
     }
@@ -55,7 +55,7 @@ public class UtilEmitter {
      *
      * @return a reference to this object.
      */
-    public UtilEmitter off() {
+    public Emitter off() {
         this.callbacks.clear();
         return this;
     }
@@ -66,7 +66,7 @@ public class UtilEmitter {
      * @param event an event name.
      * @return a reference to this object.
      */
-    public UtilEmitter off(String event) {
+    public Emitter off(String event) {
         this.callbacks.remove(event);
         return this;
     }
@@ -78,13 +78,13 @@ public class UtilEmitter {
      * @param fn
      * @return a reference to this object.
      */
-    public UtilEmitter off(String event, Listener fn) {
+    public Emitter off(String event, Listener fn) {
         ConcurrentLinkedQueue<Listener> callbacks = this.callbacks.get(event);
         if (callbacks != null) {
             Iterator<Listener> it = callbacks.iterator();
             while (it.hasNext()) {
                 Listener internal = it.next();
-                if (UtilEmitter.sameAs(fn, internal)) {
+                if (Emitter.sameAs(fn, internal)) {
                     it.remove();
                     break;
                 }
@@ -110,7 +110,7 @@ public class UtilEmitter {
      * @param args
      * @return a reference to this object.
      */
-    public UtilEmitter emit(String event, Object... args) {
+    public Emitter emit(String event, Object... args) {
         ConcurrentLinkedQueue<Listener> callbacks = this.callbacks.get(event);
         if (callbacks != null) {
             for (Listener fn : callbacks) {
@@ -160,7 +160,7 @@ public class UtilEmitter {
 
         @Override
         public void call(Object... args) {
-            UtilEmitter.this.off(this.event, this);
+            Emitter.this.off(this.event, this);
             this.fn.call(args);
         }
     }
