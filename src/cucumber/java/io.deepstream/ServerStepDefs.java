@@ -1,6 +1,5 @@
 package io.deepstream;
 
-import cucumber.api.java.After;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
@@ -25,12 +24,6 @@ public class ServerStepDefs {
         this.server2 = context.server2;
         this.serverPort = context.serverPort;
         this.server2Port = context.server2port;
-    }
-
-    @After
-    public void afterScenario() {
-        server.close();
-        server2.close();
     }
 
     @Given("^the test server is ready$")
@@ -71,8 +64,10 @@ public class ServerStepDefs {
     @Then("^the last message the server recieved is (.*?)$")
     public void The_last_message_the_server_received_is( String message ) {
         String lastMsg = server.getLastMessage();
-        System.out.println( "Server Recieved: " + TestUtils.convertChars( message ));
-        Assert.assertTrue( lastMsg.matches( TestUtils.convertChars( message ) ) );
+        System.out.println( "Server Received: " + TestUtils.convertChars( message ) + " " + TestUtils.convertChars( lastMsg ) );
+        if(  TestUtils.convertChars( lastMsg ) != TestUtils.convertChars( message )  ) {
+            Assert.assertTrue( lastMsg.matches( TestUtils.convertChars( message ) ) );
+        }
     }
 
     @Then("^the server received the message (.*?)$")
@@ -108,7 +103,7 @@ public class ServerStepDefs {
 
     @When("^some time passes$")
     public void Time_passes() throws InterruptedException {
-        Thread.sleep(500);
+        Thread.sleep(200);
     }
 
     @Given("^two seconds later$")
@@ -119,7 +114,7 @@ public class ServerStepDefs {
     @When("^the connection to the server is lost$")
     public void connection_is_lost() throws InterruptedException {
         server.close();
-        Thread.sleep(500);
+        Thread.sleep(200);
     }
 
     @Given("^the client is on the second server$")
@@ -129,7 +124,7 @@ public class ServerStepDefs {
     @When("^the connection to the server is reestablished$")
     public void connection_is_reestablished$() throws InterruptedException {
         server = new MockTcpServer( serverPort );
-        Thread.sleep(4000);
+        Thread.sleep(2000);
     }
 
     @When("^the server did not recieve any messages$")

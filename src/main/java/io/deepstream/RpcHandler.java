@@ -1,6 +1,5 @@
 package io.deepstream;
 
-import com.google.gson.JsonObject;
 import io.deepstream.constants.Actions;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
@@ -49,14 +48,12 @@ class RpcHandler implements UtilResubscribeCallback {
         }
     }
 
-    public void make(String name, JsonObject data, RpcResponseCallback callback ) {
-        make( name, MessageBuilder.typed( data ), callback );
-    }
-
-    public void make(String name, String data, RpcResponseCallback callback ) {
+    public void make(String name, Object data, RpcResponseCallback callback ) {
         String uid = this.client.getUid();
         this.rpcs.put( uid, new Rpc( this.options, this.client, uid, callback ) );
-        this.connection.sendMsg( Topic.RPC, Actions.REQUEST, new String[] { name, uid, data } );
+
+        String typedData = MessageBuilder.typed( data );
+        this.connection.sendMsg( Topic.RPC, Actions.REQUEST, new String[] { name, uid, typedData } );
     }
 
     public void handle( Message message ) {

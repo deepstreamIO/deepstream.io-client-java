@@ -19,25 +19,27 @@ public class RpcStepDefs {
 
     RpcRequestedMock toUpperCaseMock = new RpcRequestedMock();
     ResponseCallback responseCallback = new ResponseCallback();
+
+    RpcResponse rpcResponse;
     String response;
     String request;
 
     @Then("^the client provides a RPC called \"(.*?)\"$")
     public void the_client_provides_a_RPC_called( String rpcName ) throws InterruptedException {
         client.rpc.provide( rpcName, toUpperCaseMock );
-        Thread.sleep(500);
+        Thread.sleep(GENERAL_TIMEOUT);
     }
 
     @Then("^the client stops providing a RPC called \"(.*?)\"$")
     public void the_client_stops_providing_a_RPC_called( String rpcName ) throws InterruptedException {
         client.rpc.unprovide( rpcName );
-        Thread.sleep(500);
+        Thread.sleep(GENERAL_TIMEOUT);
     }
 
     @Then("^the client requests RPC \"(.*?)\" with data \"(.*?)\"$")
     public void client_makes_an_rpc( String rpcName, String data ) throws InterruptedException {
         client.rpc.make( rpcName, data, responseCallback );
-        Thread.sleep(500);
+        Thread.sleep(GENERAL_TIMEOUT);
     }
 
     @When("^the client recieves an error RPC callback for \"([^\"]*)\" with the message \"([^\"]*)\"$")
@@ -51,24 +53,27 @@ public class RpcStepDefs {
         Assert.assertEquals( data, request );
     }
 
+    @When("^the client responds to the RPC \"([^\"]*)\" with data \"([^\"]*)\"$")
+    public void the_client_responds_to_the_RPC_with_data(String rpcName, String rpcData) throws Throwable {
+        rpcResponse.send( rpcData );
+    }
+
+    @When("^the client responds to the RPC \"([^\"]*)\" with the error \"([^\"]*)\"$")
+    public void the_client_responds_to_the_RPC_with_the_error(String rpcName, String rpcError) throws Throwable {
+        rpcResponse.error( rpcError );
+    }
+
+    @When("^the client rejects the RPC \"([^\"]*)\"$")
+    public void the_client_rejects_the_RPC(String arg1) throws Throwable {
+        rpcResponse.reject();
+    }
+
     class RpcRequestedMock implements RpcRequested {
 
         @Override
         public void Call(Object data, RpcResponse response) {
             request = (String) data;
-
-            //Success
-            if( request.equals( "success" ) ) {
-                response.send( request.toUpperCase() );
-            }
-            //Error
-            else if( request.equals( "error" ) ) {
-                response.error( "An Error Occured" );
-            }
-            //Rejection when supported
-            else if( request.equals( "reject" ) ) {
-                response.reject();
-            }
+            rpcResponse = response;
         }
     }
 

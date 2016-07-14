@@ -22,6 +22,7 @@ public class MockTcpServer {
     public Boolean isOpen = false;
 
     MockTcpServer( int port ) {
+        System.out.println( "Creating new server localhost:" + port );
         threads = new ArrayList<>();
         messages = new ArrayList<>();
 
@@ -42,14 +43,20 @@ public class MockTcpServer {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    Socket sock = serverSocket.accept();
-                    self.lastSocket = sock;
-                    self.handleConnection(sock);
-                } catch (SocketException e) {
-                    //Most likely thrown when closing the serverSocket
-                } catch (IOException e) {
-                    e.printStackTrace();
+                while( serverSocket.isBound() ) {
+                    try {
+                        System.out.println( "Waiting for new connection" );
+                        Socket sock = serverSocket.accept();
+                        System.out.println( "New Connection" );
+                        self.lastSocket = sock;
+                        self.handleConnection(sock);
+                    } catch (SocketException e) {
+                        e.printStackTrace();
+                        break;
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        break;
+                    }
                 }
             }
         }).start();
@@ -63,7 +70,6 @@ public class MockTcpServer {
 
     private void handleConnection( final Socket socket ) {
         final MockTcpServer self = this;
-
         try {
             in = new InputStreamReader(socket.getInputStream());
             out = new OutputStreamWriter(socket.getOutputStream());
@@ -82,7 +88,7 @@ public class MockTcpServer {
                             self.handleMessages( new String( buffer, 0, bytesRead ) );
                         }
                     } catch (IOException e) {
-                        self.close();
+                        //self.close();
                     }
                 }
                 System.out.println( "Socket is now closed" );
@@ -117,6 +123,7 @@ public class MockTcpServer {
     }
 
     public void close()  {
+        System.out.println( "Closing server.." );
         try {
             for (Thread connectedThread : this.threads) {
                 connectedThread.join(1);

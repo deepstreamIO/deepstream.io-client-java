@@ -127,6 +127,7 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, TimeoutListene
         ScheduledFuture scheduledFuture = register.get( uniqueName );
         if( scheduledFuture != null ) {
             scheduledFuture.cancel( false );
+            register.remove( uniqueName );
             return true;
         } else {
             return false;
@@ -146,6 +147,7 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, TimeoutListene
             String uniqueName = this.getUniqueName( topic, action, name );
             register.put( uniqueName, scheduledFuture );
         } else {
+            System.out.println( "Buffering timeout " + this.state );
             this.ackTimers.add( task );
         }
     }
@@ -154,8 +156,6 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, TimeoutListene
     public void onTimeout(Topic topic, Actions action, Event event, String name ) {
         String uniqueName = this.getUniqueName( topic, action, name );
         this.register.remove( uniqueName );
-        String msg = "No ACK message received in time for " + action.name() + " " + name;
-        this.client.onError( topic, event, msg );
     }
 
     private void scheduleAcks() {
@@ -193,13 +193,17 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, TimeoutListene
             this.event = event;
             this.timeoutListener = timeoutListener;
             this.timeout = timeout;
+
+            System.out.println( "Creating timeout for " + topic + " " + action + " " + name + " " + event + " " + timeout );
         }
 
         @Override
         public void run() {
-            this.timeoutListener.onTimeout( topic, action, event, name );
+            timeoutListener.onTimeout( topic, action, event, name );
+            String msg = "No ACK message received in time for " + action.name() + " " + name;
+            System.out.println( "Running timeout" );
+            client.onError( topic, event, msg );
         }
-
     }
 
 
@@ -212,6 +216,7 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, TimeoutListene
         @Override
         protected void afterExecute(Runnable r, Throwable t) {
             super.afterExecute(r, t);
+
             if (t == null && r instanceof Future<?>) {
                 try {
                     Object result = ((Future<?>) r).get();
@@ -224,9 +229,8 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, TimeoutListene
                 }
             }
             if (t != null) {
-                throw new RuntimeException( t.getMessage() );
+                System.out.println( "Timeout executed " +  t );
             }
-
         }
     }
 }

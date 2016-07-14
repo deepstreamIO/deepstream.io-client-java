@@ -9,6 +9,7 @@ class EndpointTCP implements Endpoint {
     private final String MPS = Character.toString( '\u001f' );
     private final String MS = Character.toString( '\u001e' );
 
+    private boolean closed;
     private Socket socket;
     private String host;
     private Integer port;
@@ -67,7 +68,9 @@ class EndpointTCP implements Endpoint {
                         }
                         self.onData( new String( buffer, 0, bytesRead ) );
                     } catch ( IOException e ) {
-                        self.onError( e );
+                        if( !self.closed ) {
+                            self.onError( e );
+                        }
                     }
                 }
             }
@@ -111,14 +114,19 @@ class EndpointTCP implements Endpoint {
 
     public void send(String message) {
         try {
+            System.out.println( message );
             this.out.write( message, 0, message.length() );
             this.out.flush();
         } catch (IOException e) {
-            this.onError( e );
+            if( !this.closed ) {
+                this.onError( e );
+            }
         }
     }
 
     public void close() {
+        this.closed = true;
+
         try {
             this.socket.close();
         } catch ( IOException e ) {
