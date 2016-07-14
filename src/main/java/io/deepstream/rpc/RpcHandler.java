@@ -57,11 +57,13 @@ public class RpcHandler implements ResubscribeCallback {
     }
 
     public void make(String name, JsonObject data, RpcResponseCallback callback ) {
-        _make( name, MessageBuilder.typed( data ), callback );
+        make( name, MessageBuilder.typed( data ), callback );
     }
 
     public void make(String name, String data, RpcResponseCallback callback ) {
-        _make( name, MessageBuilder.typed( data ), callback );
+        String uid = this.client.getUid();
+        this.rpcs.put( uid, new Rpc( this.options, this.client, callback ) );
+        this.connection.sendMsg( Topic.RPC, Actions.REQUEST, new String[] { name, uid, data } );
     }
 
     public void handle( Message message ) {
@@ -112,12 +114,6 @@ public class RpcHandler implements ResubscribeCallback {
             rpc.error( message.data[ 0 ] );
             this.rpcs.remove( correlationId );
         }
-    }
-
-    private void _make(String name, String data, RpcResponseCallback callback ) {
-        String uid = this.client.getUid();
-        this.rpcs.put( uid, new Rpc( this.options, this.client, callback ) );
-        this.connection.sendMsg( Topic.RPC, Actions.REQUEST, new String[] { name, uid, data } );
     }
 
     private Rpc getRpc(String correlationId, String rpcName, String raw) {
