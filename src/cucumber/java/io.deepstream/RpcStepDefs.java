@@ -9,6 +9,7 @@ public class RpcStepDefs {
     DeepstreamClient client;
     int serverPort;
     int server2Port;
+    int GENERAL_TIMEOUT = Context.GENERAL_TIMEOUT;
 
     public RpcStepDefs( Context context ) {
         this.client = context.client;

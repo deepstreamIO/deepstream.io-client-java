@@ -41,7 +41,7 @@ public class AckTimeoutTest {
     public void onTimeoutCalledWhenNoAckReceived() throws InterruptedException {
         ackTimeoutRegistry.add( Topic.EVENT, Actions.SUBSCRIBE, "Event1", 20 );
         Thread.sleep(50);
-        verify(this.errorCallbackMock, times(1)).onError(  Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for SEvent1" );
+        verify(this.errorCallbackMock, times(1)).onError(  Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE Event1" );
     }
 
     @Test
@@ -54,7 +54,7 @@ public class AckTimeoutTest {
         ackTimeoutRegistry.add( Topic.EVENT, Actions.SUBSCRIBE, "Event1", 20 );
         ackTimeoutRegistry.clear( message );
         Thread.sleep(50);
-        verify(this.errorCallbackMock, times(0)).onError( Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for SEvent1" );
+        verify(this.errorCallbackMock, times(0)).onError( Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE Event1" );
     }
 
     @Test
@@ -63,11 +63,11 @@ public class AckTimeoutTest {
 
         ackTimeoutRegistry.add( Topic.EVENT, Actions.SUBSCRIBE, "Event1", 20 );
         Thread.sleep(50);
-        verify(this.errorCallbackMock, times(0)).onError(  Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for SEvent1" );
+        verify(this.errorCallbackMock, times(0)).onError(  Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE Event1" );
 
         deepstreamClientMock.setConnectionState( ConnectionState.OPEN );
         Thread.sleep(50);
-        verify(this.errorCallbackMock, times(1)).onError(  Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for SEvent1" );
+        verify(this.errorCallbackMock, times(1)).onError(  Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE Event1" );
     }
 
     @Test
@@ -75,6 +75,6 @@ public class AckTimeoutTest {
         ackTimeoutRegistry.add( Topic.EVENT, Actions.SUBSCRIBE, "Event1", 20 );
         ackTimeoutRegistry.add( Topic.EVENT, Actions.SUBSCRIBE, "Event1", 20);
         Thread.sleep(50);
-        verify(this.errorCallbackMock, times(1)).onError( Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for SEvent1" );
+        verify(this.errorCallbackMock, times(1)).onError( Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE Event1" );
     }
 }

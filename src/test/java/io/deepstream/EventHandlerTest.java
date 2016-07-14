@@ -62,7 +62,7 @@ public class EventHandlerTest {
     public void emitsErrorIfNotAckReceivedForSubscribe() throws InterruptedException {
         eventHandler.subscribe( "myEvent", callbackMock );
         Thread.sleep(30);
-        verify( errorCallbackMock, times(1) ).onError(Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for SmyEvent");
+        verify( errorCallbackMock, times(1) ).onError(Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE myEvent");
     }
 
     @Test
@@ -135,7 +135,7 @@ public class EventHandlerTest {
         ));
         eventHandler.unsubscribe( "myEvent", callbackMock );
         Thread.sleep(30);
-        verify( errorCallbackMock, times(1) ).onError(Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for USmyEvent");
+        verify( errorCallbackMock, times(1) ).onError(Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for UNSUBSCRIBE myEvent");
     }
 
     @Test

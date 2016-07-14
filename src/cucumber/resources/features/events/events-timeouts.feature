@@ -19,7 +19,7 @@ Scenario: Events Timeouts
 
 	# The server does not respond in time with a subscribe ACK
 	Given some time passes
-	Then the client throws a "ACK_TIMEOUT" error with message "No ACK message received in time for test1"
+	Then the client throws a "ACK_TIMEOUT" error with message "No ACK message received in time for SUBSCRIBE test1"
 
 	# The client unsubscribes from an event
 	When the client unsubscribes from an event named "test1"
@@ -27,4 +27,4 @@ Scenario: Events Timeouts
 
 	# The server does not respond in time with an unsubscribe ACK
 	Given some time passes
-	Then the client throws a "ACK_TIMEOUT" error with message "No ACK message received in time for test1"
+	Then the client throws a "ACK_TIMEOUT" error with message "No ACK message received in time for UNSUBSCRIBE test1"

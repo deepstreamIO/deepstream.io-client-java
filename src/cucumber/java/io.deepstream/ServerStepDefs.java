@@ -8,6 +8,7 @@ import org.junit.Assert;
 
 public class ServerStepDefs {
 
+    int GENERAL_TIMEOUT = Context.GENERAL_TIMEOUT;
     private final char MPS =  '\u001f';
     private final char MS = '\u001e';
 
@@ -19,7 +20,7 @@ public class ServerStepDefs {
     String clientUid;
 
     public ServerStepDefs( Context context ) {
-        this.clientUid = context.getUuid();
+        this.clientUid = context.getUid();
         this.server = context.server;
         this.server2 = context.server2;
         this.serverPort = context.serverPort;
@@ -56,7 +57,7 @@ public class ServerStepDefs {
         message = message.replace( '|', MPS );
         message = message.replace( '+', MS );
         server.send( message );
-        Thread.sleep(200);
+        Thread.sleep(GENERAL_TIMEOUT);
     }
 
     @Then("^the second server sends the message (.*?)$")
@@ -64,21 +65,20 @@ public class ServerStepDefs {
         message = message.replace( '|', MPS );
         message = message.replace( '+', MS );
         server2.send( message );
-        Thread.sleep(200);
+        Thread.sleep(GENERAL_TIMEOUT);
     }
 
     @Then("^the last message the server recieved is (.*?)$")
     public void The_last_message_the_server_received_is( String message ) {
         String lastMsg = server.getLastMessage();
-        System.out.println( lastMsg );
-        System.out.println( Util.convertChars( message ));
-        Assert.assertTrue( lastMsg.matches( Util.convertChars( message ) ) );
+        System.out.println( "Recieved: " + TestUtils.convertChars( message ));
+        Assert.assertTrue( lastMsg.matches( TestUtils.convertChars( message ) ) );
     }
 
     @Then("^the server received the message (.*?)$")
     public void server_received_message( String message ) throws InterruptedException {
         for ( String msg : server.messages) {
-            if( msg.matches(Util.convertChars( message )) ) {
+            if( msg.matches(TestUtils.convertChars( message )) ) {
                 Assert.assertTrue( true );
                 return;
             }
@@ -88,7 +88,7 @@ public class ServerStepDefs {
 
     @Then("^the last message the second server recieved is (.*?)$")
     public void The_last_message_the_second_server_received_is( String message ) {
-        Assert.assertEquals( message, Util.matchMessage( server2.getLastMessage() ) );
+        Assert.assertEquals( message, TestUtils.matchMessage( server2.getLastMessage() ) );
     }
 
     @Then("^the server has received (\\d+) messages")
@@ -108,7 +108,7 @@ public class ServerStepDefs {
 
     @When("^some time passes$")
     public void Time_passes() throws InterruptedException {
-        Thread.sleep(3000);
+        Thread.sleep(500);
     }
 
     @Given("^two seconds later$")

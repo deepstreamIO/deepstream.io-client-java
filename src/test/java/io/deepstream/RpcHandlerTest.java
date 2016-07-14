@@ -72,7 +72,7 @@ public class RpcHandlerTest {
     public void errorsIfNoAckReceivedForProvide() throws InterruptedException {
         rpcHandler.provide( "addTwo", addTwoCallback );
         Thread.sleep(30);
-        verify( errorCallbackMock, times(1) ).onError( Topic.RPC, Event.ACK_TIMEOUT, "No ACK message received in time for SaddTwo" );
+        verify( errorCallbackMock, times(1) ).onError( Topic.RPC, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE addTwo" );
     }
 
     @Test
@@ -168,7 +168,7 @@ public class RpcHandlerTest {
         Assert.assertEquals( TestUtil.replaceSeperators("P|REQ|addTwo|1|O{\"numA\":3,\"numB\":8}+"), connectionMock.lastSentMessage);
 
         Thread.sleep(20);
-        verify(this.errorCallbackMock, times(1)).onError( Topic.RPC, Event.ACK_TIMEOUT, "No ACK message received in time for REQ1" );
+        verify(this.errorCallbackMock, times(1)).onError( Topic.RPC, Event.ACK_TIMEOUT, "No ACK message received in time for REQUEST 1" );
     }
 
     @Test

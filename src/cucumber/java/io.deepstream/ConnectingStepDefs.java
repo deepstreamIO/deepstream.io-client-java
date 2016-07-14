@@ -13,11 +13,14 @@ import java.util.Map;
 
 public class ConnectingStepDefs {
 
+    Context context;
     DeepstreamClient client;
     DeepstreamException deepstreamException;
+    String errorMessage;
     LoginStatus status = new LoginStatus();
 
     public ConnectingStepDefs( Context context ) {
+        this.context = context;
         this.client = context.client;
     }
 
@@ -57,9 +60,8 @@ public class ConnectingStepDefs {
 
     @Then("^the client throws a \"(.*?)\" error with message \"(.*?)\"")
     public void Client_throws_err_and_message( String expectedError, String expectedMessage ) {
-        String message = deepstreamException.getMessage();
-        Assert.assertTrue( message.contains( expectedError ));
-        Assert.assertTrue( message.contains( expectedMessage ));
+        Assert.assertTrue( context.lastErrorMessage.contains( expectedError ));
+        Assert.assertTrue( context.lastErrorMessage.contains( expectedMessage ));
     }
 
     class LoginStatus implements LoginCallback {

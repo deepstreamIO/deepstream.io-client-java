@@ -21,7 +21,7 @@ Feature: Event Listen Timeouts
 
 	# The server does not respond in time with a listen ACK
 		When some time passes
-		Then the client throws a "ACK_TIMEOUT" error with message "No ACK message received in time for eventPrefix/.*"
+		Then the client throws a "ACK_TIMEOUT" error with message "No ACK message received in time for LISTEN eventPrefix/.*"
 
 	# The client unlistens to eventPrefix
 		When the client unlistens to events matching "eventPrefix/.*"
@@ -29,4 +29,4 @@ Feature: Event Listen Timeouts
 
 	 # The server does not respond in time with an unlisten ACK
 		When some time passes
-		Then the client throws a "ACK_TIMEOUT" error with message "No ACK message received in time for eventPrefix/.*"
+		Then the client throws a "ACK_TIMEOUT" error with message "No ACK message received in time for UNLISTEN eventPrefix/.*"

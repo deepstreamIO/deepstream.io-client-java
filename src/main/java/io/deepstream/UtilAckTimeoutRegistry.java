@@ -5,7 +5,6 @@ import io.deepstream.constants.ConnectionState;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
 
@@ -36,9 +35,9 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, TimeoutListene
      */
     public UtilAckTimeoutRegistry(IDeepstreamClient client) {
         this.client = client;
-        this.register = new HashMap<String, ScheduledFuture>();
+        this.register = new ConcurrentHashMap<String, ScheduledFuture>();
         this.ackTimers = new LinkedBlockingQueue<AckTimeout>();
-        this.executor = new ErrorReportingThreadPoolExecutor( 1 );
+        this.executor = new ErrorReportingThreadPoolExecutor(1);
 
         this.state = client.getConnectionState();
         this.client.addConnectionChangeListener( this );
@@ -142,7 +141,7 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, TimeoutListene
         AckTimeout task = new AckTimeout( topic, action, name, event, timeoutListener, timeoutDuration );
 
         if( this.state == ConnectionState.OPEN ) {
-            ScheduledFuture scheduledFuture = executor.schedule( task, timeoutDuration, TimeUnit.MICROSECONDS);
+            ScheduledFuture scheduledFuture = executor.schedule( task, timeoutDuration, TimeUnit.MILLISECONDS );
 
             String uniqueName = this.getUniqueName( topic, action, name );
             register.put( uniqueName, scheduledFuture );
@@ -152,10 +151,10 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, TimeoutListene
     }
 
     @Override
-    public void onTimeout(Topic topic, Actions action, Event event, String name) {
+    public void onTimeout(Topic topic, Actions action, Event event, String name ) {
         String uniqueName = this.getUniqueName( topic, action, name );
         this.register.remove( uniqueName );
-        String msg = "No ACK message received in time for " + action + name;
+        String msg = "No ACK message received in time for " + action.name() + " " + name;
         this.client.onError( topic, event, msg );
     }
 
@@ -213,22 +212,21 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, TimeoutListene
         @Override
         protected void afterExecute(Runnable r, Throwable t) {
             super.afterExecute(r, t);
-        /*if (t == null && r instanceof Future<?>) {
-            try {
-                Object result = ((Future<?>) r).get();
-                System.out.println( result );
-            } catch (CancellationException ce) {
-                t = ce;
-            } catch (ExecutionException ee) {
-                t = ee.getCause();
-            } catch (InterruptedException ie) {
-                Thread.currentThread().interrupt(); // ignore/reset
+            if (t == null && r instanceof Future<?>) {
+                try {
+                    Object result = ((Future<?>) r).get();
+                } catch (CancellationException ce) {
+                    //t = ce;
+                } catch (ExecutionException ee) {
+                    t = ee.getCause();
+                } catch (InterruptedException ie) {
+                    //Thread.currentThread().interrupt();
+                }
             }
-        }
-        if (t != null)
-            System.out.println(t);
-        }*/
+            if (t != null) {
+                throw new RuntimeException( t.getMessage() );
+            }
+
         }
     }
-
 }
