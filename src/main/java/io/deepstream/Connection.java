@@ -101,6 +101,10 @@ class Connection implements IConnection {
             endpoint.close();
             endpoint = null;
         }
+        if( this.reconnectTimeout != null ) {
+            this.reconnectTimeout.cancel();
+            this.reconnectTimeout = null;
+        }
     }
 
     void onOpen() {
@@ -134,7 +138,7 @@ class Connection implements IConnection {
             } else if (message.topic == Topic.RPC) {
                 this.client.rpc.handle(message);
             } else {
-                System.out.println("Normal message of type " + message.topic);
+                System.out.println("Normal message of type " + message.topic + " " + message.raw );
             }
         }
     }

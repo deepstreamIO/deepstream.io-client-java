@@ -59,7 +59,6 @@ public class MockTcpServer {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        return;
     }
 
     private void handleConnection( final Socket socket ) {

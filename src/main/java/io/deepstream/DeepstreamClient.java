@@ -15,9 +15,11 @@ public class DeepstreamClient implements IDeepstreamClient {
 
     private String uuid;
     private Connection connection;
+    private DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler;
+    private Properties config;
+
     public EventHandler event;
     public RpcHandler rpc;
-    public Properties config;
 
     public DeepstreamClient( final String url, Properties options ) throws URISyntaxException, IOException {
         this.config = getConfig( options );
@@ -28,6 +30,11 @@ public class DeepstreamClient implements IDeepstreamClient {
 
     public DeepstreamClient( final String url ) throws URISyntaxException, IOException {
         this( url, new Properties() );
+    }
+
+    public DeepstreamClient setRuntimeErrorHandler( DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler )  {
+        this.deepstreamRuntimeErrorHandler = deepstreamRuntimeErrorHandler;
+        return this;
     }
 
     public DeepstreamClient login( JsonObject data ) throws DeepstreamLoginException {
@@ -80,7 +87,13 @@ public class DeepstreamClient implements IDeepstreamClient {
             }
         }
 
-        throw new DeepstreamException( topic, event, msg );
+        if( deepstreamRuntimeErrorHandler != null ) {
+            deepstreamRuntimeErrorHandler.onException( topic, event, msg );
+        } else {
+            System.out.println( "Throwing a client exception: " + topic + " " +  event + " " +  msg );
+            throw new DeepstreamException( topic, event, msg );
+        }
+
     }
 
     private Properties getConfig( Properties properties ) throws IOException {

@@ -71,7 +71,7 @@ public class ServerStepDefs {
     @Then("^the last message the server recieved is (.*?)$")
     public void The_last_message_the_server_received_is( String message ) {
         String lastMsg = server.getLastMessage();
-        System.out.println( "Recieved: " + TestUtils.convertChars( message ));
+        System.out.println( "Server Recieved: " + TestUtils.convertChars( message ));
         Assert.assertTrue( lastMsg.matches( TestUtils.convertChars( message ) ) );
     }
 

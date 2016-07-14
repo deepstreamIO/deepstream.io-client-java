@@ -60,6 +60,7 @@ public class ConnectingStepDefs {
 
     @Then("^the client throws a \"(.*?)\" error with message \"(.*?)\"")
     public void Client_throws_err_and_message( String expectedError, String expectedMessage ) {
+        System.out.println( "Checking '" + context.lastErrorMessage + "' against " + expectedError + " " + expectedMessage );
         Assert.assertTrue( context.lastErrorMessage.contains( expectedError ));
         Assert.assertTrue( context.lastErrorMessage.contains( expectedMessage ));
     }
