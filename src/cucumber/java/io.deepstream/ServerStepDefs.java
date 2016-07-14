@@ -4,7 +4,6 @@ import cucumber.api.java.After;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
-import io.deepstream.utils.Util;
 import org.junit.Assert;
 
 public class ServerStepDefs {
@@ -70,6 +69,8 @@ public class ServerStepDefs {
     @Then("^the last message the server recieved is (.*?)$")
     public void The_last_message_the_server_received_is( String message ) {
         String lastMsg = server.getLastMessage();
+        System.out.println( lastMsg );
+        System.out.println( Util.convertChars( message ));
         Assert.assertTrue( lastMsg.matches( Util.convertChars( message ) ) );
     }
 

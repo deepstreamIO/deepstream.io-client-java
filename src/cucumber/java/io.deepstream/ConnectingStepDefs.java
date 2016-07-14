@@ -48,10 +48,10 @@ public class ConnectingStepDefs {
     }
 
 
-    @Then("^the last login failed with error \"(.*?)\" and message \"(.*?)\"")
-    public void The_last_login_failed_with_error_and_message( String expectedError, String expectedMessage ) throws InterruptedException {
+    @Then("^the last login failed with error message \"(.*?)\"")
+    public void The_last_login_failed_with_error_and_message( String expectedMessage ) throws InterruptedException {
         Thread.sleep(200);
-        Assert.assertEquals( expectedError, status.errorEvent.name() );
+        //Assert.assertEquals( expectedError, status.errorEvent.name() );
         Assert.assertEquals( expectedMessage, status.errorMessage );
     }
 

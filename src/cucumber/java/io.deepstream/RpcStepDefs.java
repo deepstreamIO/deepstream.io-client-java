@@ -2,9 +2,6 @@ package io.deepstream;
 
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
-import io.deepstream.rpc.RpcRequested;
-import io.deepstream.rpc.RpcResponse;
-import io.deepstream.rpc.RpcResponseCallback;
 import org.junit.Assert;
 
 public class RpcStepDefs {

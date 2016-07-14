@@ -3,7 +3,6 @@ package io.deepstream;
 import io.deepstream.constants.Actions;
 import io.deepstream.constants.ConnectionState;
 import io.deepstream.constants.Topic;
-import io.deepstream.message.MessageBuilder;
 
 public class ConnectionMock implements IConnection {
 

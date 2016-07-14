@@ -4,9 +4,6 @@ import com.google.gson.JsonObject;
 import io.deepstream.constants.ConnectionState;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
-import io.deepstream.event.EventHandler;
-import io.deepstream.message.Connection;
-import io.deepstream.rpc.RpcHandler;
 
 import java.io.FileInputStream;
 import java.io.IOException;
