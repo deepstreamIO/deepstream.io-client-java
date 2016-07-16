@@ -63,8 +63,6 @@ public class Singleton {
             }
         });
 
-        UtilAckTimeoutRegistry.resetAckTimeoutRegistry( this.client );
-
         lastErrorMessage = null;
 
         return this.client;

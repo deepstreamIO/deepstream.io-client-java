@@ -29,7 +29,7 @@ class EventHandler implements UtilResubscribeCallback {
         this.options = options;
         this.listeners = new HashMap<>();
         this.subscriptions = new ArrayList<>();
-        this.ackTimeoutRegistry = UtilAckTimeoutRegistry.getAckTimeoutRegistry( client );
+        this.ackTimeoutRegistry = client.getAckTimeoutRegistry( client );
         this.resubscribeNotifier = new UtilResubscribeNotifier( this.client, this );
     }
 

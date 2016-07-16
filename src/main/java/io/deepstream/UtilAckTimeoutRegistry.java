@@ -16,18 +16,6 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, TimeoutListene
     private ConnectionState state;
     private LinkedBlockingQueue<AckTimeout> ackTimers;
 
-    static UtilAckTimeoutRegistry utilAckTimeoutRegistry;
-    static UtilAckTimeoutRegistry getAckTimeoutRegistry( IDeepstreamClient client ) {
-        if(  utilAckTimeoutRegistry == null ) {
-            utilAckTimeoutRegistry = new UtilAckTimeoutRegistry( client );
-        }
-        return utilAckTimeoutRegistry;
-    }
-
-    static void resetAckTimeoutRegistry( IDeepstreamClient client ) {
-        utilAckTimeoutRegistry = new UtilAckTimeoutRegistry( client );
-    }
-
     /**
      * The registry for all ack timeouts.
      *

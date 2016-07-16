@@ -85,7 +85,9 @@ public class MockTcpServer {
                         if( in.ready() ) {
                             char[] buffer = new char[ 1024 ];
                             int bytesRead = in.read( buffer, 0, 1024 );
-                            self.handleMessages( new String( buffer, 0, bytesRead ) );
+                            if( bytesRead > -1 ) {
+                                self.handleMessages( new String( buffer, 0, bytesRead ) );
+                            }
                         }
                     } catch (IOException e) {
                         //self.close();

@@ -26,7 +26,6 @@ public class ResubscriptionTest {
         this.errorCallbackMock = mock( ErrorCallback.class );
         this.deepstreamClientMock = new DeepstreamClientMock( this.errorCallbackMock );
         this.deepstreamClientMock.setConnectionState( ConnectionState.OPEN );
-        UtilAckTimeoutRegistry.resetAckTimeoutRegistry( this.deepstreamClientMock );
 
         this.resubscribeNotifier = new UtilResubscribeNotifier( this.deepstreamClientMock, this.resubscribeCallbackMock );
     }

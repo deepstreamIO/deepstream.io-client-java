@@ -127,7 +127,7 @@ class Connection implements IConnection {
     }
 
     void onMessage(String rawMessage) {
-        List<Message> parsedMessages = MessageParser.parse( rawMessage, this );
+        List<Message> parsedMessages = MessageParser.parse( rawMessage, this.client );
         for (Message message : parsedMessages) {
             if (message.topic == Topic.CONNECTION) {
                 handleConnectionResponse(message);

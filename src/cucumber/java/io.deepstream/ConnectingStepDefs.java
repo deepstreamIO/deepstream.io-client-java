@@ -67,9 +67,9 @@ public class ConnectingStepDefs {
     @Then("^the client throws a \"(.*?)\" error with message \"(.*?)\"")
     public void Client_throws_err_and_message( String expectedError, String expectedMessage ) {
         String lastErrorMessage = context.getLastErrorMessage();
-        System.out.println( "TODO: Checking '" + lastErrorMessage + "' against " + expectedError + " " + expectedMessage );
-/*        Assert.assertTrue( lastErrorMessage.contains( expectedError ));
-        Assert.assertTrue( lastErrorMessage.contains( expectedMessage ));*/
+        Assert.assertNotNull( "Expected a runtime error to have been thrown", lastErrorMessage );
+        Assert.assertTrue( "Expected error event: '" + lastErrorMessage + "' to contain '" + expectedError + "'", lastErrorMessage.contains( expectedError ));
+        Assert.assertTrue( "Expected error message:'" + lastErrorMessage + "' to contain '" + expectedMessage + "'", lastErrorMessage.contains( expectedMessage ));
     }
 
     class LoginStatus implements LoginCallback {
