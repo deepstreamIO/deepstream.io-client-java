@@ -25,7 +25,6 @@ public class ConnectingStepDefs {
         this.client = context.client;
     }
 
-
     @Given("^the client is initialised$")
     public void the_client_is_initialised() {
         Assert.assertEquals(ConnectionState.AWAITING_CONNECTION, client.getConnectionState());

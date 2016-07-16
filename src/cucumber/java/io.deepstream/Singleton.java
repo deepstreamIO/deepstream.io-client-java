@@ -1,5 +1,6 @@
 package io.deepstream;
 
+import io.deepstream.constants.ConnectionState;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
 
@@ -9,8 +10,8 @@ import java.util.Properties;
 
 public class Singleton {
 
-    int serverPort = 9696;
-    int server2port = 9898;
+    int serverPort = 7777;
+    int server2port = 8888;
 
     String lastErrorMessage;
     MockTcpServer server = new MockTcpServer( serverPort );;
@@ -39,6 +40,12 @@ public class Singleton {
         return this.server2;
     }
 
+    MockTcpServer getNewServer1() {
+        this.server.close();
+        this.server = new MockTcpServer( serverPort );
+        return this.server;
+    }
+
     DeepstreamClient getNewClient() throws IOException, URISyntaxException, InterruptedException {
         if( this.client != null ) {
             System.out.println( "Closing old client " );
@@ -53,6 +60,7 @@ public class Singleton {
         options.put( "recordReadTimeout", "260" );
         options.put( "recordDeleteTimeout", "100" );
         options.put( "rpcResponseTimeout", "200" );
+        options.put( "reconnectIntervalIncrement", "200" );
         this.client = new DeepstreamClient( "localhost:" + serverPort, options );
 
         this.client.setRuntimeErrorHandler(new DeepstreamRuntimeErrorHandler() {
@@ -60,6 +68,13 @@ public class Singleton {
             public void onException(Topic topic, Event event, String msg) {
                 System.out.println( "Uncaught error via the DeepstreamRuntimeErrorHandler: " + topic + " " + event + " " +  msg );
                 lastErrorMessage = event + ": " + msg;
+            }
+        });
+
+        this.client.addConnectionChangeListener(new ConnectionChangeListener() {
+            @Override
+            public void connectionStateChanged(ConnectionState connectionState) {
+                System.out.println( "Connection state changed to: " + connectionState );
             }
         });
 

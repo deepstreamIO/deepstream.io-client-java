@@ -23,7 +23,6 @@ Scenario: Redirecting a client to another deepstream
 
 # The client attempts to connect to the other server when it recieves a redirect
 	When the server sends the message C|RED|<SECOND_SERVER_URL>+
-	And the server has 0 active connections
 	When some time passes
 	Then the server has 0 active connections
 		And the client is on the second server
@@ -35,7 +34,7 @@ Scenario: Redirecting a client to another deepstream
 
 # The client sends login credentials
 	When the client logs in with username "XXX" and password "YYY"
-	Then the last message the server recieved is A|REQ|{"username":"XXX","password":"YYY"}+
+	Then the last message the server recieved is A|REQ|{"password":"YYY","username":"XXX"}+
 		And the clients connection state is "AUTHENTICATING"
 
 # The client receives a login confirmation

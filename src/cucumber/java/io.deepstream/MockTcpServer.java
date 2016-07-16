@@ -45,7 +45,6 @@ public class MockTcpServer {
             public void run() {
                 while( serverSocket.isBound() ) {
                     try {
-                        System.out.println( "Waiting for new connection" );
                         Socket sock = serverSocket.accept();
                         System.out.println( "New Connection" );
                         self.lastSocket = sock;
@@ -87,10 +86,14 @@ public class MockTcpServer {
                             int bytesRead = in.read( buffer, 0, 1024 );
                             if( bytesRead > -1 ) {
                                 self.handleMessages( new String( buffer, 0, bytesRead ) );
+                            } else {
+                                System.out.println( "Lost connection 1" );
+                                break;
                             }
                         }
                     } catch (IOException e) {
-                        //self.close();
+                        System.out.println( "Lost connection 2" );
+                        break;
                     }
                 }
                 System.out.println( "Socket is now closed" );
