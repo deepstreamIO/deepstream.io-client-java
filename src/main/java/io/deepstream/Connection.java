@@ -5,6 +5,7 @@ import io.deepstream.constants.*;
 
 import java.net.URISyntaxException;
 import java.util.*;
+import java.util.List;
 
 class Connection implements IConnection {
 
@@ -138,8 +139,10 @@ class Connection implements IConnection {
                 this.client.event.handle(message);
             } else if (message.topic == Topic.RPC) {
                 this.client.rpc.handle(message);
+            } else if ( message.topic == Topic.RECORD ) {
+                this.client.record.handle(message);
             } else {
-
+                //TODO: Throw error
             }
         }
     }

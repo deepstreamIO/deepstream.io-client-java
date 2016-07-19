@@ -75,7 +75,7 @@ class MessageParser {
             return false;
         }
         else if( Types.getType( type ) == Types.OBJECT ) {
-            return new Gson().fromJson( value.substring( 1 ), Object.class );
+            return parseObject( value.substring( 1 ) );
         }
         else if( Types.getType( type ) == Types.UNDEFINED ) {
             // Undefined isn't a thing in Java..
@@ -85,4 +85,7 @@ class MessageParser {
         return null;
     }
 
+    public static Object parseObject(String value) {
+        return new Gson().fromJson( value, Object.class );
+    }
 }

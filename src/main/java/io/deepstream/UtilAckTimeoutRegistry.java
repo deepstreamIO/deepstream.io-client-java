@@ -8,7 +8,7 @@ import io.deepstream.constants.Topic;
 import java.util.Map;
 import java.util.concurrent.*;
 
-class UtilAckTimeoutRegistry implements ConnectionChangeListener, TimeoutListener {
+class UtilAckTimeoutRegistry implements ConnectionChangeListener, UtilTimeoutListener {
 
     private Map<String, ScheduledFuture> register;
     private ScheduledExecutorService executor;
@@ -91,7 +91,7 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, TimeoutListene
      * @param name The name to be added to the register
      * @param action The action to be added to the register
      */
-    public void add( Topic topic, Actions action, String name, Event event, TimeoutListener timeoutListener, int timeout ) {
+    public void add(Topic topic, Actions action, String name, Event event, UtilTimeoutListener timeoutListener, int timeout ) {
         String uniqueName = this.getUniqueName( topic, action, name );
         this.clear( uniqueName );
 
@@ -126,7 +126,7 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, TimeoutListene
      * Adds the uniqueName to the register. Only schedules the timer if
      * the connection state is OPEN, otherwise it adds to the queue of waiting acks.
      */
-    private void addToRegister( Topic topic, Actions action, String name, Event event, TimeoutListener timeoutListener, int timeoutDuration ) {
+    private void addToRegister(Topic topic, Actions action, String name, Event event, UtilTimeoutListener timeoutListener, int timeoutDuration ) {
         AckTimeout task = new AckTimeout( topic, action, name, event, timeoutListener, timeoutDuration );
 
         if( this.state == ConnectionState.OPEN ) {
@@ -167,14 +167,14 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, TimeoutListene
     }
 
     private class AckTimeout implements Runnable {
-        private TimeoutListener timeoutListener;
+        private UtilTimeoutListener timeoutListener;
         private Topic topic;
         private Actions action;
         private String name;
         private Event event;
         private int timeout;
 
-        AckTimeout( Topic topic, Actions action, String name,  Event event, TimeoutListener timeoutListener, int timeout ) {
+        AckTimeout(Topic topic, Actions action, String name, Event event, UtilTimeoutListener timeoutListener, int timeout ) {
             this.topic = topic;
             this.action = action;
             this.name = name;

@@ -63,7 +63,7 @@ public class ObjectDifferTest {
         Pair pair = comparer.getDiff(p, q);
 
         Assert.assertEquals("likes", pair.getKey());
-        Assert.assertEquals( "[\"wine\", \"coffee\"]", getJson(pair.getValue()) );
+        Assert.assertEquals( "[\"wine\",\"coffee\"]", getJson(pair.getValue()) );
     }
 
     @org.junit.Test

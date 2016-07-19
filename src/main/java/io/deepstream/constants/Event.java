@@ -19,9 +19,10 @@ public enum Event {
     INVALID_AUTH_DATA,
     IS_CLOSED,
     UNKNOWN_CALLEE,
-    RECORD_NOT_FOUND;
+    RECORD_NOT_FOUND,
+    MESSAGE_DENIED;
 
-    static public Event getEvent( String event ) {
+    static public Event getEvent(String event ) {
 
         for( Event s : EnumSet.allOf( Event.class ) ) {
             if( s.name().equals( event ) ) {
