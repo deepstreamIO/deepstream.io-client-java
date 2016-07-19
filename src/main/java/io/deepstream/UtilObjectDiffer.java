@@ -58,13 +58,13 @@ class UtilObjectDiffer {
         // No change
         if(oldNode.equals(newNode)) {
             System.out.println("Same object, exiting");
-            return new Pair(path.toString(), value);
+            return new Pair(path.toString(), null);
         }
 
         // Whole new class todo: tests for this
         if(oldNode.getClass() != newNode.getClass()) {
             System.out.println("Not same class, exiting");
-            return new Pair(path.toString(), value);
+            return new Pair(path.toString(), newNode);
         }
 
         // Iterate over fields and compare
@@ -89,7 +89,7 @@ class UtilObjectDiffer {
 
                     if( foundDifference ) {
                         System.out.println("More than 1 item is different. BREAK");
-                        return new Pair(path.toString(), gson.toJson(newNode));
+                        return new Pair(path.toString(), newNode);
                     }
 
                     // Set flags for when only one attribute is different
@@ -101,8 +101,6 @@ class UtilObjectDiffer {
                     newDiffNodeValue = currentNodeValue;
                 }
             }
-
-            System.out.println("Didn't find two fields different");
 
             // Only one attribute in the node is different
             // either recursively getDiff the different attribute, or
@@ -120,7 +118,7 @@ class UtilObjectDiffer {
                     return getDiff(oldDiffNodeValue, newDiffNodeValue);
                 }
 
-                return new Pair( path.toString(), newDiffNodeValue.toString() );
+                return new Pair( path.toString(), newDiffNodeValue );
             }
         }
         catch (IllegalAccessException e)
