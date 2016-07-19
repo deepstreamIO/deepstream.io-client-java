@@ -1,5 +1,6 @@
 package io.deepstream;
 
+import com.google.gson.Gson;
 import javafx.util.Pair;
 import org.junit.After;
 import org.junit.Assert;
@@ -12,10 +13,12 @@ import java.util.List;
 public class ObjectDifferTest {
 
     UtilObjectDiffer comparer;
+    Gson gson;
 
     @Before
     public void setUp() throws URISyntaxException {
         comparer = new UtilObjectDiffer();
+        gson = new Gson();
     }
 
     @After
@@ -45,7 +48,7 @@ public class ObjectDifferTest {
     }
 
     @org.junit.Test
-    public void simpleObjectSendsPatchForList() {
+    public void simpleObjectSendsPatchForWholeList() {
 
         ArrayList listA = new ArrayList();
         listA.add("beer");
@@ -60,7 +63,7 @@ public class ObjectDifferTest {
         Pair pair = comparer.getDiff(p, q);
 
         Assert.assertEquals("likes", pair.getKey());
-        Assert.assertEquals("[wine, coffee]", pair.getValue());
+        Assert.assertEquals( "[\"wine\", \"coffee\"]", getJson(pair.getValue()) );
     }
 
     @org.junit.Test
@@ -78,7 +81,7 @@ public class ObjectDifferTest {
 
         Pair pair = comparer.getDiff(p, q);
         Assert.assertEquals("", pair.getKey());
-        Assert.assertEquals("{\"age\":20,\"name\":\"Craig\",\"likes\":[\"wine\",\"coffee\"]}", pair.getValue());
+        Assert.assertEquals( "{\"age\":20,\"name\":\"Craig\",\"likes\":[\"wine\",\"coffee\"]}", getJson(pair.getValue()) );
     }
 
     @org.junit.Test
@@ -106,7 +109,11 @@ public class ObjectDifferTest {
 
         Pair pair = comparer.getDiff(p, q);
         Assert.assertEquals("favouriteCoffee", pair.getKey());
-        Assert.assertEquals("{\"name\":\"Flat White\",\"price\":7}", pair.getValue());
+        Assert.assertEquals( "{\"name\":\"Flat White\",\"price\":7}", getJson(pair.getValue()) );
+    }
+
+    private String getJson( Object obj ) {
+        return gson.toJson( obj );
     }
 
     class Person {
