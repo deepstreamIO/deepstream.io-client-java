@@ -24,7 +24,7 @@ class RpcHandler implements UtilResubscribeCallback {
         this.client = client;
         this.providers = new HashMap<>();
         this.rpcs = new HashMap<>();
-        this.ackTimeoutRegistry = UtilAckTimeoutRegistry.getAckTimeoutRegistry( this.client );
+        this.ackTimeoutRegistry = client.getAckTimeoutRegistry();
         this.resubscribeNotifier = new UtilResubscribeNotifier( this.client, this );
 
         this.timeoutDuration = Integer.parseInt( (String) this.options.get( "subscriptionTimeout" ) );

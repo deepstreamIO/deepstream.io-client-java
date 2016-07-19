@@ -17,4 +17,4 @@ before_install:
   - ./installJava.sh
 
 script:
-  - ./gradlew cucumber
+  - ./gradlew test

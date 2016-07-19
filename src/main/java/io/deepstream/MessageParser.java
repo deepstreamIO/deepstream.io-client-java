@@ -21,28 +21,35 @@ class MessageParser {
      * and returns an array of parsed message objects
      * or null for invalid messages
      */
-    static List<Message> parse( String message, Connection connection ) {
+    static List<Message> parse( String message, IDeepstreamClient client ) {
         List<Message> messages = new ArrayList();
         String[] rawMessages = message.split( MS );
+        Message parsedMessage;
         for( short i=0; i < rawMessages.length; i++ ) {
-            messages.add( parseMessage( rawMessages[ i ] ) );
+            parsedMessage = parseMessage( rawMessages[ i ], client );
+            if( parsedMessage != null ) {
+                messages.add( parsedMessage );
+            }
         }
         return messages;
     }
 
-    static private Message parseMessage( String message ) {
+    static private Message parseMessage( String message, IDeepstreamClient client ) {
         String[] parts = message.split( MPS );
 
         if( parts.length < 2 ) {
-            throw new Error( Event.MESSAGE_PARSE_ERROR.name() + " Insufficient Parts" );
+            client.onError( null, Event.MESSAGE_PARSE_ERROR, "Insufficient message parts" );
+            return null;
         }
 
         if( Topic.getTopic( parts[ 0 ] ) == null ) {
-            throw new Error( Event.MESSAGE_PARSE_ERROR.name() + " Incorrect Type " + parts[ 0 ]  );
+            client.onError( null, Event.MESSAGE_PARSE_ERROR, "Received message for unknown topic " + parts[ 0 ] );
+            return null;
         }
 
         if( Actions.getAction( parts[ 1 ] ) == null ) {
-            throw new Error( Event.MESSAGE_PARSE_ERROR.name() + " Incorrect Action " + parts[ 1 ] );
+            client.onError( null, Event.MESSAGE_PARSE_ERROR, "Unknown action " + parts[ 1 ] );
+            return null;
         }
 
         return new Message( message, Topic.getTopic( parts[ 0 ] ), Actions.getAction( parts[ 1 ] ), Arrays.copyOfRange( parts, 2, parts.length ) );
@@ -68,7 +75,7 @@ class MessageParser {
             return false;
         }
         else if( Types.getType( type ) == Types.OBJECT ) {
-            return new Gson().fromJson( value.substring( 1 ), Object.class );
+            return parseObject( value.substring( 1 ) );
         }
         else if( Types.getType( type ) == Types.UNDEFINED ) {
             // Undefined isn't a thing in Java..
@@ -78,4 +85,7 @@ class MessageParser {
         return null;
     }
 
+    public static Object parseObject(String value) {
+        return new Gson().fromJson( value, Object.class );
+    }
 }

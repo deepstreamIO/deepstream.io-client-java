@@ -2,6 +2,8 @@ package io.deepstream;
 
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import io.deepstream.constants.Actions;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
@@ -11,28 +13,31 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import java.util.Map;
 
 
-public class Record extends Emitter {
+public class Record extends Emitter implements UtilResubscribeCallback {
 
-    private UtilAckTimeoutRegistry ackTimeoutRegistry;
-    private IConnection connection;
-    IDeepstreamClient client;
-    private String name;
-    private Map recordOptions;
-    private Map options;
     public int usages;
     public int version;
-    Object record;
-    private Object data;
+
+    private final UtilResubscribeNotifier utilResubscribeNotifier;
+    private final UtilAckTimeoutRegistry ackTimeoutRegistry;
+    private final IConnection connection;
+    private final IDeepstreamClient client;
+    private final UtilObjectDiffer differ;
+    private final Gson gson;
+
+    private RecordEventsListener recordEventsListener;
+    private JsonObject data;
+    private String name;
+    private Map options;
     private String rawData;
-    private Gson gson;
-    Class clazz;
-    UtilObjectDiffer differ;
+    private JSONPath path;
+    private Class clazz;
 
 
     public Record(String name, Map recordOptions, IConnection connection, Map options, IDeepstreamClient client) {
-        this.ackTimeoutRegistry = UtilAckTimeoutRegistry.getAckTimeoutRegistry( client );
+        this.ackTimeoutRegistry = client.getAckTimeoutRegistry();
+        this.utilResubscribeNotifier = new UtilResubscribeNotifier( client, this );
         this.name = name;
-        this.recordOptions = recordOptions;
         this.options = options;
         this.usages = 0;
         this.version = 0;
@@ -40,13 +45,26 @@ public class Record extends Emitter {
         this.client = client;
         this.gson = new Gson();
         this.differ = new UtilObjectDiffer();
-        this.data = null;
-        this.rawData = null;
+        this.data = new JsonObject();
+        this.path = new JSONPath( this.data );
         this.scheduleAcks();
         this.sendRead();
     }
 
-    public void set( Object obj ) {
+    public void setRecordEventsListener(RecordEventsListener recordEventsListener) {
+        this.recordEventsListener = recordEventsListener;
+    }
+
+    public void set( Object value ) {
+        this.data = (JsonObject) gson.toJsonTree( value );
+        this.path = new JSONPath( this.data );
+    }
+
+    public void set( String path, Object value ) {
+        this.path.set( path, gson.toJsonTree( value ) );
+    }
+
+    public void set( Class obj ) {
         this.version++;
         Pair<String, Object> pair = differ.getDiff(this.data, obj);
 
@@ -72,8 +90,18 @@ public class Record extends Emitter {
      *
      * @return
      */
-    public Map get() {
-        throw new NotImplementedException();
+    public Object get( String path ) {
+        return this.path.get( path );
+    }
+
+
+    /**
+     * Gets the record as a JSON object
+     *
+     * @return
+     */
+    public JsonElement get() {
+        return this.data;
     }
 
     /**
@@ -85,46 +113,24 @@ public class Record extends Emitter {
     public <T> T get( Class<T> clazz ) {
         if( this.rawData != null ) {
             this.clazz = clazz;
-            this.data = gson.fromJson( this.rawData, clazz );
-            return clone((T) this.data);
+            return clone((T) gson.fromJson( this.rawData, clazz ));
         }
         return null;
     }
 
-    /**
-     * Gets the given path of a record as a typed object
-     *
-     * @param path the path to get from the record
-     * @param clazz type of class to deserialize the path into
-     * @return a deserialized object of type T
-     */
-    public <T> T get( String path, Class<T> clazz ) {
-        throw new NotImplementedException();
+    public void delete() {
     }
 
-    public void get( String path ) {
-        throw new NotImplementedException();
-
+    public void discard() {
     }
 
-    public void onMessage( Message message ) {
-        if( message.action == Actions.READ ) {
-            if( this.version == 0 ) {
-                this.ackTimeoutRegistry.clear( message );
-                this.onRead( message );
-            } else {
-                this.applyUpdate( message, this.client );
-            }
-        }
-        else if( message.action == Actions.ACK ) {
-            this.processAckMessage( message );
-        }
+    protected void onMessage(Message message) {
 
     }
 
     private void onRead( Message message ) {
         this.version = Integer.parseInt( message.data[ 1 ] );
-        this.rawData = message.data[ 2 ];
+        this.data = gson.fromJson( message.data[ 2 ], JsonObject.class );
     }
 
     private void sendRead() {
@@ -172,15 +178,18 @@ public class Record extends Emitter {
     private void destroy() {
         this.clearTimeouts();
         this.off();
-        //this.resubscribeNotifier.destroy();
-        //this.isDestroyed = true;
-        //this.isReady = false;
-        this.client = null;
-        this.connection = null;
+        this.utilResubscribeNotifier.destroy();
+//        this.isDestroyed = true;
+//        this.isReady = false;
     }
 
     private <T> T clone(T data) {
         String serialized = gson.toJson( data );
         return (T) gson.fromJson(serialized, this.clazz);
+    }
+
+    @Override
+    public void resubscribe() {
+        sendRead();
     }
 }

@@ -5,6 +5,7 @@ import io.deepstream.constants.*;
 
 import java.net.URISyntaxException;
 import java.util.*;
+import java.util.List;
 
 class Connection implements IConnection {
 
@@ -127,8 +128,9 @@ class Connection implements IConnection {
     }
 
     void onMessage(String rawMessage) {
-        List<Message> parsedMessages = MessageParser.parse( rawMessage, this );
+        List<Message> parsedMessages = MessageParser.parse( rawMessage, this.client );
         for (Message message : parsedMessages) {
+            System.out.println("Normal message of type " + message.topic + " " + message.raw );
             if (message.topic == Topic.CONNECTION) {
                 handleConnectionResponse(message);
             } else if (message.topic == Topic.AUTH) {
@@ -137,8 +139,10 @@ class Connection implements IConnection {
                 this.client.event.handle(message);
             } else if (message.topic == Topic.RPC) {
                 this.client.rpc.handle(message);
+            } else if ( message.topic == Topic.RECORD ) {
+                this.client.record.handle(message);
             } else {
-                System.out.println("Normal message of type " + message.topic + " " + message.raw );
+                //TODO: Throw error
             }
         }
     }

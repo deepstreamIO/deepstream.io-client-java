@@ -11,21 +11,24 @@ import java.net.URISyntaxException;
 import java.util.Properties;
 import java.util.UUID;
 
-public class DeepstreamClient implements IDeepstreamClient {
+public class DeepstreamClient extends IDeepstreamClient {
 
     private String uuid;
-    private Connection connection;
+    private final Connection connection;
     private DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler;
-    private Properties config;
+    private final Properties config;
+    private UtilAckTimeoutRegistry utilAckTimeoutRegistry;
 
-    public EventHandler event;
-    public RpcHandler rpc;
+    public final RecordHandler record;
+    public final EventHandler event;
+    public final RpcHandler rpc;
 
     public DeepstreamClient( final String url, Properties options ) throws URISyntaxException, IOException {
         this.config = getConfig( options );
         this.connection = new Connection( url, this.config, this );
         this.event = new EventHandler( config, this.connection, this );
         this.rpc = new RpcHandler( config, this.connection, this );
+        this.record = new RecordHandler( config, this.connection, this );
     }
 
     public DeepstreamClient( final String url ) throws URISyntaxException, IOException {
@@ -74,7 +77,7 @@ public class DeepstreamClient implements IDeepstreamClient {
         return uuid;
     }
 
-    public void onError(Topic topic, Event event, String msg) throws DeepstreamException {
+    void onError(Topic topic, Event event, String msg) throws DeepstreamException {
         /*
          * Help to diagnose the problem quicker by checking for
          * some mon problems

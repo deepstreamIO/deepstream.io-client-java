@@ -46,7 +46,6 @@ public class RpcHandlerTest {
         this.errorCallbackMock = mock( ErrorCallback.class );
         this.deepstreamClientMock = new DeepstreamClientMock( this.errorCallbackMock );
         this.deepstreamClientMock.setConnectionState( ConnectionState.OPEN );
-        UtilAckTimeoutRegistry.resetAckTimeoutRegistry( this.deepstreamClientMock );
 
         Properties options = new Properties();
         options.put( "subscriptionTimeout", "10" );
@@ -71,7 +70,7 @@ public class RpcHandlerTest {
     @Test
     public void errorsIfNoAckReceivedForProvide() throws InterruptedException {
         rpcHandler.provide( "addTwo", addTwoCallback );
-        Thread.sleep(30);
+        Thread.sleep(50);
         verify( errorCallbackMock, times(1) ).onError( Topic.RPC, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE addTwo" );
     }
 
@@ -167,7 +166,7 @@ public class RpcHandlerTest {
 
         Assert.assertEquals( TestUtil.replaceSeperators("P|REQ|addTwo|1|O{\"numA\":3,\"numB\":8}+"), connectionMock.lastSentMessage);
 
-        Thread.sleep(20);
+        Thread.sleep(50);
         verify(this.errorCallbackMock, times(1)).onError( Topic.RPC, Event.ACK_TIMEOUT, "No ACK message received in time for REQUEST 1" );
     }
 

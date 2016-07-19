@@ -32,7 +32,6 @@ public class EventHandlerTest {
         this.errorCallbackMock = mock( ErrorCallback.class );
         this.deepstreamClientMock = new DeepstreamClientMock( this.errorCallbackMock );
         this.deepstreamClientMock.setConnectionState( ConnectionState.OPEN );
-        UtilAckTimeoutRegistry.resetAckTimeoutRegistry( this.deepstreamClientMock );
 
         Map options = new Properties();
         options.put( "subscriptionTimeout", "10" );
@@ -61,7 +60,7 @@ public class EventHandlerTest {
     @Test
     public void emitsErrorIfNotAckReceivedForSubscribe() throws InterruptedException {
         eventHandler.subscribe( "myEvent", callbackMock );
-        Thread.sleep(30);
+        Thread.sleep(50);
         verify( errorCallbackMock, times(1) ).onError(Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE myEvent");
     }
 

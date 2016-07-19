@@ -7,7 +7,7 @@ import io.deepstream.constants.Topic;
 import java.util.Map;
 
 
-class Rpc implements TimeoutListener {
+class Rpc implements UtilTimeoutListener {
 
     private String uid;
     private UtilAckTimeoutRegistry ackTimeoutRegistry;
@@ -20,7 +20,7 @@ class Rpc implements TimeoutListener {
         this.client = client;
         this.uid = uid;
         this.callback = callback;
-        this.ackTimeoutRegistry = UtilAckTimeoutRegistry.getAckTimeoutRegistry( this.client );
+        this.ackTimeoutRegistry = client.getAckTimeoutRegistry();
         this.setTimeouts();
     }
 
