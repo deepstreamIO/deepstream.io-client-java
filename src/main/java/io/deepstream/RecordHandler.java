@@ -2,6 +2,7 @@ package io.deepstream;
 
 
 import io.deepstream.constants.Event;
+import io.deepstream.constants.RecordEvents;
 import io.deepstream.constants.Topic;
 
 import java.util.HashMap;
@@ -21,36 +22,34 @@ public class RecordHandler {
 
 
     public Record getRecord( String name ) {
-        if( !records.containsKey( name ) ) {
-            Record record = new Record( name, new HashMap(), connection, new HashMap(), client );
+        Record record = records.get( name );
+        if( record == null ) {
+            record = new Record( name, new HashMap(), connection, new HashMap(), client );
             records.put( name, record );
             setListeners( record );
         }
-
-        Record record = records.get( name );
         record.usages++;
-
         return record;
     }
 
     private void setListeners(Record record) {
-        record.on("error", new Emitter.Listener() {
+        record.on(RecordEvents.ERROR, new Emitter.Listener() {
             public void call(Object... args) {
                 String[] data = (String[]) args;
                 client.onError(Topic.RECORD, Event.getEvent(data[ 1 ]), data[ 2 ] );
             }
         });
-        record.on("destroyPending", new Emitter.Listener() {
+        record.on(RecordEvents.DESTROY_PENDING, new Emitter.Listener() {
             public void call(Object... args) {
 
             }
         });
-        record.on("deleted", new Emitter.Listener() {
+        record.on(RecordEvents.DELETED, new Emitter.Listener() {
             public void call(Object... args) {
 
             }
         });
-        record.on("discard", new Emitter.Listener() {
+        record.on(RecordEvents.DISCARD, new Emitter.Listener() {
             public void call(Object... args) {
 
             }

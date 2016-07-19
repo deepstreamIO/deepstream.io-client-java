@@ -20,6 +20,17 @@ public class Emitter {
             = new ConcurrentHashMap<String, ConcurrentLinkedQueue<Listener>>();
 
     /**
+     *
+     * @param enu eventName as an Enum
+     * @param fn
+     * @return a reference to this object.
+     */
+    public Emitter on( Enum enu, Listener fn ) {
+        this.on( enu.toString(), fn );
+        return this;
+    }
+
+    /**
      * Listens on the event.
      * @param event event name.
      * @param fn
