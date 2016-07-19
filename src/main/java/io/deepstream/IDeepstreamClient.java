@@ -13,9 +13,9 @@ abstract class IDeepstreamClient {
     abstract ConnectionState getConnectionState();
     abstract String getUid();
 
-    UtilAckTimeoutRegistry getAckTimeoutRegistry( IDeepstreamClient client ) {
+    UtilAckTimeoutRegistry getAckTimeoutRegistry() {
         if(  utilAckTimeoutRegistry == null ) {
-            utilAckTimeoutRegistry = new UtilAckTimeoutRegistry( client );
+            utilAckTimeoutRegistry = new UtilAckTimeoutRegistry( this );
         }
         return utilAckTimeoutRegistry;
     }

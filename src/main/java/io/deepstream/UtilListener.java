@@ -10,21 +10,21 @@ class UtilListener implements UtilResubscribeCallback {
     private UtilAckTimeoutRegistry ackTimoutRegistry;
     private Topic topic;
     private String pattern;
-    private Emitter.Listener callback;
+    private ListenCallback listenerCallback;
     private Map options;
     private IDeepstreamClient client;
     private IConnection connection;
     private UtilResubscribeNotifier resubscribeNotifier;
 
-    public UtilListener(Topic topic, String pattern, Emitter.Listener callback, Map options, IDeepstreamClient client, IConnection connection ) {
+    public UtilListener(Topic topic, String pattern, ListenCallback listenerCallback, Map options, IDeepstreamClient client, IConnection connection ) {
         this.topic = topic;
         this.pattern = pattern;
-        this.callback = callback;
+        this.listenerCallback = listenerCallback;
         this.options = options;
         this.client = client;
         this.connection = connection;
         this.resubscribeNotifier = new UtilResubscribeNotifier( this.client, this );
-        this.ackTimoutRegistry = client.getAckTimeoutRegistry( this.client );
+        this.ackTimoutRegistry = client.getAckTimeoutRegistry();
         this.scheduleAckTimeout();
         this.sendListen();
     }
@@ -32,7 +32,7 @@ class UtilListener implements UtilResubscribeCallback {
     public void destroy() {
         this.connection.sendMsg( this.topic, Actions.UNLISTEN, new String[] { this.pattern } );
         this.resubscribeNotifier.destroy();
-        this.callback = null;
+        this.listenerCallback = null;
         this.pattern = null;
         this.client = null;
         this.connection = null;
@@ -44,7 +44,12 @@ class UtilListener implements UtilResubscribeCallback {
             this.ackTimoutRegistry.clear( message );
         } else {
             boolean isFound = message.action.equals( Actions.SUBSCRIBTION_FOR_PATTERN_FOUND );
-            this.callback.call( message.data[ 1 ], isFound );
+            if( isFound ) {
+                this.listenerCallback.onSubscriptionForPatternAdded( message.data[ 1 ] );
+            } else {
+                this.listenerCallback.onSubscriptionForPatternRemoved( message.data[ 1 ] );
+            }
+
         }
     }
 
