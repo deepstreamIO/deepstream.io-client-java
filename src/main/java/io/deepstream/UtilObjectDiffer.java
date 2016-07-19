@@ -55,6 +55,10 @@ class UtilObjectDiffer {
     Pair getDiff(Object oldNode, Object newNode) {
         boolean foundDifference = false;
 
+        if(oldNode == null) {
+            return new Pair(path.toString(), newNode);
+        }
+
         // No change
         if(oldNode.equals(newNode)) {
             System.out.println("Same object, exiting");

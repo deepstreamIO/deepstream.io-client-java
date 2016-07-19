@@ -72,13 +72,21 @@ public class RecordSetTest {
         Assert.assertEquals( TestUtil.replaceSeperators("R|U|testRecord|1|{\"firstName\":\"Harry\"}+"), connectionMock.lastSentMessage );
     }
 
-    //Todo: once paths have been done
-    /*it( 'sends update messages for path changes ', function(){
-        record.set( 'lastname', 'Hempel' );
-        expect( connection.lastSendMessage ).toBe( msg( 'R|P|testRecord|2|lastname|SHempel+' ) );
-    });
+    @Test
+    public void sendsPatchForSinglePathUpdate() {
+        record.onMessage( new Message(
+                "raw",
+                Topic.RECORD,
+                Actions.READ,
+                new String[] { "testRecord", String.valueOf( 0 ), "{\"firstName\":\"Fred\",\"lastName\":\"Weasley\"}" }
+        ));
+        Person p = record.get( Person.class );
+        p.firstName = "George";
+        record.set( p );
+        Assert.assertEquals( TestUtil.replaceSeperators("R|P|testRecord|1|firstName|SGeorge+"), connectionMock.lastSentMessage );
+    }
 
-    it( 'deletes value when sending undefined', function(){
+    /*it( 'deletes value when sending undefined', function(){
         record.set( 'lastname', undefined );
         expect( connection.lastSendMessage ).toBe( msg( 'R|P|testRecord|3|lastname|U+' ) );
         expect( record.get() ).toEqual( { firstname: 'Wolfram' } );
