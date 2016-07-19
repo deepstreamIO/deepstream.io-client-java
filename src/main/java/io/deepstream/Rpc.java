@@ -20,7 +20,7 @@ class Rpc implements TimeoutListener {
         this.client = client;
         this.uid = uid;
         this.callback = callback;
-        this.ackTimeoutRegistry = UtilAckTimeoutRegistry.getAckTimeoutRegistry( this.client );
+        this.ackTimeoutRegistry = client.getAckTimeoutRegistry( this.client );
         this.setTimeouts();
     }
 

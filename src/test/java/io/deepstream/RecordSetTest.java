@@ -17,21 +17,23 @@ import java.util.Map;
 import java.util.Properties;
 
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 @RunWith( JUnit4.class )
 public class RecordSetTest {
 
     private Record record;
     private ConnectionMock connectionMock;
-    private IDeepstreamClient deepstreamClientMock;
+    private DeepstreamClientMock deepstreamClientMock;
     private Person personMock;
+    private ErrorCallback errorCallbackMock;
 
     @Before
     public void setUp() throws URISyntaxException {
         this.personMock = new Person( "Fred", "Weasley" );
+
         this.connectionMock = new ConnectionMock();
-        this.deepstreamClientMock = mock( DeepstreamClient.class );
-        when( this.deepstreamClientMock.getConnectionState() ).thenReturn( ConnectionState.OPEN );
+        this.errorCallbackMock = mock( ErrorCallback.class );
+        this.deepstreamClientMock = new DeepstreamClientMock( this.errorCallbackMock );
+        this.deepstreamClientMock.setConnectionState( ConnectionState.OPEN );
 
         Map options = new Properties();
         options.put( "recordReadAckTimeout", "10" );

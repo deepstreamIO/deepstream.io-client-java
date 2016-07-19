@@ -56,16 +56,19 @@ public class RpcStepDefs {
     @When("^the client responds to the RPC \"([^\"]*)\" with data \"([^\"]*)\"$")
     public void the_client_responds_to_the_RPC_with_data(String rpcName, String rpcData) throws Throwable {
         rpcResponse.send( rpcData );
+        Thread.sleep(GENERAL_TIMEOUT * 2);
     }
 
     @When("^the client responds to the RPC \"([^\"]*)\" with the error \"([^\"]*)\"$")
     public void the_client_responds_to_the_RPC_with_the_error(String rpcName, String rpcError) throws Throwable {
         rpcResponse.error( rpcError );
+        Thread.sleep(GENERAL_TIMEOUT * 2);
     }
 
     @When("^the client rejects the RPC \"([^\"]*)\"$")
     public void the_client_rejects_the_RPC(String arg1) throws Throwable {
         rpcResponse.reject();
+        Thread.sleep(GENERAL_TIMEOUT * 2);
     }
 
     class RpcRequestedMock implements RpcRequested {

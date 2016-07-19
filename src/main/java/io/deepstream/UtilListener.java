@@ -24,7 +24,7 @@ class UtilListener implements UtilResubscribeCallback {
         this.client = client;
         this.connection = connection;
         this.resubscribeNotifier = new UtilResubscribeNotifier( this.client, this );
-        this.ackTimoutRegistry = UtilAckTimeoutRegistry.getAckTimeoutRegistry( this.client );
+        this.ackTimoutRegistry = client.getAckTimeoutRegistry( this.client );
         this.scheduleAckTimeout();
         this.sendListen();
     }

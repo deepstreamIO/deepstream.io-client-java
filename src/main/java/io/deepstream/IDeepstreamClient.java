@@ -4,10 +4,19 @@ import io.deepstream.constants.ConnectionState;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
 
-interface IDeepstreamClient {
-    IDeepstreamClient addConnectionChangeListener(ConnectionChangeListener connectionChangeListener);
-    IDeepstreamClient removeConnectionChangeListener( ConnectionChangeListener connectionChangeListener );
-    void onError(Topic topic, Event event, String message);
-    ConnectionState getConnectionState();
-    String getUid();
+abstract class IDeepstreamClient {
+    private UtilAckTimeoutRegistry utilAckTimeoutRegistry;
+
+    abstract IDeepstreamClient addConnectionChangeListener(ConnectionChangeListener connectionChangeListener);
+    abstract IDeepstreamClient removeConnectionChangeListener( ConnectionChangeListener connectionChangeListener );
+    abstract void onError(Topic topic, Event event, String message);
+    abstract ConnectionState getConnectionState();
+    abstract String getUid();
+
+    UtilAckTimeoutRegistry getAckTimeoutRegistry( IDeepstreamClient client ) {
+        if(  utilAckTimeoutRegistry == null ) {
+            utilAckTimeoutRegistry = new UtilAckTimeoutRegistry( client );
+        }
+        return utilAckTimeoutRegistry;
+    }
 }

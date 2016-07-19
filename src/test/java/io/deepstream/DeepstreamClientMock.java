@@ -6,7 +6,7 @@ import io.deepstream.constants.Topic;
 
 import java.util.ArrayList;
 
-public class DeepstreamClientMock implements IDeepstreamClient, ErrorCallback {
+public class DeepstreamClientMock extends IDeepstreamClient implements ErrorCallback {
 
     private ArrayList<ConnectionChangeListener> connectionListeners;
     private ConnectionState connectionState;

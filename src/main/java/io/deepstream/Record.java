@@ -30,7 +30,7 @@ public class Record extends Emitter {
 
 
     public Record(String name, Map recordOptions, IConnection connection, Map options, IDeepstreamClient client) {
-        this.ackTimeoutRegistry = UtilAckTimeoutRegistry.getAckTimeoutRegistry( client );
+        this.ackTimeoutRegistry = client.getAckTimeoutRegistry( client );
         this.name = name;
         this.recordOptions = recordOptions;
         this.options = options;

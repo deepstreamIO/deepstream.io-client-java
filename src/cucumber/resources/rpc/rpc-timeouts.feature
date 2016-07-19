@@ -37,7 +37,7 @@ Scenario: RPC Timeouts
 
 	# The server does not respond in time with a subscribe ACK
 	When some time passes
-	Then the client throws a "ACK_TIMEOUT" error with message "No ACK message received in time for toUppercase"
+	Then the client throws a "ACK_TIMEOUT" error with message "No ACK message received in time for SUBSCRIBE toUppercase"
 
 # Unproviding
 
@@ -47,4 +47,4 @@ Scenario: RPC Timeouts
 
 	# The server does not respond in time with an unsubscribe ACK
 	When some time passes
-	Then the client throws a "ACK_TIMEOUT" error with message "No ACK message received in time for toUppercase"
+	Then the client throws a "ACK_TIMEOUT" error with message "No ACK message received in time for UNSUBSCRIBE toUppercase"

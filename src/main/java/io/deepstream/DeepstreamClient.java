@@ -11,12 +11,13 @@ import java.net.URISyntaxException;
 import java.util.Properties;
 import java.util.UUID;
 
-public class DeepstreamClient implements IDeepstreamClient {
+public class DeepstreamClient extends IDeepstreamClient {
 
     private String uuid;
     private Connection connection;
     private DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler;
     private Properties config;
+    private UtilAckTimeoutRegistry utilAckTimeoutRegistry;
 
     public EventHandler event;
     public RpcHandler rpc;
@@ -74,7 +75,7 @@ public class DeepstreamClient implements IDeepstreamClient {
         return uuid;
     }
 
-    public void onError(Topic topic, Event event, String msg) throws DeepstreamException {
+    void onError(Topic topic, Event event, String msg) throws DeepstreamException {
         /*
          * Help to diagnose the problem quicker by checking for
          * some mon problems
