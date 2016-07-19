@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import io.deepstream.constants.Actions;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
+import javafx.util.Pair;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.Map;
@@ -20,9 +21,12 @@ public class Record extends Emitter {
     private Map options;
     public int usages;
     public int version;
+    Object record;
+    private Object data;
     private String rawData;
     private Gson gson;
     Class clazz;
+    UtilObjectDiffer differ;
 
 
     public Record(String name, Map recordOptions, IConnection connection, Map options, IDeepstreamClient client) {
@@ -35,6 +39,8 @@ public class Record extends Emitter {
         this.connection = connection;
         this.client = client;
         this.gson = new Gson();
+        this.differ = new UtilObjectDiffer();
+        this.data = null;
         this.rawData = null;
         this.scheduleAcks();
         this.sendRead();
@@ -42,12 +48,23 @@ public class Record extends Emitter {
 
     public void set( Object obj ) {
         this.version++;
-        this.rawData = gson.toJson( obj );
-        this.connection.sendMsg( Topic.RECORD, Actions.UPDATE, new String[] {
+        Pair<String, Object> pair = differ.getDiff(this.data, obj);
+
+        if( pair.getKey().equals("") ) {
+            this.connection.sendMsg( Topic.RECORD, Actions.UPDATE, new String[] {
+                    this.name,
+                    String.valueOf( this.version ),
+                    gson.toJson( pair.getValue() )
+            });
+        }
+        else {
+            this.connection.sendMsg( Topic.RECORD, Actions.PATCH, new String[] {
                 this.name,
                 String.valueOf( this.version ),
-                this.rawData
-        });
+                pair.getKey(),
+                MessageBuilder.typed( pair.getValue() )
+            });
+        }
     }
 
     /**
@@ -68,9 +85,9 @@ public class Record extends Emitter {
     public <T> T get( Class<T> clazz ) {
         if( this.rawData != null ) {
             this.clazz = clazz;
-            return gson.fromJson( this.rawData, clazz );
+            this.data = gson.fromJson( this.rawData, clazz );
+            return clone((T) this.data);
         }
-
         return null;
     }
 
@@ -160,5 +177,10 @@ public class Record extends Emitter {
         //this.isReady = false;
         this.client = null;
         this.connection = null;
+    }
+
+    private <T> T clone(T data) {
+        String serialized = gson.toJson( data );
+        return (T) gson.fromJson(serialized, this.clazz);
     }
 }
