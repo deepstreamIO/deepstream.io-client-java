@@ -1,24 +1,19 @@
 package io.deepstream;
 
-import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import javafx.util.Pair;
 
-import java.lang.reflect.Field;
-import java.util.List;
 import java.util.Map;
 
 
 class UtilObjectDiffer {
 
     StringBuilder path = new StringBuilder();
-    Gson gson = new Gson();
-    String value;
-
-    String oldDiffNodeName;
-    Object oldDiffNodeValue;
-
-    String newDiffNodeName;
-    Object newDiffNodeValue;
+    JsonElement value;
+    String key;
+    String pathKey;
 
     /**
      * Gets the difference between two objects.
@@ -45,89 +40,61 @@ class UtilObjectDiffer {
      *
      * The following would be returned in a Pair:
      *
-     * ( "favouriteCoffee/name", "Latte" )
+     * ( "favouriteCoffee.name", "Latte" )
      *
-     * @param oldNode the old version of the object
-     * @param newNode the new version of the object
+     * @param nodeA the old version of the object
+     * @param nodeB the new version of the object
      * @return a Pair<String,Object> with the path of the changes and the actual changes
      */
-    //todo: investigate returning an object to use with MessageBuilder.typed()
-    Pair getDiff(Object oldNode, Object newNode) {
-        boolean foundDifference = false;
+    public Pair getUpdateObject(JsonElement nodeA, JsonElement nodeB) {
 
-        if(oldNode == null) {
-            return new Pair(path.toString(), newNode);
+        if( nodeA instanceof JsonArray || nodeB instanceof JsonArray ) {
+            System.out.println("Array, returning");
+            return new Pair(path.toString(), nodeB);
         }
 
-        // No change
-        if(oldNode.equals(newNode)) {
-            System.out.println("Same object, exiting");
+        JsonObject node1 = (JsonObject) nodeA;
+        JsonObject node2 = (JsonObject) nodeB;
+
+        if( node1.equals(node2) ) {
+            System.out.println("Same object, returning");
             return new Pair(path.toString(), null);
         }
 
-        // Whole new class todo: tests for this
-        if(oldNode.getClass() != newNode.getClass()) {
-            System.out.println("Not same class, exiting");
-            return new Pair(path.toString(), newNode);
+        int difference = node1.entrySet().size() - node2.entrySet().size();
+        if( difference > 1 || difference < -1 ) {
+            System.out.println("More than one is different, update for node needed");
+            return new Pair(path.toString(), node2);
         }
 
-        // Iterate over fields and compare
-        //todo: investigate sorting for these fields
-        Field[] oldFields = oldNode.getClass().getDeclaredFields();
-        Field[] newFields = newNode.getClass().getDeclaredFields();
-        try
-        {
-            for (int i = 0; i < oldFields.length; i++) {
-                Object oldNodeValue = oldFields[i].get(oldNode);
-                String oldNodeName = oldFields[i].getName();
-                Object currentNodeValue = newFields[i].get(newNode);
-                String currentNodeName = newFields[i].getName();
+        boolean foundDifferentNode = false;
 
-                if( oldNodeValue == null && currentNodeValue == null ) {
-                    continue;
-                }
+        for (Map.Entry<String, JsonElement> s : node1.entrySet()) {
+            key = s.getKey();
 
-                System.out.printf("Old %s is: %s. New %s is: %s\n", oldNodeName, oldNodeValue, currentNodeName, currentNodeValue);
-
-                if( !oldNodeValue.equals(currentNodeValue) ) {
-
-                    if( foundDifference ) {
-                        System.out.println("More than 1 item is different. BREAK");
-                        return new Pair(path.toString(), newNode);
-                    }
-
-                    // Set flags for when only one attribute is different
-                    System.out.println("They are different");
-                    foundDifference = true;
-                    oldDiffNodeName = oldNodeName;
-                    oldDiffNodeValue = oldNodeValue;
-                    newDiffNodeName = currentNodeName;
-                    newDiffNodeValue = currentNodeValue;
-                }
+            if( node2.get(key).equals(node1.get(key)) ) {
+                System.out.printf("Same values old:%s new:%s\n", node1.get(key), node2.get(key));
             }
 
-            // Only one attribute in the node is different
-            // either recursively getDiff the different attribute, or
-            // return if a primitive
-            if( newDiffNodeValue != null ) {
-                System.out.println("Found one field different");
-                buildPath( newDiffNodeName );
+            else {
 
-                if(  newDiffNodeValue instanceof Object && (
-                        !(newDiffNodeValue instanceof String) &&
-                                !(newDiffNodeValue instanceof List) &&
-                                !(newDiffNodeValue instanceof Map) ) ) //todo: implement functionality for maps
-                {
-                    System.out.println("Going deeper...");
-                    return getDiff(oldDiffNodeValue, newDiffNodeValue);
+                if( foundDifferentNode ) {
+                    System.out.println("Found two different! BREAK");
+                    return new Pair(path.toString(), node2);
                 }
 
-                return new Pair( path.toString(), newDiffNodeValue );
+                System.out.printf("Found a different value old:%s new:%s\n", node1.get(key), node2.get(key));
+                value = node2.get(key);
+                pathKey = key;
+                foundDifferentNode = true;
             }
         }
-        catch (IllegalAccessException e)
-        {
-            e.printStackTrace();
+
+        buildPath( pathKey );
+
+        if( value instanceof JsonObject ) {
+            System.out.println("Going deeper");
+            return getUpdateObject( node1.get(key), value);
         }
         return new Pair(path.toString(), value);
     }
@@ -136,7 +103,7 @@ class UtilObjectDiffer {
         if( path.toString().equals("") ) {
             path.append( currentNodeName );
         } else {
-            path.append( "/" );
+            path.append( "." );
             path.append( currentNodeName );
         }
     }
