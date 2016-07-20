@@ -295,4 +295,8 @@ public class RecordHandler implements RecordEventsListener {
         records.remove( recordName );
         lists.remove( recordName );
     }
+
+    @Override
+    public void onRecordReady(String recordName) {
+    }
 }
