@@ -137,12 +137,12 @@ public class JSONPathTest {
         Assert.assertEquals( "randomValue", coreElement.get( "randomKey" ).getAsString() );
     }
 
-/*    @Test
+    @Test
     public void extendsExisitingArrays() {
-        jsonPath.set( "randomKey[ 0 ]", gson.toJsonTree( "randomValue" ) );
+        jsonPath.set( "randomKey[ 0 ].name", gson.toJsonTree( "randomValue" ) );
         Assert.assertEquals(
                 "randomValue",
-                coreElement.get( "randomKey" ).getAsJsonArray().get( 0 ).getAsString()
+                coreElement.get( "randomKey" ).getAsJsonArray().get( 0 ).getAsJsonObject().get( "name" ).getAsString()
         );
-    }*/
+    }
 }

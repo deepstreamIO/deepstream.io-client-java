@@ -38,32 +38,62 @@ public class JSONPath {
         while (st.hasMoreTokens() && !traverser.isJsonNull()) {
             token = st.nextToken();
             parent = traverser;
-            if (isArray(token)) {
-                traverser = getArrayElement(element, token);
 
-                token = getIndex( token );
-            } else {
-                traverser = traverser.getAsJsonObject().get(token);
+            System.out.println( token );
+
+            try {
+                if (isArray(token)) {
+                    traverser = getArrayElement(traverser, token);
+                    token = getIndex( token );
+                } else if( traverser.isJsonObject() ){
+                    traverser = traverser.getAsJsonObject().get(token);
+                } else if( traverser.isJsonArray() ){
+                    break;
+                }
+            } catch( NullPointerException e ) {
+                if( value != null ) {
+                    if (isArray(token)) {
+                        int index = Integer.parseInt(getIndex(token));
+                        String prefix = getTokenPrefix(token);
+                        JsonArray array = new JsonArray();
+
+                        for (int i = 0; i < index; i++) {
+                            array.add(JsonNull.INSTANCE);
+                        }
+
+                        if (st.hasMoreTokens()) {
+                            JsonElement temp = new JsonObject();
+                            array.add(temp);
+                        }
+
+                        traverser.getAsJsonObject().add(prefix, array);
+                        traverser = array.get(index);
+                    }
+                }
             }
         }
 
         if( value != null && token != null ) {
-            if( parent.isJsonObject() ) {
-                JsonObject object = (JsonObject) parent;
-                object.add( token, value );
-            }
-            else if( parent.isJsonArray() ) {
-                JsonArray object = (JsonArray) parent;
-                int size = object.size();
-                int index = Integer.parseInt( token );
-                for( int i=size; i<=index; i++ ){
-                    object.add( JsonNull.INSTANCE );
-                }
-                object.set( index, value );
-            }
+            createNesting(value, parent, token);
         }
 
         return traverser;
+    }
+
+    private static void createNesting(JsonElement value, JsonElement parent, String token) {
+        if( parent.isJsonObject() ) {
+            JsonObject object = (JsonObject) parent;
+            object.add( token, value );
+        }
+        else if( parent.isJsonArray() ) {
+            JsonArray object = (JsonArray) parent;
+            int size = object.size();
+            int index = Integer.parseInt( token );
+            for( int i=size; i<=index; i++ ){
+                object.add( JsonNull.INSTANCE );
+            }
+            object.set( index, value );
+        }
     }
 
     private static JsonElement getArrayElement(JsonElement traverser,
@@ -78,11 +108,6 @@ public class JSONPath {
             return null;
         } catch( IndexOutOfBoundsException e ) {
             return null;
-        } catch( NullPointerException e ) {
-            String arrayName = getTokenPrefix(token);
-            JsonObject object = new JsonObject();
-            object.add( arrayName, new JsonArray() );
-            return object;
         }
     }
 
@@ -95,8 +120,13 @@ public class JSONPath {
     }
 
     private static boolean isArray(String token) {
-        boolean isArray = ( token.contains("[") && token.contains("]") && (token.indexOf("[") < token.indexOf("]")));
+        try {
+            Integer.parseInt( token );
+            return true;
+        } catch( Exception e ) {
+        }
 
+        boolean isArray = ( token.contains("[") && token.contains("]") && (token.indexOf("[") < token.indexOf("]")));
         try {
             Integer.parseInt( token.substring(token.indexOf("[")+1, token.indexOf("]") ).trim() );
             return isArray;
