@@ -1,6 +1,7 @@
 package io.deepstream;
 
 
+import com.google.gson.JsonObject;
 import io.deepstream.constants.ConnectionState;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
@@ -13,9 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class RecordTest {
 
@@ -67,10 +66,28 @@ public class RecordTest {
     public void recordInitialisedCorrectly() {
         recordSendsDownCorrectCreateMessage();
         record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|A|S|recordA" ), deepstreamClientMock ) );
-        record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|recordA|0|{}" ), deepstreamClientMock ) );
+        record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|recordA|0|{ \"name\": \"sam\" }" ), deepstreamClientMock ) );
         Assert.assertTrue( record.isReady );
         verify( recordEventsListeners, times(1) ).onRecordReady( "recordA" );
     }
+
+    @Test
+    public void recordReturnsObjectCorrectly() {
+        JsonObject data = new JsonObject();
+        data.addProperty( "name", "sam" );
+
+        recordInitialisedCorrectly();
+        Assert.assertEquals( data, record.get() );
+    }
+
+/*    @Test
+    public void recordReturnsObjectPathsCorrectly() {
+        JsonObject data = new JsonObject();
+        data.addProperty( "name", "sam" );
+
+        recordInitialisedCorrectly();
+        Assert.assertEquals( "sam", record.get( "name" ) );
+    }*/
 
     @Test
     public void recordDiscardsCorrectly() throws DeepstreamRecordDestroyedException {
