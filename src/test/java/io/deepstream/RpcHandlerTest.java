@@ -36,15 +36,16 @@ public class RpcHandlerTest {
             response.send( numA + numB );
         }
     };
-    ErrorCallback errorCallbackMock;
+    DeepstreamRuntimeErrorHandler errorCallbackMock;
 
 
     @Before
     public void setUp() throws URISyntaxException {
         this.callbackMock = mock( RpcResponseCallback.class );
         this.connectionMock = new ConnectionMock();
-        this.errorCallbackMock = mock( ErrorCallback.class );
-        this.deepstreamClientMock = new DeepstreamClientMock( this.errorCallbackMock );
+        this.errorCallbackMock = mock( DeepstreamRuntimeErrorHandler.class );
+        this.deepstreamClientMock = new DeepstreamClientMock();
+        this.deepstreamClientMock.setRuntimeErrorHandler( errorCallbackMock );
         this.deepstreamClientMock.setConnectionState( ConnectionState.OPEN );
 
         Properties options = new Properties();
@@ -71,7 +72,7 @@ public class RpcHandlerTest {
     public void errorsIfNoAckReceivedForProvide() throws InterruptedException {
         rpcHandler.provide( "addTwo", addTwoCallback );
         Thread.sleep(50);
-        verify( errorCallbackMock, times(1) ).onError( Topic.RPC, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE addTwo" );
+        verify( errorCallbackMock, times(1) ).onException( Topic.RPC, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE addTwo" );
     }
 
     @Test
@@ -167,7 +168,7 @@ public class RpcHandlerTest {
         Assert.assertEquals( TestUtil.replaceSeperators("P|REQ|addTwo|1|O{\"numA\":3,\"numB\":8}+"), connectionMock.lastSentMessage);
 
         Thread.sleep(50);
-        verify(this.errorCallbackMock, times(1)).onError( Topic.RPC, Event.ACK_TIMEOUT, "No ACK message received in time for REQUEST 1" );
+        verify(this.errorCallbackMock, times(1)).onException( Topic.RPC, Event.ACK_TIMEOUT, "No ACK message received in time for REQUEST 1" );
     }
 
     @Test

@@ -15,14 +15,14 @@ public class RecordHandlerTest {
     DeepstreamClientMock deepstreamClientMock;
     ConnectionMock connectionMock;
     RecordHandler recordHandler;
-    ErrorCallback errorCallbackMock;
+    DeepstreamRuntimeErrorHandler errorCallbackMock;
 
     @Before
     public void setUp() {
-
         this.connectionMock = new ConnectionMock();
-        this.errorCallbackMock = mock( ErrorCallback.class );
-        this.deepstreamClientMock = new DeepstreamClientMock( this.errorCallbackMock );
+        this.errorCallbackMock = mock( DeepstreamRuntimeErrorHandler.class );
+        this.deepstreamClientMock = new DeepstreamClientMock();
+        this.deepstreamClientMock.setRuntimeErrorHandler( errorCallbackMock );
         this.deepstreamClientMock.setConnectionState( ConnectionState.OPEN );
 
         Map options = new Properties();

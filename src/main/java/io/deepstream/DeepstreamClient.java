@@ -2,8 +2,6 @@ package io.deepstream;
 
 import com.google.gson.JsonObject;
 import io.deepstream.constants.ConnectionState;
-import io.deepstream.constants.Event;
-import io.deepstream.constants.Topic;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -15,9 +13,7 @@ public class DeepstreamClient extends IDeepstreamClient {
 
     private String uuid;
     private final Connection connection;
-    private DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler;
     private final Properties config;
-    private UtilAckTimeoutRegistry utilAckTimeoutRegistry;
 
     public final RecordHandler record;
     public final EventHandler event;
@@ -33,11 +29,6 @@ public class DeepstreamClient extends IDeepstreamClient {
 
     public DeepstreamClient( final String url ) throws URISyntaxException, IOException {
         this( url, new Properties() );
-    }
-
-    public DeepstreamClient setRuntimeErrorHandler( DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler )  {
-        this.deepstreamRuntimeErrorHandler = deepstreamRuntimeErrorHandler;
-        return this;
     }
 
     public DeepstreamClient login( JsonObject data ) throws DeepstreamLoginException {
@@ -75,28 +66,6 @@ public class DeepstreamClient extends IDeepstreamClient {
             return uuid;
         }
         return uuid;
-    }
-
-    void onError(Topic topic, Event event, String msg) throws DeepstreamException {
-        /*
-         * Help to diagnose the problem quicker by checking for
-         * some mon problems
-         */
-        if( event.equals( Event.ACK_TIMEOUT ) || event.equals( Event.RESPONSE_TIMEOUT ) ) {
-            if( getConnectionState().equals( ConnectionState.AWAITING_AUTHENTICATION ) ) {
-                String errMsg = "Your message timed out because you\'re not authenticated. Have you called login()?";
-                onError( Topic.ERROR, Event.NOT_AUTHENTICATED, errMsg );
-                return;
-            }
-        }
-
-        if( deepstreamRuntimeErrorHandler != null ) {
-            deepstreamRuntimeErrorHandler.onException( topic, event, msg );
-        } else {
-            System.out.println( "Throwing a client exception: " + topic + " " +  event + " " +  msg );
-            throw new DeepstreamException( topic, event, msg );
-        }
-
     }
 
     private Properties getConfig( Properties properties ) throws IOException {

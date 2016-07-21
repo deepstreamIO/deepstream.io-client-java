@@ -2,6 +2,7 @@ package io.deepstream;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 
 import java.util.Iterator;
@@ -36,11 +37,17 @@ public class JSONPath {
 
         while (st.hasMoreTokens() && !traverser.isJsonNull()) {
             token = st.nextToken();
-            parent = element;
+            parent = traverser;
             if (isArray(token)) {
                 traverser = getArrayElement(element, token);
+                if (traverser.isJsonArray() ) {
+                    parent = traverser;
+                } else {
+                    parent = traverser.getAsJsonObject().get( getTokenPrefix( token ) );
+                }
+                token = getIndex( token );
             } else {
-                traverser = element.getAsJsonObject().get(token);
+                traverser = traverser.getAsJsonObject().get(token);
             }
         }
 
@@ -51,7 +58,12 @@ public class JSONPath {
             }
             else if( parent.isJsonArray() ) {
                 JsonArray object = (JsonArray) parent;
-                object.set( Integer.parseInt( token ), value );
+                int size = object.size();
+                int index = Integer.parseInt( token );
+                for( int i=size; i<=index; i++ ){
+                    object.add( JsonNull.INSTANCE );
+                }
+                object.set( index, value );
             }
         }
 
@@ -60,18 +72,37 @@ public class JSONPath {
 
     private static JsonElement getArrayElement(JsonElement traverser,
                                                String token) {
-        int index = Integer.valueOf(token.substring(token.indexOf("[") + 1,
-                token.indexOf("]")));
-        return traverser.getAsJsonObject()
-                .get(token.substring(0, token.indexOf("["))).getAsJsonArray()
-                .get(index);
+
+        int index =  Integer.valueOf( getIndex(token) );
+        try {
+            return traverser.getAsJsonObject()
+                    .get(getTokenPrefix(token)).getAsJsonArray()
+                    .get(index);
+        } catch( ArrayIndexOutOfBoundsException e ) {
+            return null;
+        } catch( IndexOutOfBoundsException e ) {
+            return null;
+        } catch( NullPointerException e ) {
+            String arrayName = getTokenPrefix(token);
+            JsonObject object = new JsonObject();
+            object.add( arrayName, new JsonArray() );
+            return object;
+        }
+    }
+
+    private static String getTokenPrefix(String token) {
+        return token.substring( 0, token.indexOf( "[" ) );
+    }
+
+    private static String getIndex(String token) {
+        return token.substring(token.indexOf("[") + 1, token.indexOf("]")).trim();
     }
 
     private static boolean isArray(String token) {
         boolean isArray = ( token.contains("[") && token.contains("]") && (token.indexOf("[") < token.indexOf("]")));
 
         try {
-            Integer.parseInt( token.substring(token.indexOf("[")+1, token.indexOf("]") ) );
+            Integer.parseInt( token.substring(token.indexOf("[")+1, token.indexOf("]") ).trim() );
             return isArray;
         } catch (Exception e) {
             return false;

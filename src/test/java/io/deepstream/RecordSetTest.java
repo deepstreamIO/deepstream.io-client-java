@@ -24,15 +24,16 @@ public class RecordSetTest {
     private ConnectionMock connectionMock;
     private DeepstreamClientMock deepstreamClientMock;
     private Person personMock;
-    private ErrorCallback errorCallbackMock;
+    private DeepstreamRuntimeErrorHandler errorCallbackMock;
 
     @Before
     public void setUp() throws URISyntaxException {
         this.personMock = new Person( "Fred", "Weasley" );
 
         this.connectionMock = new ConnectionMock();
-        this.errorCallbackMock = mock( ErrorCallback.class );
-        this.deepstreamClientMock = new DeepstreamClientMock( this.errorCallbackMock );
+        this.errorCallbackMock = mock( DeepstreamRuntimeErrorHandler.class );
+        this.deepstreamClientMock = new DeepstreamClientMock();
+        this.deepstreamClientMock.setRuntimeErrorHandler( errorCallbackMock );
         this.deepstreamClientMock.setConnectionState( ConnectionState.OPEN );
 
         Map options = new Properties();

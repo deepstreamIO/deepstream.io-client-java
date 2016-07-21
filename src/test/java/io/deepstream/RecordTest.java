@@ -22,7 +22,7 @@ public class RecordTest {
     DeepstreamClientMock deepstreamClientMock;
     ConnectionMock connectionMock;
     RecordHandler recordHandler;
-    ErrorCallback errorCallbackMock;
+    DeepstreamRuntimeErrorHandler errorCallbackMock;
     Record record;
     RecordEventsListener recordEventsListeners;
 
@@ -30,8 +30,9 @@ public class RecordTest {
     public void setUp() {
 
         this.connectionMock = new ConnectionMock();
-        this.errorCallbackMock = mock( ErrorCallback.class );
-        this.deepstreamClientMock = new DeepstreamClientMock( this.errorCallbackMock );
+        this.errorCallbackMock = mock( DeepstreamRuntimeErrorHandler.class );
+        this.deepstreamClientMock = new DeepstreamClientMock();
+        this.deepstreamClientMock.setRuntimeErrorHandler( errorCallbackMock );
         this.deepstreamClientMock.setConnectionState( ConnectionState.OPEN );
 
         options = new Properties();
@@ -135,21 +136,21 @@ public class RecordTest {
     public void unsolicitatedDeleteAckMessages() throws DeepstreamRecordDestroyedException {
         recordInitialisedCorrectly();
         record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|A|D|recordA" ), deepstreamClientMock ) );
-        verify( errorCallbackMock, times( 1 ) ).onError(Topic.RECORD, Event.UNSOLICITED_MESSAGE, TestUtil.replaceSeperators( "R|A|D|recordA" ) );
+        verify( errorCallbackMock, times( 1 ) ).onException(Topic.RECORD, Event.UNSOLICITED_MESSAGE, TestUtil.replaceSeperators( "R|A|D|recordA" ) );
     }
 
     @Test
     public void unsolicitatedDiscardAckMessages() throws DeepstreamRecordDestroyedException {
         recordInitialisedCorrectly();
         record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|A|US|recordA" ), deepstreamClientMock ) );
-        verify( errorCallbackMock, times( 1 ) ).onError(Topic.RECORD, Event.UNSOLICITED_MESSAGE, TestUtil.replaceSeperators( "R|A|US|recordA" ) );
+        verify( errorCallbackMock, times( 1 ) ).onException(Topic.RECORD, Event.UNSOLICITED_MESSAGE, TestUtil.replaceSeperators( "R|A|US|recordA" ) );
     }
 
     @Test
     public void subscribeTimeout() throws DeepstreamRecordDestroyedException, InterruptedException {
         recordSendsDownCorrectCreateMessage();
         Thread.sleep( 20 );
-        verify( errorCallbackMock, times( 1 ) ).onError(Topic.RECORD, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE recordA" );
+        verify( errorCallbackMock, times( 1 ) ).onException(Topic.RECORD, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE recordA" );
     }
 
     @Test
@@ -157,21 +158,21 @@ public class RecordTest {
         recordSendsDownCorrectCreateMessage();
         record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|A|S|recordA" ), deepstreamClientMock ) );
         Thread.sleep( 30 );
-        verify( errorCallbackMock, times( 1 ) ).onError(Topic.RECORD, Event.RESPONSE_TIMEOUT, "No message received in time for READ recordA" );
+        verify( errorCallbackMock, times( 1 ) ).onException(Topic.RECORD, Event.RESPONSE_TIMEOUT, "No message received in time for READ recordA" );
     }
 
     @Test
     public void discardTimeout() throws DeepstreamRecordDestroyedException, InterruptedException {
         recordDiscardsCorrectly();
         Thread.sleep( 30 );
-        verify( errorCallbackMock, times( 1 ) ).onError(Topic.RECORD, Event.ACK_TIMEOUT, "No ACK message received in time for UNSUBSCRIBE recordA" );
+        verify( errorCallbackMock, times( 1 ) ).onException(Topic.RECORD, Event.ACK_TIMEOUT, "No ACK message received in time for UNSUBSCRIBE recordA" );
     }
 
     @Test
     public void deleteTimout() throws DeepstreamRecordDestroyedException, InterruptedException {
         recordDeletesCorrectly();
         Thread.sleep( 30 );
-        verify( errorCallbackMock, times( 1 ) ).onError(Topic.RECORD, Event.DELETE_TIMEOUT, "No message received in time for DELETE recordA" );
+        verify( errorCallbackMock, times( 1 ) ).onException(Topic.RECORD, Event.DELETE_TIMEOUT, "No message received in time for DELETE recordA" );
     }
 
 }
