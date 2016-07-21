@@ -6,7 +6,6 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 
 import java.util.Iterator;
-import java.util.StringTokenizer;
 
 public class JSONPath {
     private JsonElement coreElement;
@@ -30,13 +29,15 @@ public class JSONPath {
     }
 
     private static JsonElement iterateThrough (JsonElement element, String path, JsonElement value) {
-        StringTokenizer st = new StringTokenizer(path, ".");
+        String[] st = path.split( "\\." );
+        System.out.println( st.length );
         JsonElement parent = null;
         JsonElement traverser = element;
         String token = null;
 
-        while (st.hasMoreTokens() && !traverser.isJsonNull()) {
-            token = st.nextToken();
+        for( int i=0; i<st.length; i++ ) {
+            token = st[ i ];
+
             parent = traverser;
 
             System.out.println( token );
@@ -57,11 +58,11 @@ public class JSONPath {
                         String prefix = getTokenPrefix(token);
                         JsonArray array = new JsonArray();
 
-                        for (int i = 0; i < index; i++) {
+                        for (int j = 0; j < index; i++) {
                             array.add(JsonNull.INSTANCE);
                         }
 
-                        if (st.hasMoreTokens()) {
+                        if (i!=st.length) {
                             JsonElement temp = new JsonObject();
                             array.add(temp);
                         }
@@ -120,12 +121,6 @@ public class JSONPath {
     }
 
     private static boolean isArray(String token) {
-        try {
-            Integer.parseInt( token );
-            return true;
-        } catch( Exception e ) {
-        }
-
         boolean isArray = ( token.contains("[") && token.contains("]") && (token.indexOf("[") < token.indexOf("]")));
         try {
             Integer.parseInt( token.substring(token.indexOf("[")+1, token.indexOf("]") ).trim() );
