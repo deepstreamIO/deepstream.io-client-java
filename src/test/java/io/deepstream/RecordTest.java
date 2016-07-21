@@ -149,7 +149,7 @@ public class RecordTest {
     @Test
     public void subscribeTimeout() throws DeepstreamRecordDestroyedException, InterruptedException {
         recordSendsDownCorrectCreateMessage();
-        Thread.sleep( 20 );
+        Thread.sleep( 50 );
         verify( errorCallbackMock, times( 1 ) ).onException(Topic.RECORD, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE recordA" );
     }
 
@@ -157,21 +157,21 @@ public class RecordTest {
     public void readTimeout() throws DeepstreamRecordDestroyedException, InterruptedException {
         recordSendsDownCorrectCreateMessage();
         record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|A|S|recordA" ), deepstreamClientMock ) );
-        Thread.sleep( 30 );
+        Thread.sleep( 50 );
         verify( errorCallbackMock, times( 1 ) ).onException(Topic.RECORD, Event.RESPONSE_TIMEOUT, "No message received in time for READ recordA" );
     }
 
     @Test
     public void discardTimeout() throws DeepstreamRecordDestroyedException, InterruptedException {
         recordDiscardsCorrectly();
-        Thread.sleep( 30 );
+        Thread.sleep( 50 );
         verify( errorCallbackMock, times( 1 ) ).onException(Topic.RECORD, Event.ACK_TIMEOUT, "No ACK message received in time for UNSUBSCRIBE recordA" );
     }
 
     @Test
     public void deleteTimout() throws DeepstreamRecordDestroyedException, InterruptedException {
         recordDeletesCorrectly();
-        Thread.sleep( 30 );
+        Thread.sleep( 50 );
         verify( errorCallbackMock, times( 1 ) ).onException(Topic.RECORD, Event.DELETE_TIMEOUT, "No message received in time for DELETE recordA" );
     }
 

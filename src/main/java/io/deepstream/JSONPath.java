@@ -40,11 +40,7 @@ public class JSONPath {
             parent = traverser;
             if (isArray(token)) {
                 traverser = getArrayElement(element, token);
-                if (traverser.isJsonArray() ) {
-                    parent = traverser;
-                } else {
-                    parent = traverser.getAsJsonObject().get( getTokenPrefix( token ) );
-                }
+
                 token = getIndex( token );
             } else {
                 traverser = traverser.getAsJsonObject().get(token);
