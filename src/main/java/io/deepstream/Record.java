@@ -39,7 +39,7 @@ public class Record extends Emitter implements UtilResubscribeCallback {
 
     private Class clazz;
 
-    private JsonObject data;
+    private JsonElement data;
     private String name;
     private Map options;
     private String rawData;
@@ -176,17 +176,51 @@ public class Record extends Emitter implements UtilResubscribeCallback {
         } else if( message.action == Actions.UPDATE || message.action == Actions.PATCH ) {
             applyUpdate( message );
         } else if( message.data[ 0 ] == Event.VERSION_EXISTS.toString() ) {
-            recoverRecord( message );
+            recoverRecord( Integer.parseInt( message.data[ 2 ] ), gson.fromJson( message.data[ 3 ], JsonElement.class ), message );
         } else if( message.data[ 0 ] == Event.MESSAGE_DENIED.toString() ) {
            clearTimeouts();
         }
     }
 
     private void applyUpdate(Message message) {
-        // TODO: Apply merge strategy
+        int version = Integer.parseInt( message.data[ 1 ] );
+
+        JsonElement data;
+        if( message.action == Actions.PATCH ) {
+            data = gson.toJsonTree( MessageParser.convertTyped( message.data[ 3 ], client ) );
+        } else {
+            data = gson.fromJson( message.data[ 2 ], JsonElement.class );
+        }
+
+
+        if( this.version != -1 && this.version + 1 != version ) {
+            if( message.action == Actions.PATCH ) {
+                /**
+                 * Request a snapshot so that a merge can be done with the read reply which contains
+                 * the full state of the record
+                 **/
+                this.connection.send( MessageBuilder.getMsg( Topic.RECORD, Actions.SNAPSHOT, this.name ) );
+            } else {
+                recoverRecord( version, data, message );
+            }
+            return;
+        }
+
+        beginChange();
+
+        this.version = version;
+        if( Actions.PATCH == message.action ) {
+            path.set( message.data[ 2 ], data );
+        } else {
+            this.data = data;
+            this.path.setCoreElement( data );
+        }
+
+        completeChange();
+
     }
 
-    private void recoverRecord(Message message) {
+    private void recoverRecord(int version, Object data, Message message) {
         // TODO: Apply merge strategy
     }
 

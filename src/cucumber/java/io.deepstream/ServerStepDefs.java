@@ -75,9 +75,15 @@ public class ServerStepDefs {
             if( msg.matches(context.recieveMessage( message )) ) {
                 Assert.assertTrue( true );
                 return;
+            } else if( msg.equals( context.recieveMessage( message ) ) ) {
+                Assert.assertTrue( true );
+                return;
+            } else {
+                System.out.println( "Not a match " +  message + " " + context.sendMessage( msg ) );
             }
         }
-        Assert.assertTrue( false );
+
+        Assert.assertTrue( "Expected " + context.recieveMessage( message ) + " from " + server.messages, false );
     }
 
     @Then("^the last message the second server recieved is (.*?)$")

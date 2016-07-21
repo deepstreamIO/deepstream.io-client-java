@@ -36,7 +36,7 @@ Scenario: Record
 	Then the client record "happyRecord" data is {"name":"John", "pets": [{"name":"Ruffles", "type":"dog","age":2}]}
 
 	# The client receives an partial update
-	When the server sends the message R|P|happyRecord|101|pets.0.age|N3+
+	When the server sends the message R|P|happyRecord|101|pets[0].age|N3+
 	Then the client record "happyRecord" data is {"name":"John", "pets": [{"name":"Ruffles", "type":"dog","age":3}]}
 
 	# The client receives a full update
@@ -44,8 +44,8 @@ Scenario: Record
 	Then the client record "happyRecord" data is {"name":"Smith", "pets": [{"name":"Ruffus", "type":"dog","age":4}]}
 
 	# The client sends an partial update
-	When the client sets the record "happyRecord" "pets.0.name" to "Max"
-	Then the last message the server recieved is R|P|happyRecord|103|pets.0.name|SMax+
+	When the client sets the record "happyRecord" "pets[0].name" to "Max"
+	Then the last message the server recieved is R|P|happyRecord|103|pets[0].name|SMax+
 
 	# The client receives another full update
 	When the client sets the record "happyRecord" to {"name":"Smith","pets":[{"name":"Ruffus","type":"dog","age":5}]}

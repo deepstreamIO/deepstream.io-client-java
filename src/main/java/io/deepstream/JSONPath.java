@@ -75,13 +75,13 @@ public class JSONPath {
         }
 
         if( value != null && token != null ) {
-            createNesting(value, parent, token);
+            updateValue(value, parent, token);
         }
 
         return traverser;
     }
 
-    private static void createNesting(JsonElement value, JsonElement parent, String token) {
+    private static void updateValue(JsonElement value, JsonElement parent, String token) {
         if( parent.isJsonObject() ) {
             JsonObject object = (JsonObject) parent;
             object.add( token, value );
@@ -133,6 +133,10 @@ public class JSONPath {
     public Array getIterable(String path) {
         JsonElement j = this.get(path);
         return j.isJsonArray()? new Array(j.getAsJsonArray()) : null;
+    }
+
+    public void setCoreElement(JsonElement coreElement) {
+        this.coreElement = coreElement;
     }
 
     public class Array implements Iterable<JSONPath> {

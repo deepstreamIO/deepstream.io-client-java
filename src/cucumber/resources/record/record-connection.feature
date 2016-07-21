@@ -42,7 +42,7 @@ Scenario: Record Connectivity
 		And the clients connection state is "RECONNECTING"
 
 	# The client sends an partial update
-	When the client sets the record "connectionRecord" "pets.0.name" to "Max"
+	When the client sets the record "connectionRecord" "pets[0].name" to "Max"
 
 	# The client reconnects to the server
 	When the connection to the server is reestablished
@@ -61,4 +61,4 @@ Scenario: Record Connectivity
 	Then the server received the message R|L|recordPrefix/.*+
 
 	# The client sends offline changes
-	Then the server received the message R|P|connectionRecord|101|pets.0.name|SMax+
+	Then the server received the message R|P|connectionRecord|101|pets[0].name|SMax+
