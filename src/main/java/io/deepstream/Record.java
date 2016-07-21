@@ -22,6 +22,9 @@ public class Record extends Emitter implements UtilResubscribeCallback {
     public int usages;
     public int version;
 
+    public boolean isReady;
+    public boolean isDestroyed;
+
     private final UtilResubscribeNotifier utilResubscribeNotifier;
     private final UtilAckTimeoutRegistry ackTimeoutRegistry;
     private final IConnection connection;
@@ -40,9 +43,6 @@ public class Record extends Emitter implements UtilResubscribeCallback {
     private String name;
     private Map options;
     private String rawData;
-    private boolean isReady;
-    private boolean isDestroyed;
-
 
     public Record(String name, Map recordOptions, IConnection connection, Map options, IDeepstreamClient client) {
         this.ackTimeoutRegistry = client.getAckTimeoutRegistry();
@@ -157,7 +157,7 @@ public class Record extends Emitter implements UtilResubscribeCallback {
 
         // TODO: on ready async callback
         int subscriptionTimeout = Integer.parseInt( (String) this.options.get( "recordDeleteTimeout" ) );
-        this.ackTimeoutRegistry.add( Topic.RECORD, Actions.UNSUBSCRIBE, name, Event.DELETE_TIMEOUT, subscriptionTimeout );
+        this.ackTimeoutRegistry.add( Topic.RECORD, Actions.DELETE, name, Event.DELETE_TIMEOUT, subscriptionTimeout );
         this.connection.send( MessageBuilder.getMsg( Topic.RECORD, Actions.DELETE, this.name ) );
 
         return this;
@@ -239,6 +239,8 @@ public class Record extends Emitter implements UtilResubscribeCallback {
     }
 
     private void onRead( Message message ) {
+        ackTimeoutRegistry.clear( message );
+
         beginChange();
         this.version = Integer.parseInt( message.data[ 1 ] );
         this.data = gson.fromJson( message.data[ 2 ], JsonObject.class );

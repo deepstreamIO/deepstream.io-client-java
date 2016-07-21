@@ -34,7 +34,7 @@ class MessageParser {
         return messages;
     }
 
-    static private Message parseMessage( String message, IDeepstreamClient client ) {
+    static Message parseMessage( String message, IDeepstreamClient client ) {
         String[] parts = message.split( MPS );
 
         if( parts.length < 2 ) {
@@ -55,7 +55,7 @@ class MessageParser {
         return new Message( message, Topic.getTopic( parts[ 0 ] ), Actions.getAction( parts[ 1 ] ), Arrays.copyOfRange( parts, 2, parts.length ) );
     }
 
-    public static Object convertTyped( String value, IDeepstreamClient client ) {
+    static Object convertTyped( String value, IDeepstreamClient client ) {
 
         char type = value.charAt(0);
 
@@ -85,7 +85,7 @@ class MessageParser {
         return null;
     }
 
-    public static Object parseObject(String value) {
+    static Object parseObject(String value) {
         return new Gson().fromJson( value, Object.class );
     }
 }

@@ -187,9 +187,14 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, UtilTimeoutLis
 
         @Override
         public void run() {
+            String msg;
+
             timeoutListener.onTimeout( topic, action, event, name );
-            String msg = "No ACK message received in time for " + action.name() + " " + name;
-            System.out.println( "Running timeout" );
+            if( event == Event.ACK_TIMEOUT ) {
+               msg = "No ACK message received in time for " + action.name() + " " + name;
+            } else {
+                msg = "No message received in time for " + action.name() + " " + name;
+            }
             client.onError( topic, event, msg );
         }
     }

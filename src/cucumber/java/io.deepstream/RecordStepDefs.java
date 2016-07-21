@@ -78,7 +78,7 @@ public class RecordStepDefs {
 
     @Then("^the client record \"([^\"]*)\" data is (.*)$")
     public void the_client_record_data_is(String recordName, String data ) throws Throwable {
-        Assert.assertEquals( record.get(), data );
+        Assert.assertEquals( data, record.get() );
     }
 
 }

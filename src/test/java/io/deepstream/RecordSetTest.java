@@ -63,7 +63,7 @@ public class RecordSetTest {
     }
 
     @Test
-    public void sendsUpdateForEntireDataChange() {
+    public void sendsUpdateForEntireDataChange() throws DeepstreamRecordDestroyedException {
         record.onMessage( new Message(
                 "raw",
                 Topic.RECORD,
@@ -75,7 +75,7 @@ public class RecordSetTest {
     }
 
     @Test
-    public void sendsPatchForSinglePathUpdate() {
+    public void sendsPatchForSinglePathUpdate() throws DeepstreamRecordDestroyedException {
         record.onMessage( new Message(
                 "raw",
                 Topic.RECORD,
