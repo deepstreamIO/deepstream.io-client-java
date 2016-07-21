@@ -142,6 +142,71 @@ public class ObjectDifferTest {
         Assert.assertEquals( "{\"name\":\"Flat White\",\"price\":6}", getJson(pair.getValue()) );
     }
 
+    @org.junit.Test
+    public void nestedObjectSendsPatchForArray() {
+        JsonObject p = new JsonObject();
+        p.addProperty("name", "Alex");
+        JsonArray drinks = new JsonArray();
+        drinks.add("Latte");
+        drinks.add("Juice");
+        p.add("drinks", drinks);
+
+        JsonObject q = new JsonObject();
+        q.addProperty("name", "Alex");
+        JsonArray drinks2 = new JsonArray();
+        drinks2.add("Latte");
+        drinks2.add("Milk");
+        q.add("drinks", drinks2);
+
+        Pair pair = comparer.getUpdateObject(p, q);
+
+        Assert.assertEquals("drinks", pair.getKey());
+        Assert.assertEquals( "[\"Latte\",\"Milk\"]", getJson(pair.getValue()) );
+    }
+
+    @org.junit.Test
+    public void differentAttributeSendsUpdate() {
+        JsonObject p = new JsonObject();
+        p.addProperty("name", "Fred");
+        p.addProperty("lastName", "Weasley");
+
+        JsonObject q = new JsonObject();
+        q.addProperty("name", "Fred");
+        q.addProperty("age", 20);
+
+        Pair pair = comparer.getUpdateObject(p, q);
+        Assert.assertEquals("", pair.getKey());
+        Assert.assertEquals( "{\"name\":\"Fred\",\"age\":20}", getJson(pair.getValue()));
+    }
+
+    @org.junit.Test
+    public void pathMissingFromFirstNodeSendsUpdate() {
+        JsonObject p = new JsonObject();
+        p.addProperty("name", "Fred");
+
+        JsonObject q = new JsonObject();
+        q.addProperty("name", "Fred");
+        q.addProperty("lastName", "Weasley");
+
+        Pair pair = comparer.getUpdateObject(p, q);
+        Assert.assertEquals("", pair.getKey());
+        Assert.assertEquals( "{\"name\":\"Fred\",\"lastName\":\"Weasley\"}", getJson(pair.getValue()));
+    }
+
+    @org.junit.Test
+    public void pathMissingFromSecondNodeSendsUpdate() {
+        JsonObject p = new JsonObject();
+        p.addProperty("name", "Fred");
+        p.addProperty("lastName", "Weasley");
+
+        JsonObject q = new JsonObject();
+        q.addProperty("name", "Fred");
+
+        Pair pair = comparer.getUpdateObject(p, q);
+        Assert.assertEquals("", pair.getKey());
+        Assert.assertEquals( "{\"name\":\"Fred\"}", getJson(pair.getValue()));
+    }
+
     private String getJson( Object obj ) {
         return gson.toJson( obj );
     }
