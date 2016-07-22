@@ -10,20 +10,6 @@ import java.util.Map;
 
 class UtilObjectDiffer {
 
-    StringBuilder path;
-    JsonElement value;
-    String key;
-    String pathKey;
-
-    public Pair<String, JsonElement> getUpdateObject(JsonElement nodeA, JsonElement nodeB) {
-        //Hack to clear state
-        path = new StringBuilder();
-        value = null;
-        key = null;
-        pathKey = null;
-        return getDiff(nodeA, nodeB);
-    }
-
     /**
      * Gets the difference between two objects.
      *
@@ -53,16 +39,29 @@ class UtilObjectDiffer {
      *
      * @param nodeA the old version of the object
      * @param nodeB the new version of the object
-     * @return a Pair<String,Object> with the path of the changes and the actual changes
+     * @return a Pair<String, JsonElement> with the path of the changes and the actual changes
      */
-    private Pair<String, JsonElement> getDiff(JsonElement nodeA, JsonElement nodeB) {
+    public Pair<String, JsonElement> getUpdateObject(JsonElement nodeA, JsonElement nodeB) {
+        return getDiff(nodeA, nodeB, new StringBuilder());
+    }
+
+    /**
+     * Implementation that gets the actual diff object
+     *
+     * @param nodeA the old version of the object
+     * @param nodeB the new version of the object
+     * @param path the StringBuilder object that contains the current path
+     * @return a Pair<String, JsonElement> with the path of the changes and the actual changes
+     */
+    private Pair<String, JsonElement> getDiff(JsonElement nodeA, JsonElement nodeB, StringBuilder path) {
+        String nodePath = null;
+        JsonElement diffNode = null;
 
         if( nodeA.equals(nodeB) ) {
-            System.out.println("Same object, returning");
             return new Pair(path.toString(), null);
         }
+        // Just return the whole array
         else if( nodeA instanceof JsonArray || nodeB instanceof JsonArray ) {
-            System.out.println("Array, returning whole new node");
             return new Pair(path.toString(), nodeB);
         }
 
@@ -71,49 +70,40 @@ class UtilObjectDiffer {
 
         int difference = node1.entrySet().size() - node2.entrySet().size();
         if( difference != 0 ) {
-            System.out.println("Size of objects are different, need to update whole node");
             return new Pair(path.toString(), node2);
         }
 
         boolean foundDifferentNode = false;
-
-        // Compare attributes of JsonElement
         for (Map.Entry<String, JsonElement> s : node1.entrySet()) {
-            key = s.getKey();
+            String key = s.getKey();
 
+            // Missing path, send whole node
             if( node2.get(key) == null ) {
-                System.out.println("A path is missing, send whole new path");
                 return new Pair(path.toString(), node2);
             }
 
-            if( node2.get(key).equals(node1.get(key)) ) {
-                System.out.printf("Same values old:%s new:%s\n", node1.get(key), node2.get(key));
-            }
-
-            else {
-
+            if( ! node2.get(key).equals(node1.get(key)) ) {
+                // Found two attributes that are different
+                // need to send whole node
                 if( foundDifferentNode ) {
-                    System.out.println("Found two different! BREAK");
                     return new Pair(path.toString(), node2);
                 }
 
-                System.out.printf("Found a different value old:%s new:%s\n", node1.get(key), node2.get(key));
-                value = node2.get(key);
-                pathKey = key;
+                diffNode = node2.get(key);
+                nodePath = key;
                 foundDifferentNode = true;
             }
         }
+        // Only one attribute of node is different
+        buildPath( nodePath, path );
 
-        buildPath( pathKey );
-
-        if( value instanceof JsonObject ) {
-            System.out.println("Going deeper");
-            return getDiff( node1.get(key), value);
+        if( diffNode instanceof JsonObject ) {
+            return getDiff( node1.get(nodePath), diffNode, path );
         }
-        return new Pair(path.toString(), value);
+        return new Pair(path.toString(), diffNode);
     }
 
-    private void buildPath(String currentNodeName) {
+    private void buildPath(String currentNodeName, StringBuilder path) {
         if( path.toString().equals("") ) {
             path.append( currentNodeName );
         } else {

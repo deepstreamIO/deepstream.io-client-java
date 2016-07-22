@@ -12,13 +12,12 @@ import java.net.URISyntaxException;
 
 public class ObjectDifferTest {
 
-    UtilObjectDiffer comparer;
-    Gson gson;
+    UtilObjectDiffer comparer = new UtilObjectDiffer();
+    Gson gson = new Gson();
 
     @Before
     public void setUp() throws URISyntaxException {
-        comparer = new UtilObjectDiffer();
-        gson = new Gson();
+
     }
 
     @After
