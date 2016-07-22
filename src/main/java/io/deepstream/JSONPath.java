@@ -24,8 +24,11 @@ public class JSONPath {
     public void set( String path, JsonElement value ) {
         if( path == "" ) {
             throw new RuntimeException( "Setting an entire object must be done via setValue( JsonElement value );" );
+        } else if( path == null ) {
+           this.coreElement = value;
+        } else {
+            iterateThrough(this.coreElement, path, value);
         }
-        iterateThrough(this.coreElement, path, value);
     }
 
     private static JsonElement iterateThrough (JsonElement element, String path, JsonElement value) {
@@ -130,17 +133,17 @@ public class JSONPath {
         }
     }
 
-    public Array getIterable(String path) {
-        JsonElement j = this.get(path);
-        return j.isJsonArray()? new Array(j.getAsJsonArray()) : null;
-    }
-
     public void setCoreElement(JsonElement coreElement) {
         this.coreElement = coreElement;
     }
 
+    public JsonElement getCoreElement() {
+        return coreElement;
+    }
+
     public class Array implements Iterable<JSONPath> {
         private JsonArray root;
+        private JsonElement coreElement;
 
         public Array(JsonArray root) {
             this.root = root;

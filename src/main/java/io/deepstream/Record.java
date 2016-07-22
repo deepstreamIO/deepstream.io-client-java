@@ -79,7 +79,7 @@ public class Record extends Emitter implements UtilResubscribeCallback {
      *
      * @return
      */
-    public Object get( String path ) {
+    public JsonElement get( String path ) {
         return this.path.get( path );
     }
 
@@ -100,6 +100,8 @@ public class Record extends Emitter implements UtilResubscribeCallback {
     public Record set(String path, Object value ) throws DeepstreamRecordDestroyedException {
         throwExceptionIfDestroyed( "set" );
 
+        JsonElement element = gson.toJsonTree( value );
+
         if( !this.isReady && path != null ) {
             System.out.println( "Not ready, should queue!" );
             return this;
@@ -111,7 +113,8 @@ public class Record extends Emitter implements UtilResubscribeCallback {
 
         beginChange();
         this.version++;
-        this.path.set( path, gson.toJsonTree( value ) );
+        this.path.set( path, element );
+        this.data = this.path.getCoreElement();
         sendUpdate( path, value );
         completeChange();
 
