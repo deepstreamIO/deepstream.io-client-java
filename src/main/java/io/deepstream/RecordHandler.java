@@ -18,7 +18,6 @@ public class RecordHandler implements RecordEventsListener {
     private final UtilSingleNotifier hasRegistry;
     private final UtilSingleNotifier snapshotRegistry;
     private final Map<String, UtilListener> listeners;
-    private final Emitter destroyEventEmitter;
 
     /**
      * A collection of factories for records. This class
@@ -40,8 +39,6 @@ public class RecordHandler implements RecordEventsListener {
         int recordReadTimeout = Integer.parseInt( (String) options.get( "recordReadTimeout" ) );
         hasRegistry = new UtilSingleNotifier( client, connection, Topic.RECORD, Actions.SNAPSHOT, recordReadTimeout );
         snapshotRegistry = new UtilSingleNotifier( client, connection, Topic.RECORD, Actions.SNAPSHOT, recordReadTimeout );
-
-        destroyEventEmitter = new Emitter();
     }
 
     /**
@@ -169,7 +166,7 @@ public class RecordHandler implements RecordEventsListener {
             recordName = message.data[ 1 ];
 
             if( isDiscardAck( message ) ) {
-                destroyEventEmitter.emit( "destroy_ack_" + recordName, message );
+                //TODO: destroyEventEmitter.emit( "destroy_ack_" + recordName, message );
 
                 record = records.get( recordName );
                 if( Actions.getAction( message.data[ 0 ] ) == Actions.DELETE && record != null ) {
@@ -275,13 +272,14 @@ public class RecordHandler implements RecordEventsListener {
      */
     @Override
     public void onDestroyPending(final String recordName) {
-        destroyEventEmitter.on( "destroy_ack_" + recordName, new Emitter.Listener() {
+        //TODO:
+        /*destroyEventEmitter.on( "destroy_ack_" + recordName, new Emitter.Listener() {
             @Override
             public void call(Object... args) {
                 Record record = records.get( recordName );
                 record.onMessage( (Message) args[ 0 ] );
             }
-        } );
+        } );*/
         onRecordDiscarded( recordName );
     }
 
@@ -297,6 +295,7 @@ public class RecordHandler implements RecordEventsListener {
     }
 
     @Override
-    public void onRecordReady(String recordName) {
+    public void onRecordReady(Record record) {
+
     }
 }

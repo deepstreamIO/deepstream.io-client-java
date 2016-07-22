@@ -4,6 +4,7 @@ package io.deepstream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
@@ -14,10 +15,10 @@ import java.util.concurrent.ConcurrentMap;
  *
  * @see <a href="https://github.com/component/emitter">https://github.com/component/emitter</a>
  */
-public class Emitter {
+class Emitter {
 
-    private ConcurrentMap<String, ConcurrentLinkedQueue<Listener>> callbacks
-            = new ConcurrentHashMap<String, ConcurrentLinkedQueue<Listener>>();
+    private ConcurrentMap<String, ConcurrentLinkedQueue<Object>> callbacks
+            = new ConcurrentHashMap<String, ConcurrentLinkedQueue<Object>>();
 
     /**
      *
@@ -25,7 +26,7 @@ public class Emitter {
      * @param fn
      * @return a reference to this object.
      */
-    public Emitter on( Enum enu, Listener fn ) {
+    public Emitter on( Enum enu, Object fn ) {
         this.on( enu.toString(), fn );
         return this;
     }
@@ -36,11 +37,11 @@ public class Emitter {
      * @param fn
      * @return a reference to this object.
      */
-    public Emitter on(String event, Listener fn) {
-        ConcurrentLinkedQueue<Listener> callbacks = this.callbacks.get(event);
+    public Emitter on(String event, Object fn) {
+        ConcurrentLinkedQueue<Object> callbacks = this.callbacks.get(event);
         if (callbacks == null) {
-            callbacks = new ConcurrentLinkedQueue <Listener>();
-            ConcurrentLinkedQueue<Listener> _callbacks = this.callbacks.putIfAbsent(event, callbacks);
+            callbacks = new ConcurrentLinkedQueue <Object>();
+            ConcurrentLinkedQueue<Object> _callbacks = this.callbacks.putIfAbsent(event, callbacks);
             if (_callbacks != null) {
                 callbacks = _callbacks;
             }
@@ -89,12 +90,12 @@ public class Emitter {
      * @param fn
      * @return a reference to this object.
      */
-    public Emitter off(String event, Listener fn) {
-        ConcurrentLinkedQueue<Listener> callbacks = this.callbacks.get(event);
+    public Emitter off(String event, Object fn) {
+        ConcurrentLinkedQueue<Object> callbacks = this.callbacks.get(event);
         if (callbacks != null) {
-            Iterator<Listener> it = callbacks.iterator();
+            Iterator<Object> it = callbacks.iterator();
             while (it.hasNext()) {
-                Listener internal = it.next();
+                Object internal = it.next();
                 if (Emitter.sameAs(fn, internal)) {
                     it.remove();
                     break;
@@ -104,7 +105,7 @@ public class Emitter {
         return this;
     }
 
-    private static boolean sameAs(Listener fn, Listener internal) {
+    private static boolean sameAs(Object fn, Object internal) {
         if (fn.equals(internal)) {
             return true;
         } else if (internal instanceof OnceListener) {
@@ -115,47 +116,47 @@ public class Emitter {
     }
 
     /**
-     * Executes each of listeners with the given args.
-     *
-     * @param event an event name.
-     * @param args
-     * @return a reference to this object.
-     */
-    public Emitter emit(String event, Object... args) {
-        ConcurrentLinkedQueue<Listener> callbacks = this.callbacks.get(event);
-        if (callbacks != null) {
-            for (Listener fn : callbacks) {
-                fn.call(args);
-            }
-        }
-        return this;
-    }
-
-    /**
      * Returns a list of listeners for the specified event.
      *
      * @param event an event name.
      * @return a reference to this object.
      */
-    public List<Listener> listeners(String event) {
-        ConcurrentLinkedQueue<Listener> callbacks = this.callbacks.get(event);
+    public List<Object> listeners(String event) {
+        ConcurrentLinkedQueue<Object> callbacks = this.callbacks.get(event);
         return callbacks != null ?
-                new ArrayList<Listener>(callbacks) : new ArrayList<Listener>(0);
+                new ArrayList<Object>(callbacks) : new ArrayList<Object>(0);
     }
 
     /**
      * Check if this emitter has listeners for the specified event.
      *
      * @param event an event name.
-     * @return a reference to this object.
+     * @return
      */
     public boolean hasListeners(String event) {
-        ConcurrentLinkedQueue<Listener> callbacks = this.callbacks.get(event);
+        ConcurrentLinkedQueue<Object> callbacks = this.callbacks.get(event);
         return callbacks != null && !callbacks.isEmpty();
     }
 
-    public static interface Listener {
+    /**
+     * Check if this emitter has any listeners
+     *
+     * @return
+     */
+    public Set getEvents() {
+        return this.callbacks.keySet();
+    }
 
+    /**
+     * Check if this emitter has any listeners
+     *
+     * @return
+     */
+    public boolean hasListeners() {
+        return this.callbacks.isEmpty();
+    }
+
+    public static interface Listener {
         public void call(Object... args);
     }
 

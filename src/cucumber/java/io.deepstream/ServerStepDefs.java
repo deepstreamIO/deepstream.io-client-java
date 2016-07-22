@@ -65,7 +65,7 @@ public class ServerStepDefs {
         message = context.recieveMessage( message );
         System.out.println( "Server Received: " + message + " " + lastMsg );
         if(  lastMsg.equals( message ) == false ) {
-            Assert.assertTrue( "Expected '" + lastMsg + "' to match '" + message + "'", lastMsg.matches( message ) );
+            Assert.assertTrue( "Expected \n\t'" + lastMsg + "' to match \n\t'" + message + "'", lastMsg.matches( message ) );
         }
     }
 

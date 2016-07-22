@@ -19,7 +19,7 @@ public class EventStepDefs {
     }
 
     ListenCallback listenCallback = mock( ListenCallback.class );
-    Emitter.Listener callback = mock( Emitter.Listener.class );
+    EventCallback callback = mock( EventCallback.class );
 
     @Then("^the client subscribes to an event named \"(.*?)\"$")
     public void the_client_subscribes_to_event( String eventName ) throws InterruptedException {
@@ -41,7 +41,7 @@ public class EventStepDefs {
 
     @Then("^the client received the event \"(.*?)\" with data \"(.*?)\"$")
     public void client_receives_event( String eventName, String data ) throws InterruptedException {
-        verify( callback ).call( data );
+        verify( callback ).onEvent( eventName, data );
     }
 
     @Then("^the client listens to events matching \"(.*?)\"$")

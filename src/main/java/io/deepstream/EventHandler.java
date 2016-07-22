@@ -4,10 +4,8 @@ import io.deepstream.constants.Actions;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 class EventHandler implements UtilResubscribeCallback {
 
@@ -33,7 +31,7 @@ class EventHandler implements UtilResubscribeCallback {
         this.resubscribeNotifier = new UtilResubscribeNotifier( this.client, this );
     }
 
-    public void subscribe( String eventName, Emitter.Listener eventListener ) {
+    public void subscribe( String eventName, EventCallback eventListener ) {
         if( this.emitter.hasListeners( eventName ) == false ) {
             this.subscriptions.add( eventName );
             this.ackTimeoutRegistry.add( Topic.EVENT, Actions.SUBSCRIBE, eventName, this.subscriptionTimeout );
@@ -42,7 +40,7 @@ class EventHandler implements UtilResubscribeCallback {
         this.emitter.on( eventName, eventListener );
     }
 
-    public void unsubscribe( String eventName, Emitter.Listener eventListener ) {
+    public void unsubscribe( String eventName, EventCallback eventListener ) {
         this.subscriptions.remove( eventName );
         this.emitter.off(eventName, eventListener);
         if ( this.emitter.hasListeners(eventName) == false ) {
@@ -53,12 +51,12 @@ class EventHandler implements UtilResubscribeCallback {
 
     public void emit( String eventName ) {
         this.connection.send( MessageBuilder.getMsg( Topic.EVENT, Actions.EVENT, eventName ) );
-        this.emitter.emit( eventName );
+        this.broadcastEvent( eventName );
     }
 
     public void emit( String eventName, Object data ) {
         this.connection.send( MessageBuilder.getMsg( Topic.EVENT, Actions.EVENT, eventName, MessageBuilder.typed( data ) ) );
-        this.emitter.emit( eventName, data );
+        this.broadcastEvent( eventName, data );
     }
 
     public void listen( String pattern, ListenCallback callback ) {
@@ -82,7 +80,7 @@ class EventHandler implements UtilResubscribeCallback {
         }
     }
 
-    public void handle( Message message ) {
+    protected void handle( Message message ) {
         String eventName;
 
         if( message.action == Actions.ACK ) {
@@ -93,9 +91,9 @@ class EventHandler implements UtilResubscribeCallback {
 
         if( message.action == Actions.EVENT ) {
             if( message.data.length == 2 ) {
-                this.emitter.emit( eventName, MessageParser.convertTyped( message.data[ 1 ], this.client ) );
+                this.emit( eventName, MessageParser.convertTyped( message.data[ 1 ], this.client ) );
             } else {
-                this.emitter.emit( eventName );
+                this.emit( eventName );
             }
         }
         else if( this.listeners.get( eventName ) != null ) {
@@ -116,6 +114,17 @@ class EventHandler implements UtilResubscribeCallback {
     public void resubscribe() {
         for ( String eventName : this.subscriptions ) {
             this.connection.sendMsg( Topic.EVENT, Actions.SUBSCRIBE, new String[] { eventName } );
+        }
+    }
+
+    private void broadcastEvent( String eventName, Object... args ) {
+        List<Object> listeners = this.emitter.listeners( eventName );
+        for( Object listener : listeners ) {
+            if( args != null ) {
+                ((EventCallback) listener).onEvent(eventName, args);
+            } else {
+                ((EventCallback) listener).onEvent(eventName);
+            }
         }
     }
 }

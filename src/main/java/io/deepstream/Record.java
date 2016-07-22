@@ -10,14 +10,14 @@ import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
 import javafx.util.Pair;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.List;
 
 
 public class Record extends Emitter implements UtilResubscribeCallback {
 
-    public static String DESTROY_PENDING = "DESTROY_PENDING";
+    private static final String ALL_EVENT = "ALL_EVENT";
+    private static final String DESTROY_PENDING = "DESTROY_PENDING";
 
     public int usages;
     public int version;
@@ -31,11 +31,11 @@ public class Record extends Emitter implements UtilResubscribeCallback {
     private final IDeepstreamClient client;
     private final UtilObjectDiffer differ;
     private final Gson gson;
+    private final JSONPath path;
+    private final Emitter subscribers;
 
     private RecordEventsListener recordEventsListener;
     private RecordMergeStrategy mergeStrategy;
-    private JSONPath path;
-    private Map<String, ArrayList> subscribers;
 
     private Class clazz;
 
@@ -57,9 +57,10 @@ public class Record extends Emitter implements UtilResubscribeCallback {
         this.differ = new UtilObjectDiffer();
         this.data = new JsonObject();
         this.path = new JSONPath( this.data );
-        this.subscribers = new HashMap<>();
+        this.subscribers = new Emitter();
         this.isReady = false;
         this.isDestroyed = false;
+
         this.scheduleAcks();
         this.sendRead();
     }
@@ -80,7 +81,7 @@ public class Record extends Emitter implements UtilResubscribeCallback {
      * @return
      */
     public JsonElement get( String path ) {
-        return this.path.get( path );
+        return deepCopy( this.path.get( path ) );
     }
 
     /**
@@ -89,7 +90,7 @@ public class Record extends Emitter implements UtilResubscribeCallback {
      * @return
      */
     public JsonElement get() {
-        return this.data;
+        return deepCopy( this.data );
     }
 
     public Record set( Object value ) throws DeepstreamRecordDestroyedException {
@@ -107,45 +108,71 @@ public class Record extends Emitter implements UtilResubscribeCallback {
             return this;
         }
 
-        if ( this.data.equals( value ) ) {
+        JsonElement object = this.path.get( path );
+        if( object != null && object.equals( value ) ) {
+            return this;
+        } else if( path == null && this.data.equals( value ) ) {
             return this;
         }
 
-        beginChange();
+        Map oldValues = beginChange();
         this.version++;
         this.path.set( path, element );
         this.data = this.path.getCoreElement();
         sendUpdate( path, value );
-        completeChange();
+        completeChange( oldValues );
 
         return this;
     }
 
     public Record subscribe( String path, RecordChangedCallback recordChangedCallback ) throws DeepstreamRecordDestroyedException {
-        throwExceptionIfDestroyed( "subscribe" );
-        return this;
+        return subscribe( path, recordChangedCallback, false );
     }
 
     public Record subscribe( RecordChangedCallback recordChangedCallback ) throws DeepstreamRecordDestroyedException {
-        subscribe( null, recordChangedCallback );
+        return subscribe( recordChangedCallback, false );
+    }
+
+    public Record subscribe( RecordChangedCallback recordChangedCallback, boolean triggerNow ) throws DeepstreamRecordDestroyedException {
+        subscribe( null, recordChangedCallback, triggerNow );
+        return this;
+    }
+
+    public Record subscribe( String path, RecordChangedCallback recordChangedCallback, boolean triggerNow ) throws DeepstreamRecordDestroyedException {
+        throwExceptionIfDestroyed( "subscribe" );
+
+        if( path == null ) {
+            this.subscribers.on( ALL_EVENT, recordChangedCallback );
+        } else {
+            this.subscribers.on( path, recordChangedCallback );
+        }
+
+        return this;
+    }
+
+    public Record unsubscribe( RecordChangedCallback recordChangedCallback ) throws DeepstreamRecordDestroyedException {
+        unsubscribe( null, recordChangedCallback );
         return this;
     }
 
     public Record unsubscribe( String path, RecordChangedCallback recordChangedCallback ) throws DeepstreamRecordDestroyedException {
         throwExceptionIfDestroyed( "unsubscribe" );
+
+        if( path == null ) {
+            this.subscribers.off( ALL_EVENT, recordChangedCallback );
+        } else {
+            this.subscribers.off( path, recordChangedCallback );
+        }
+
         return this;
     }
 
-    public Record unsubscribe( RecordChangedCallback recordChangedCallback ) throws DeepstreamRecordDestroyedException {
-        subscribe( null, recordChangedCallback );
-        return this;
-    }
 
     public Record discard() throws DeepstreamRecordDestroyedException {
         throwExceptionIfDestroyed( "delete" );
         this.usages--;
         if( this.usages <= 0 ) {
-            this.emit(DESTROY_PENDING);
+            //this.emit(DESTROY_PENDING);
             // TODO: on ready async callback
             int subscriptionTimeout = Integer.parseInt( (String) this.options.get( "subscriptionTimeout" ) );
             this.ackTimeoutRegistry.add( Topic.RECORD, Actions.UNSUBSCRIBE, name, subscriptionTimeout );
@@ -156,7 +183,7 @@ public class Record extends Emitter implements UtilResubscribeCallback {
 
     public Record delete() throws DeepstreamRecordDestroyedException {
         throwExceptionIfDestroyed( "delete" );
-        this.emit(DESTROY_PENDING);
+        //this.emit(DESTROY_PENDING);
 
         // TODO: on ready async callback
         int subscriptionTimeout = Integer.parseInt( (String) this.options.get( "recordDeleteTimeout" ) );
@@ -209,17 +236,18 @@ public class Record extends Emitter implements UtilResubscribeCallback {
             return;
         }
 
-        beginChange();
+        Map oldValues = beginChange();
 
         this.version = version;
         if( Actions.PATCH == message.action ) {
             path.set( message.data[ 2 ], data );
+            System.out.println( "Changed to: " + path.get( message.data[2] ));
         } else {
             this.data = data;
             this.path.setCoreElement( data );
         }
 
-        completeChange();
+        completeChange( oldValues );
 
     }
 
@@ -240,18 +268,61 @@ public class Record extends Emitter implements UtilResubscribeCallback {
         this.ackTimeoutRegistry.clear( Topic.RECORD, Actions.READ, this.name );
     }
 
-    private void beginChange() {
-        if( this.subscribers.isEmpty() ) {
-            return;
+    private Map beginChange() {
+        Set<String> paths = this.subscribers.getEvents();
+
+        if( paths.isEmpty() ) {
+            return null;
         }
+
+        Map<String,JsonElement> oldValues = new HashMap();
+
+        if( paths.contains( ALL_EVENT ) ) {
+            oldValues.put( ALL_EVENT, this.get() );
+        }
+
+        for( String path : paths ) {
+            if( path != ALL_EVENT ) {
+                oldValues.put( path, this.get( path ) );
+            }
+        }
+
+        return oldValues;
     }
 
-    private void completeChange() {
+    private void completeChange(Map<String,JsonElement> oldValues) {
+        List<Object> listeners;
+
+        JsonElement oldValue, newValue;
+
+        if( oldValues == null || oldValues.isEmpty() ) {
+            return;
+        }
+
+        oldValue = oldValues.remove( ALL_EVENT );
+        if( oldValue != null && !oldValue.equals( this.data ) ) {
+            listeners = this.subscribers.listeners( ALL_EVENT );
+            for( Object listener : listeners ) {
+                ((RecordChangedCallback) listener).onRecordChanged( this.name, this.get() );
+            }
+        }
+
+        for( String key : oldValues.keySet() ) {
+            oldValue = oldValues.get( key );
+            newValue = this.get( key );
+            System.out.println( "Key: " + key + " value: " + oldValue );
+            if( oldValue == null || !oldValue.equals( newValue ) ) {
+                listeners = this.subscribers.listeners( key );
+                for( Object listener : listeners ) {
+                    ((RecordChangedCallback) listener).onRecordChanged( this.name, key, newValue );
+                }
+            }
+        }
     }
 
     private void throwExceptionIfDestroyed(String action) throws DeepstreamRecordDestroyedException {
         if( this.isDestroyed ) {
-            throw new DeepstreamRecordDestroyedException( );    
+            throw new DeepstreamRecordDestroyedException();
         }
     }
 
@@ -260,14 +331,14 @@ public class Record extends Emitter implements UtilResubscribeCallback {
         this.ackTimeoutRegistry.clear( message );
 
         if( action.equals( Actions.DELETE ) ) {
-            this.emit( "delete" );
+            //this.emit( "delete" );
             if( this.recordEventsListener != null ) {
                 recordEventsListener.onRecordDeleted( this.name );
             }
             this.destroy();
         }
         else if( action.equals( Actions.UNSUBSCRIBE ) ) {
-            this.emit( "discard" );
+            //this.emit( "discard" );
             if( this.recordEventsListener != null ) {
                 recordEventsListener.onRecordDiscarded( this.name );
             }
@@ -278,19 +349,20 @@ public class Record extends Emitter implements UtilResubscribeCallback {
     private void onRead( Message message ) {
         ackTimeoutRegistry.clear( message );
 
-        beginChange();
+        Map oldValues = beginChange();
         this.version = Integer.parseInt( message.data[ 1 ] );
         this.data = gson.fromJson( message.data[ 2 ], JsonObject.class );
-        completeChange();
+        this.path.setCoreElement(this.data);
+        completeChange( oldValues );
         setReady();
     }
 
     private void setReady() {
         this.isReady = true;
         //TODO: Emit ready events
-        this.emit( "ready" );
+        //this.emit( "ready" );
         if( this.recordEventsListener != null ) {
-            recordEventsListener.onRecordReady( this.name );
+            recordEventsListener.onRecordReady( this );
         }
     }
 
@@ -356,5 +428,15 @@ public class Record extends Emitter implements UtilResubscribeCallback {
             return clone((T) gson.fromJson( this.rawData, clazz ));
         }
         return null;
+    }
+
+    public JsonElement deepCopy(JsonElement element) {
+        try {
+            Gson gson = new Gson();
+            return gson.fromJson(gson.toJson(element, JsonElement.class), JsonElement.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

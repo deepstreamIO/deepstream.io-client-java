@@ -1,4 +1,4 @@
 package io.deepstream;
 
-public class DeepstreamRecordDestroyedException extends Exception {
+public class DeepstreamRecordDestroyedException extends RuntimeException {
 }

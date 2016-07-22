@@ -21,12 +21,12 @@ public class EventHandlerTest {
     DeepstreamClientMock deepstreamClientMock;
     ConnectionMock connectionMock;
     EventHandler eventHandler;
-    Emitter.Listener callbackMock;
+    EventCallback callbackMock;
     DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler;
 
     @Before
     public void setUp() throws URISyntaxException {
-        callbackMock = mock( Emitter.Listener.class );
+        callbackMock = mock( EventCallback.class );
 
         this.connectionMock = new ConnectionMock();
         this.deepstreamRuntimeErrorHandler = mock( DeepstreamRuntimeErrorHandler.class );
@@ -70,7 +70,7 @@ public class EventHandlerTest {
         eventHandler.subscribe( "myEvent", callbackMock );
         eventHandler.emit( "myEvent", 8 );
         Thread.sleep(30);
-        verify( callbackMock, times(1) ).call( new Object[] { 8 } );
+        verify( callbackMock, times(1) ).onEvent( "myEvent", new Object[] { 8 } );
     }
 
     @Test
@@ -83,7 +83,7 @@ public class EventHandlerTest {
                 new String[] { "myEvent", "N23" }
         ));
         Thread.sleep(30);
-        verify( callbackMock, times(1) ).call( (float) 23 );
+        verify( callbackMock, times(1) ).onEvent( "myEvent", (float) 23 );
     }
 
     @Test
@@ -95,7 +95,7 @@ public class EventHandlerTest {
                 Actions.EVENT,
                 new String[] { "myEvent" }
         ));
-        verify( callbackMock, times(1) ).call( );
+        verify( callbackMock, times(1) ).onEvent( "myEvent" );
     }
 
     @Test
@@ -121,7 +121,7 @@ public class EventHandlerTest {
         eventHandler.subscribe( "myEvent", callbackMock );
         eventHandler.unsubscribe( "myEvent", callbackMock );
         eventHandler.emit( "myEvent", 11 );
-        verify( callbackMock, times(0) ).call( 11 );
+        verify( callbackMock, times(0) ).onEvent( "myEvent", 11 );
     }
 
     @Test

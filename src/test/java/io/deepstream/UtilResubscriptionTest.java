@@ -12,7 +12,7 @@ import java.net.URISyntaxException;
 import static org.mockito.Mockito.*;
 
 @RunWith( JUnit4.class )
-public class ResubscriptionTest {
+public class UtilResubscriptionTest {
 
     DeepstreamClientMock deepstreamClientMock;
     UtilResubscribeCallback resubscribeCallbackMock;

@@ -15,7 +15,7 @@ import java.net.URISyntaxException;
 import static org.mockito.Mockito.*;
 
 @RunWith( JUnit4.class )
-public class AckTimeoutTest {
+public class UtilAckTimeoutTest {
 
     DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandlerMock;
     DeepstreamClientMock deepstreamClientMock;

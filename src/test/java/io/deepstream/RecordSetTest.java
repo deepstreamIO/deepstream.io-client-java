@@ -40,6 +40,9 @@ public class RecordSetTest {
         options.put( "recordReadTimeout", "20" );
 
         this.record = new Record( "testRecord", new HashMap(), connectionMock, options, deepstreamClientMock );
+        record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|A|S|testRecord" ), deepstreamClientMock ) );
+        record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|testRecord|0|{}" ), deepstreamClientMock ) );
+        Assert.assertEquals( new JsonObject(), record.get() );
     }
 
     @After
@@ -48,17 +51,7 @@ public class RecordSetTest {
     }
 
     @Test
-    public void createsTheRecord() {
-        record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|A|S|testRecord" ), deepstreamClientMock ) );
-        record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|testRecord|0|{}" ), deepstreamClientMock ) );
-
-        Assert.assertEquals( new JsonObject(), record.get() );
-    }
-
-    @Test
     public void sendsUpdateMessageForEntireRecord() throws DeepstreamRecordDestroyedException {
-        createsTheRecord();
-
         JsonObject object = new JsonObject();
         object.addProperty( "firstname", "Wolfram" );
         record.set( object );

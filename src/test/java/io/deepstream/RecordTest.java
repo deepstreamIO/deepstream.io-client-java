@@ -69,7 +69,7 @@ public class RecordTest {
         record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|A|S|recordA" ), deepstreamClientMock ) );
         record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|recordA|0|{ \"name\": \"sam\" }" ), deepstreamClientMock ) );
         Assert.assertTrue( record.isReady );
-        verify( recordEventsListeners, times(1) ).onRecordReady( "recordA" );
+        verify( recordEventsListeners, times(1) ).onRecordReady( record );
     }
 
     @Test

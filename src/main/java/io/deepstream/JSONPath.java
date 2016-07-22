@@ -15,10 +15,11 @@ public class JSONPath {
     }
 
     public JsonElement get(String path){
-        if( path == "" ){
+        if( path == "" || path == null ){
             return this.coreElement;
+        } else {
+            return iterateThrough(this.coreElement, path, null);
         }
-        return iterateThrough(this.coreElement, path, null);
     }
 
     public void set( String path, JsonElement value ) {
@@ -61,7 +62,7 @@ public class JSONPath {
                         String prefix = getTokenPrefix(token);
                         JsonArray array = new JsonArray();
 
-                        for (int j = 0; j < index; i++) {
+                        for (int j = 0; j < index; j++) {
                             array.add(JsonNull.INSTANCE);
                         }
 
