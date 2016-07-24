@@ -1,6 +1,7 @@
 package io.deepstream;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import io.deepstream.constants.Actions;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
@@ -86,6 +87,6 @@ class MessageParser {
     }
 
     static Object parseObject(String value) {
-        return new Gson().fromJson( value, Object.class );
+        return new Gson().fromJson( value, JsonElement.class );
     }
 }

@@ -1,6 +1,7 @@
 package io.deepstream;
 
 
+import com.google.gson.JsonElement;
 import io.deepstream.constants.Actions;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
@@ -123,12 +124,22 @@ public class RecordHandler implements RecordEventsListener {
      *
      * @param name
      */
-    public void snapshot( String name, SingleNotifierCallback callback ) {
+    public void snapshot(String name, final RecordSnapshotCallback callback ) {
         Record record = records.get( name );
-        if( record != null ) {
-            callback.onSingleNotifierResponse( name, record.get() );
+        if( record != null && record.isReady ) {
+            callback.onRecordSnapshot( name, record.get() );
         } else {
-            snapshotRegistry.request( name, callback );
+            snapshotRegistry.request(name, new UtilSingleNotifierCallback() {
+                @Override
+                public void onSingleNotifierError(String name, DeepstreamException error) {
+                    callback.onRecordSnapshotError( name, error );
+                }
+
+                @Override
+                public void onSingleNotifierResponse(String name, Object data) {
+                    callback.onRecordSnapshot(name, (JsonElement) data);
+                }
+            });
         }
     }
 
@@ -143,10 +154,10 @@ public class RecordHandler implements RecordEventsListener {
         if( record != null && record.isReady ) {
             callback.onRecordFound( name );
         } else {
-            hasRegistry.request(name, new SingleNotifierCallback() {
+            hasRegistry.request(name, new UtilSingleNotifierCallback() {
                 @Override
                 public void onSingleNotifierError(String name, DeepstreamException error) {
-                    callback.onRecordError( name, error );
+                    callback.onRecordHasError( name, error );
                 }
 
                 @Override
@@ -166,7 +177,7 @@ public class RecordHandler implements RecordEventsListener {
      * Will be called by the client for incoming messages on the RECORD topic
      * @param message
      */
-    void handle( Message message ) {
+    protected void handle( Message message ) {
         Record record;
         boolean processed = false;
         String recordName;

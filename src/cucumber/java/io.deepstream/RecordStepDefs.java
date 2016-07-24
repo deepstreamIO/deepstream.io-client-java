@@ -22,6 +22,7 @@ public class RecordStepDefs {
     ListenCallback listenCallback = mock( ListenCallback.class );
     RecordChangedCallback recordChangedCallback = mock( RecordChangedCallback.class );
     RecordHasCallback recordHasCallback = mock( RecordHasCallback.class );
+    RecordSnapshotCallback recordSnapshotCallback = mock( RecordSnapshotCallback.class );
     Record record;
 
     public RecordStepDefs( Context context ) {
@@ -163,7 +164,7 @@ public class RecordStepDefs {
 
     @Then("^the client is told the record \"([^\"]*)\" doesn't exist$")
     public void the_client_is_told_the_record_doesn_t_exist(String recordName) throws Throwable {
-        verify( recordHasCallback, times( 0 ) ).onRecordError(anyString(), any(DeepstreamException.class));
+        verify( recordHasCallback, times( 0 ) ).onRecordHasError(anyString(), any(DeepstreamException.class));
         verify( recordHasCallback, times( 0 ) ).onRecordFound(recordName);
         verify( recordHasCallback, times( 1 ) ).onRecordNotFound(recordName);
         reset( recordHasCallback );
@@ -171,18 +172,47 @@ public class RecordStepDefs {
 
     @Then("^the client is told the record \"([^\"]*)\" exists$")
     public void the_client_is_told_the_record_exists(String recordName) throws Throwable {
-        verify( recordHasCallback, times( 0 ) ).onRecordError(anyString(), any(DeepstreamException.class));
+        verify( recordHasCallback, times( 0 ) ).onRecordHasError(anyString(), any(DeepstreamException.class));
         verify( recordHasCallback, times( 1 ) ).onRecordFound(recordName);
         verify( recordHasCallback, times( 0 ) ).onRecordNotFound(anyString());
         reset( recordHasCallback );
     }
 
-    @Then("^the client is told the record \"([^\"]*)\" encountered an error$")
-    public void the_client_is_told_the_record_encountered_an_error(String recordName) throws Throwable {
-        verify( recordHasCallback, times( 1 ) ).onRecordError(anyString(), any(DeepstreamException.class));
+    @Then("^the client is told the record \"([^\"]*)\" encountered an error checking if record exists$")
+    public void the_client_is_told_the_record_encountered_an_error_checking_if_record_exists(String recordName) throws Throwable {
+        verify( recordHasCallback, times( 1 ) ).onRecordHasError(anyString(), any(DeepstreamException.class));
         verify( recordHasCallback, times( 0 ) ).onRecordFound(anyString());
         verify( recordHasCallback, times( 0 ) ).onRecordNotFound(anyString());
         reset( recordHasCallback );
+    }
+
+    /**
+     * Snapshot
+     */
+
+    @Given("^the client requests a snapshot for the record \"([^\"]*)\"$")
+    public void the_client_requests_a_snapshot_for_the_record(String recordName) throws Throwable {
+        client.record.snapshot( recordName, recordSnapshotCallback);
+        Thread.sleep(GENERAL_TIMEOUT);
+    }
+
+    @Then("^the client has no response for the snapshot of record \"([^\"]*)\"$")
+    public void the_client_has_no_response_for_the_snapshot_of_record(String arg1) throws Throwable {
+        verifyZeroInteractions( recordHasCallback );
+    }
+
+    @Then("^the client is told the record \"([^\"]*)\" encountered an error retrieving snapshot$")
+    public void the_client_is_told_the_record_encountered_an_error_retrieving_snapshot(String recordName) throws Throwable {
+        verify( recordSnapshotCallback, times( 1 ) ).onRecordSnapshotError(anyString(), any(DeepstreamException.class));
+        verify( recordSnapshotCallback, times( 0 ) ).onRecordSnapshot(anyString(), any(JsonElement.class));
+        reset( recordSnapshotCallback );
+    }
+
+    @Then("^the client is provided the snapshot for record \"([^\"]*)\" with data \"(.*)\"$$")
+    public void the_client_is_provided_the_snapshot_name_for_record_with_data(String recordName, String data) throws Throwable {
+        verify( recordSnapshotCallback, times( 0 ) ).onRecordSnapshotError(anyString(), any(DeepstreamException.class));
+        verify( recordSnapshotCallback, times( 1 ) ).onRecordSnapshot(anyString(), any(JsonElement.class));
+        reset( recordSnapshotCallback );
     }
 
 

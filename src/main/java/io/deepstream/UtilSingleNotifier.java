@@ -58,7 +58,7 @@ public class UtilSingleNotifier implements UtilResubscribeCallback {
      * @param name
      * @param callback
      */
-    public void request( String name, SingleNotifierCallback callback ) {
+    public void request( String name, UtilSingleNotifierCallback callback ) {
         ArrayList callbacks = (ArrayList) requests.get( name );
         if( callbacks == null ) {
             callbacks = new ArrayList();
@@ -79,8 +79,8 @@ public class UtilSingleNotifier implements UtilResubscribeCallback {
      * @param data
      */
     public void recieve( String name, DeepstreamException error, Object data ) {
-        ArrayList<SingleNotifierCallback> callbacks = (ArrayList<SingleNotifierCallback>) requests.get( name );
-        for (SingleNotifierCallback callback : callbacks) {
+        ArrayList<UtilSingleNotifierCallback> callbacks = (ArrayList<UtilSingleNotifierCallback>) requests.get( name );
+        for (UtilSingleNotifierCallback callback : callbacks) {
             if( error != null ) {
                 callback.onSingleNotifierError( name, error );
             } else {
