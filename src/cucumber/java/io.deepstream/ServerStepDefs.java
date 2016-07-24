@@ -50,7 +50,7 @@ public class ServerStepDefs {
             message = message.replace( "<UID>", clientUid );
         }
         server.send( context.sendMessage( message ) );
-        Thread.sleep(GENERAL_TIMEOUT);
+        Thread.sleep(GENERAL_TIMEOUT * 3);
     }
 
     @Then("^the second server sends the message (.*?)$")

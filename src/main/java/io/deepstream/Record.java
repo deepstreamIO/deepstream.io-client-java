@@ -14,7 +14,7 @@ import java.util.*;
 import java.util.List;
 
 
-public class Record extends Emitter implements UtilResubscribeCallback {
+public class Record implements UtilResubscribeCallback {
 
     private static final String ALL_EVENT = "ALL_EVENT";
     private static final String DESTROY_PENDING = "DESTROY_PENDING";
@@ -172,7 +172,6 @@ public class Record extends Emitter implements UtilResubscribeCallback {
         throwExceptionIfDestroyed( "delete" );
         this.usages--;
         if( this.usages <= 0 ) {
-            //this.emit(DESTROY_PENDING);
             // TODO: on ready async callback
             int subscriptionTimeout = Integer.parseInt( (String) this.options.get( "subscriptionTimeout" ) );
             this.ackTimeoutRegistry.add( Topic.RECORD, Actions.UNSUBSCRIBE, name, subscriptionTimeout );
@@ -183,7 +182,6 @@ public class Record extends Emitter implements UtilResubscribeCallback {
 
     public Record delete() throws DeepstreamRecordDestroyedException {
         throwExceptionIfDestroyed( "delete" );
-        //this.emit(DESTROY_PENDING);
 
         // TODO: on ready async callback
         int subscriptionTimeout = Integer.parseInt( (String) this.options.get( "recordDeleteTimeout" ) );
@@ -331,14 +329,12 @@ public class Record extends Emitter implements UtilResubscribeCallback {
         this.ackTimeoutRegistry.clear( message );
 
         if( action.equals( Actions.DELETE ) ) {
-            //this.emit( "delete" );
             if( this.recordEventsListener != null ) {
                 recordEventsListener.onRecordDeleted( this.name );
             }
             this.destroy();
         }
         else if( action.equals( Actions.UNSUBSCRIBE ) ) {
-            //this.emit( "discard" );
             if( this.recordEventsListener != null ) {
                 recordEventsListener.onRecordDiscarded( this.name );
             }
@@ -359,8 +355,6 @@ public class Record extends Emitter implements UtilResubscribeCallback {
 
     private void setReady() {
         this.isReady = true;
-        //TODO: Emit ready events
-        //this.emit( "ready" );
         if( this.recordEventsListener != null ) {
             recordEventsListener.onRecordReady( this );
         }
@@ -396,7 +390,6 @@ public class Record extends Emitter implements UtilResubscribeCallback {
 
     private void destroy() {
         this.clearTimeouts();
-        this.off();
         this.utilResubscribeNotifier.destroy();
         this.isReady = false;
         this.isDestroyed = true;

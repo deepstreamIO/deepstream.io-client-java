@@ -8,9 +8,7 @@ import cucumber.api.java.en.When;
 import org.junit.Assert;
 import org.mockito.Matchers;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
 
 public class RecordStepDefs {
@@ -23,6 +21,7 @@ public class RecordStepDefs {
 
     ListenCallback listenCallback = mock( ListenCallback.class );
     RecordChangedCallback recordChangedCallback = mock( RecordChangedCallback.class );
+    RecordHasCallback recordHasCallback = mock( RecordHasCallback.class );
     Record record;
 
     public RecordStepDefs( Context context ) {
@@ -145,6 +144,37 @@ public class RecordStepDefs {
         record.unsubscribe( path, recordChangedCallback );
         Thread.sleep(GENERAL_TIMEOUT);
         reset( recordChangedCallback );
+    }
+
+    /**
+     * Has
+     */
+    @Given("^the client checks if the server has the record \"([^\"]*)\"$")
+    public void the_client_checks_if_the_server_has_the_record(String recordName) throws Throwable {
+        recordHasCallback = mock( RecordHasCallback.class );
+        client.record.has(recordName, recordHasCallback );
+        Thread.sleep(GENERAL_TIMEOUT);
+    }
+
+    @Then("^the client is not told if the record \"([^\"]*)\" exists$")
+    public void the_client_is_not_told_if_the_record_exists(String recordName) throws Throwable {
+        verifyZeroInteractions( recordHasCallback );
+    }
+
+    @Then("^the client is told the record \"([^\"]*)\" doesn't exist$")
+    public void the_client_is_told_the_record_doesn_t_exist(String recordName) throws Throwable {
+        verify( recordHasCallback, times( 0 ) ).onRecordError(anyString(), any(DeepstreamException.class));
+        verify( recordHasCallback, times( 0 ) ).onRecordFound(recordName);
+        verify( recordHasCallback, times( 1 ) ).onRecordNotFound(recordName);
+        reset( recordHasCallback );
+    }
+
+    @Then("^the client is told the record \"([^\"]*)\" exists$")
+    public void the_client_is_told_the_record_exists(String recordName) throws Throwable {
+        verify( recordHasCallback, times( 0 ) ).onRecordError(anyString(), any(DeepstreamException.class));
+        verify( recordHasCallback, times( 1 ) ).onRecordFound(recordName);
+        verify( recordHasCallback, times( 0 ) ).onRecordNotFound(anyString());
+        reset( recordHasCallback );
     }
 
 }

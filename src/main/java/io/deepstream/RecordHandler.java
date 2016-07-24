@@ -138,12 +138,26 @@ public class RecordHandler implements RecordEventsListener {
      * @param name
      * @param callback
      */
-    public void has( String name, SingleNotifierCallback callback ) {
+    public void has(String name, final RecordHasCallback callback ) {
         Record record = records.get( name );
-        if( record != null ) {
-            callback.onSingleNotifierResponse( name, true );
+        if( record != null && record.isReady ) {
+            callback.onRecordFound( name );
         } else {
-            snapshotRegistry.request( name, callback );
+            hasRegistry.request(name, new SingleNotifierCallback() {
+                @Override
+                public void onSingleNotifierError(String name, DeepstreamException error) {
+                    callback.onRecordError( name, error );
+                }
+
+                @Override
+                public void onSingleNotifierResponse(String name, Object data) {
+                    if( (boolean) data ) {
+                        callback.onRecordFound( name );
+                    } else {
+                        callback.onRecordNotFound( name );
+                    }
+                }
+            });
         }
     }
 
@@ -152,7 +166,7 @@ public class RecordHandler implements RecordEventsListener {
      * Will be called by the client for incoming messages on the RECORD topic
      * @param message
      */
-    public void handle( Message message ) {
+    void handle( Message message ) {
         Record record;
         boolean processed = false;
         String recordName;
@@ -177,12 +191,12 @@ public class RecordHandler implements RecordEventsListener {
             }
 
             if( message.data[ 0 ] == Actions.SNAPSHOT.toString() ) {
-                snapshotRegistry.recieve( recordName, message.data[ 2 ], null );
+                snapshotRegistry.recieve( recordName, new DeepstreamException( message.data[ 2 ] ), null );
                 return;
             }
 
             if( message.data[ 0 ] == Actions.HAS.toString() ) {
-                snapshotRegistry.recieve( recordName, message.data[ 2 ], null );
+                snapshotRegistry.recieve( recordName, new DeepstreamException( message.data[ 2 ] ), null );
                 return;
             }
         } else {

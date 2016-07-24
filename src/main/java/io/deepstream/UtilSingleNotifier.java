@@ -78,7 +78,7 @@ public class UtilSingleNotifier implements UtilResubscribeCallback {
      * @param error
      * @param data
      */
-    public void recieve( String name, Object error, Object data ) {
+    public void recieve( String name, DeepstreamException error, Object data ) {
         ArrayList<SingleNotifierCallback> callbacks = (ArrayList<SingleNotifierCallback>) requests.get( name );
         for (SingleNotifierCallback callback : callbacks) {
             if( error != null ) {
