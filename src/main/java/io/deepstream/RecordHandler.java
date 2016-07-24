@@ -190,13 +190,13 @@ public class RecordHandler implements RecordEventsListener {
                 return;
             }
 
-            if( message.data[ 0 ] == Actions.SNAPSHOT.toString() ) {
+            if( message.data[ 0 ].equals( Actions.SNAPSHOT.toString() ) ) {
                 snapshotRegistry.recieve( recordName, new DeepstreamException( message.data[ 2 ] ), null );
                 return;
             }
 
-            if( message.data[ 0 ] == Actions.HAS.toString() ) {
-                snapshotRegistry.recieve( recordName, new DeepstreamException( message.data[ 2 ] ), null );
+            if( message.data[ 0 ].equals(Actions.HAS.toString() ))  {
+                hasRegistry.recieve( recordName, new DeepstreamException( message.data[ 2 ] ), null );
                 return;
             }
         } else {
@@ -263,10 +263,10 @@ public class RecordHandler implements RecordEventsListener {
         }
 
         String errorType =  message.data[ 0 ];
-        if( errorType == Event.VERSION_EXISTS.toString()
-                || errorType == Event.MESSAGE_DENIED.toString()
-                || errorType == Actions.SNAPSHOT.toString()
-                || errorType == Actions.HAS.toString() ) {
+        if( errorType.equals( Event.VERSION_EXISTS.toString() )
+                || errorType.equals(Event.MESSAGE_DENIED.toString() )
+                || errorType.equals(Actions.SNAPSHOT.toString() )
+                || errorType.equals(Actions.HAS.toString() )) {
             return false;
         }
 

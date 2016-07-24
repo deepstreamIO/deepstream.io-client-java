@@ -28,11 +28,6 @@ Scenario: Record Has
     When the server sends the message R|H|hasRecord|T+
     Then the client is told the record "hasRecord" exists
 
-    # The check gets an error
-    Given the client checks if the server has the record "hasRecord"
-    When the server sends the message R|E|H|hasRecord|CACHE_RETRIEVAL_TIMEOUT+
-    Then the client is told the record "hasRecord" encountered an error
-
 	# The client receives a read
 	Given the server sends the message R|R|hasRecord|100|{"name":"John", "pets": [{"name":"Ruffles", "type":"dog","age":2}]}+
 

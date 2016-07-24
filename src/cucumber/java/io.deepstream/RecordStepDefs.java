@@ -177,4 +177,13 @@ public class RecordStepDefs {
         reset( recordHasCallback );
     }
 
+    @Then("^the client is told the record \"([^\"]*)\" encountered an error$")
+    public void the_client_is_told_the_record_encountered_an_error(String recordName) throws Throwable {
+        verify( recordHasCallback, times( 1 ) ).onRecordError(anyString(), any(DeepstreamException.class));
+        verify( recordHasCallback, times( 0 ) ).onRecordFound(anyString());
+        verify( recordHasCallback, times( 0 ) ).onRecordNotFound(anyString());
+        reset( recordHasCallback );
+    }
+
+
 }
