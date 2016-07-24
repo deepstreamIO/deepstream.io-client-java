@@ -129,7 +129,7 @@ class RpcHandler implements UtilResubscribeCallback {
         RpcRequested callback = this.providers.get( name );
         if( callback != null ) {
             response = new RpcResponse( this.connection, name, correlationId );
-            callback.Call( data, response );
+            callback.onRPCRequested( data, response );
         } else {
             this.connection.sendMsg( Topic.RPC, Actions.REJECTION, new String[] { name, correlationId } );
         }

@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 
-public class Record implements UtilResubscribeCallback {
+class Record implements UtilResubscribeCallback {
 
     private static final String ALL_EVENT = "ALL_EVENT";
     private static final String DESTROY_PENDING = "DESTROY_PENDING";
@@ -30,8 +30,8 @@ public class Record implements UtilResubscribeCallback {
     private final IDeepstreamClient client;
     private final UtilObjectDiffer differ;
     private final Gson gson;
-    private final JSONPath path;
-    private final Emitter subscribers;
+    private final UtilJSONPath path;
+    private final UtilEmitter subscribers;
 
     private RecordEventsListener recordEventsListener;
     private RecordMergeStrategy mergeStrategy;
@@ -55,8 +55,8 @@ public class Record implements UtilResubscribeCallback {
         this.gson = new Gson();
         this.differ = new UtilObjectDiffer();
         this.data = new JsonObject();
-        this.path = new JSONPath( this.data );
-        this.subscribers = new Emitter();
+        this.path = new UtilJSONPath( this.data );
+        this.subscribers = new UtilEmitter();
         this.isReady = false;
         this.isDestroyed = false;
 

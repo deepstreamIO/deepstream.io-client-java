@@ -1,6 +1,6 @@
 package io.deepstream;
 
-import com.google.gson.JsonObject;
+import com.google.gson.JsonElement;
 import io.deepstream.constants.ConnectionState;
 
 import java.util.ArrayList;
@@ -28,12 +28,12 @@ public class DeepstreamClientMock extends IDeepstreamClient {
     }
 
     @Override
-    IDeepstreamClient login(JsonObject data) throws DeepstreamLoginException {
+    IDeepstreamClient login(JsonElement data) throws DeepstreamLoginException {
         return this;
     }
 
     @Override
-    IDeepstreamClient login(JsonObject data, LoginCallback loginCallback) throws DeepstreamLoginException {
+    IDeepstreamClient login(JsonElement data, LoginCallback loginCallback) throws DeepstreamLoginException {
         return this;
     }
 

@@ -14,6 +14,7 @@ public class ConnectionMock implements IConnection {
         this.state = ConnectionState.CLOSED;
     }
 
+    @Override
     public void sendMsg(Topic topic, Actions action, String[] data) {
         this.lastSentMessage = MessageBuilder.getMsg( topic, action, data );
     }

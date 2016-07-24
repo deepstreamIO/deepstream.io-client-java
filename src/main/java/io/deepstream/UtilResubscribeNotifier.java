@@ -10,7 +10,7 @@ import io.deepstream.constants.ConnectionState;
  *
  * Resubscribe logic should only occur once per connection loss
  */
-public class UtilResubscribeNotifier implements ConnectionChangeListener {
+class UtilResubscribeNotifier implements ConnectionChangeListener {
 
     private IDeepstreamClient client;
     private UtilResubscribeCallback resubscribe;
@@ -31,7 +31,7 @@ public class UtilResubscribeNotifier implements ConnectionChangeListener {
     }
 
     /**
-     * Call this whenever this functionality is no longer needed to remove links
+     * onRPCRequested this whenever this functionality is no longer needed to remove links
      */
     protected void destroy() {
         this.client.removeConnectionChangeListener( this );

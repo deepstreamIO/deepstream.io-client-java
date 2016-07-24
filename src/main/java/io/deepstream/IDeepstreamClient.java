@@ -1,6 +1,6 @@
 package io.deepstream;
 
-import com.google.gson.JsonObject;
+import com.google.gson.JsonElement;
 import io.deepstream.constants.ConnectionState;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
@@ -12,8 +12,8 @@ abstract class IDeepstreamClient {
     abstract IDeepstreamClient addConnectionChangeListener(ConnectionChangeListener connectionChangeListener);
     abstract IDeepstreamClient removeConnectionChangeListener( ConnectionChangeListener connectionChangeListener );
     abstract ConnectionState getConnectionState();
-    abstract IDeepstreamClient login( JsonObject data )throws DeepstreamLoginException ;
-    abstract IDeepstreamClient login( JsonObject data, LoginCallback loginCallback ) throws DeepstreamLoginException ;
+    abstract IDeepstreamClient login( JsonElement data )throws DeepstreamLoginException ;
+    abstract IDeepstreamClient login( JsonElement data, LoginCallback loginCallback ) throws DeepstreamLoginException ;
     abstract IDeepstreamClient close();
     abstract String getUid();
 

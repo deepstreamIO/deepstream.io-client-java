@@ -13,7 +13,7 @@ import java.net.URISyntaxException;
 
 public class JSONPathTest {
     private Gson gson = new Gson();
-    private JSONPath jsonPath;
+    private UtilJSONPath jsonPath;
     private JsonObject coreElement;
 
     @Before
@@ -40,7 +40,7 @@ public class JSONPathTest {
         coreElement.add( "address", currentAddress );
         coreElement.add( "pastAddresses", pastAddresses );
 
-        jsonPath = new JSONPath( coreElement );
+        jsonPath = new UtilJSONPath( coreElement );
     }
 
     @After

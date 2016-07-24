@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class UtilSingleNotifier implements UtilResubscribeCallback {
+class UtilSingleNotifier implements UtilResubscribeCallback {
 
     private final Topic topic;
     private final Actions action;
@@ -20,7 +20,7 @@ public class UtilSingleNotifier implements UtilResubscribeCallback {
     private final UtilResubscribeNotifier resubscribeNotifier;
 
     /**
-     * Provides a scaffold for subscriptionless requests to deepstream, such as the SNAPSHOT
+     * Provides a scaffold for subscriptionless requests to io.deepstream.gherkin, such as the SNAPSHOT
      * and HAS functionality. The SingleNotifier multiplexes all the client requests so
      * that they can can be notified at once, and also includes reconnection funcionality
      * incase the connection drops.

@@ -28,7 +28,7 @@ public class RpcHandlerTest {
     int rpcCalls = 0;
     RpcRequested addTwoCallback = new RpcRequested() {
         @Override
-        public void Call(Object data, RpcResponse response) {
+        public void onRPCRequested(Object data, RpcResponse response) {
             rpcCalls++;
             double numA = ((JsonElement) data).getAsJsonObject().get("numA").getAsDouble();
             double numB = ((JsonElement) data).getAsJsonObject().get("numB").getAsDouble();

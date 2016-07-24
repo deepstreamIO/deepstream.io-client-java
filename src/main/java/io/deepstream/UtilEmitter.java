@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentMap;
  *
  * @see <a href="https://github.com/component/emitter">https://github.com/component/emitter</a>
  */
-class Emitter {
+class UtilEmitter {
 
     private ConcurrentMap<String, ConcurrentLinkedQueue<Object>> callbacks
             = new ConcurrentHashMap<String, ConcurrentLinkedQueue<Object>>();
@@ -26,7 +26,7 @@ class Emitter {
      * @param fn
      * @return a reference to this object.
      */
-    public Emitter on( Enum enu, Object fn ) {
+    public UtilEmitter on(Enum enu, Object fn ) {
         this.on( enu.toString(), fn );
         return this;
     }
@@ -37,7 +37,7 @@ class Emitter {
      * @param fn
      * @return a reference to this object.
      */
-    public Emitter on(String event, Object fn) {
+    public UtilEmitter on(String event, Object fn) {
         ConcurrentLinkedQueue<Object> callbacks = this.callbacks.get(event);
         if (callbacks == null) {
             callbacks = new ConcurrentLinkedQueue <Object>();
@@ -57,7 +57,7 @@ class Emitter {
      * @param fn
      * @return a reference to this object.
      */
-    public Emitter once(final String event, final Listener fn) {
+    public UtilEmitter once(final String event, final Listener fn) {
         this.on(event, new OnceListener(event, fn));
         return this;
     }
@@ -67,7 +67,7 @@ class Emitter {
      *
      * @return a reference to this object.
      */
-    public Emitter off() {
+    public UtilEmitter off() {
         this.callbacks.clear();
         return this;
     }
@@ -78,7 +78,7 @@ class Emitter {
      * @param event an event name.
      * @return a reference to this object.
      */
-    public Emitter off(String event) {
+    public UtilEmitter off(String event) {
         this.callbacks.remove(event);
         return this;
     }
@@ -90,13 +90,13 @@ class Emitter {
      * @param fn
      * @return a reference to this object.
      */
-    public Emitter off(String event, Object fn) {
+    public UtilEmitter off(String event, Object fn) {
         ConcurrentLinkedQueue<Object> callbacks = this.callbacks.get(event);
         if (callbacks != null) {
             Iterator<Object> it = callbacks.iterator();
             while (it.hasNext()) {
                 Object internal = it.next();
-                if (Emitter.sameAs(fn, internal)) {
+                if (UtilEmitter.sameAs(fn, internal)) {
                     it.remove();
                     break;
                 }
@@ -172,7 +172,7 @@ class Emitter {
 
         @Override
         public void call(Object... args) {
-            Emitter.this.off(this.event, this);
+            UtilEmitter.this.off(this.event, this);
             this.fn.call(args);
         }
     }

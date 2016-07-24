@@ -10,7 +10,7 @@ import java.util.List;
 class EventHandler implements UtilResubscribeCallback {
 
     private int subscriptionTimeout;
-    private Emitter emitter;
+    private UtilEmitter emitter;
     private Map options;
     private IConnection connection;
     private IDeepstreamClient client;
@@ -21,7 +21,7 @@ class EventHandler implements UtilResubscribeCallback {
 
     public EventHandler(Map options, IConnection connection, IDeepstreamClient client ) {
         this.subscriptionTimeout = Integer.parseInt( (String) options.get( "subscriptionTimeout" ) );
-        this.emitter = new Emitter();
+        this.emitter = new UtilEmitter();
         this.connection = connection;
         this.client = client;
         this.options = options;

@@ -7,10 +7,10 @@ import com.google.gson.JsonObject;
 
 import java.util.Iterator;
 
-public class JSONPath {
+class UtilJSONPath {
     private JsonElement coreElement;
 
-    public JSONPath(JsonElement e){
+    public UtilJSONPath(JsonElement e){
         this.coreElement = e;
     }
 
@@ -142,7 +142,7 @@ public class JSONPath {
         return coreElement;
     }
 
-    public class Array implements Iterable<JSONPath> {
+    public class Array implements Iterable<UtilJSONPath> {
         private JsonArray root;
         private JsonElement coreElement;
 
@@ -151,16 +151,16 @@ public class JSONPath {
         }
 
         @Override
-        public Iterator<JSONPath> iterator() {
-            return new Iterator<JSONPath>(){
+        public Iterator<UtilJSONPath> iterator() {
+            return new Iterator<UtilJSONPath>(){
                 Iterator<JsonElement> it = root.iterator();
                 @Override
                 public boolean hasNext() {
                     return it.hasNext();
                 }
                 @Override
-                public JSONPath next() {
-                    return new JSONPath(it.next());
+                public UtilJSONPath next() {
+                    return new UtilJSONPath(it.next());
                 }
                 @Override
                 public void remove() {
