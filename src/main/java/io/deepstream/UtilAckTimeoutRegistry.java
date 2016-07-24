@@ -25,7 +25,7 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, UtilTimeoutLis
         this.client = client;
         this.register = new ConcurrentHashMap<String, ScheduledFuture>();
         this.ackTimers = new LinkedBlockingQueue<AckTimeout>();
-        this.executor = new ErrorReportingThreadPoolExecutor(1);
+        this.executor = new ScheduledThreadPoolExecutor(1);
 
         this.state = client.getConnectionState();
         this.client.addConnectionChangeListener( this );
@@ -135,7 +135,6 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, UtilTimeoutLis
             String uniqueName = this.getUniqueName( topic, action, name );
             register.put( uniqueName, scheduledFuture );
         } else {
-            System.out.println( "Buffering timeout " + this.state );
             this.ackTimers.add( task );
         }
     }
@@ -181,8 +180,6 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, UtilTimeoutLis
             this.event = event;
             this.timeoutListener = timeoutListener;
             this.timeout = timeout;
-
-            System.out.println( "Creating timeout for " + topic + " " + action + " " + name + " " + event + " " + timeout );
         }
 
         @Override
@@ -196,34 +193,6 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, UtilTimeoutLis
                 msg = "No message received in time for " + action.name() + " " + name;
             }
             client.onError( topic, event, msg );
-        }
-    }
-
-
-    private class ErrorReportingThreadPoolExecutor extends ScheduledThreadPoolExecutor {
-
-        public ErrorReportingThreadPoolExecutor(int corePoolSize) {
-            super(corePoolSize);
-        }
-
-        @Override
-        protected void afterExecute(Runnable r, Throwable t) {
-            super.afterExecute(r, t);
-
-            if (t == null && r instanceof Future<?>) {
-                try {
-                    Object result = ((Future<?>) r).get();
-                } catch (CancellationException ce) {
-                    //t = ce;
-                } catch (ExecutionException ee) {
-                    t = ee.getCause();
-                } catch (InterruptedException ie) {
-                    //Thread.currentThread().interrupt();
-                }
-            }
-            if (t != null) {
-                System.out.println( "Timeout executed " +  t );
-            }
         }
     }
 }

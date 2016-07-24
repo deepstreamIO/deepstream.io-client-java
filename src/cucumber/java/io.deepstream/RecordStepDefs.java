@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
+import io.deepstream.constants.MergeStrategy;
 import org.junit.Assert;
 import org.mockito.Matchers;
 
@@ -213,6 +214,30 @@ public class RecordStepDefs {
         verify( recordSnapshotCallback, times( 0 ) ).onRecordSnapshotError(anyString(), any(DeepstreamException.class));
         verify( recordSnapshotCallback, times( 1 ) ).onRecordSnapshot(anyString(), any(JsonElement.class));
         reset( recordSnapshotCallback );
+    }
+
+    /**
+     * Conflict
+     */
+    @When("^the client selects \"REMOTE_WINS\" merge strategy for record \"(.*)\"$")
+    public void the_client_selects_REMOTE_WINS_merge_strategy(String recordName) throws Throwable {
+        record.setMergeStrategy(MergeStrategy.REMOTE_WINS);
+    }
+
+    @When("^the client selects \"LOCAL_WINS\" merge strategy for record \"(.*)\"$")
+    public void the_client_selects_LOCAL_WINS_merge_strategy(String recordName) throws Throwable {
+        record.setMergeStrategy(MergeStrategy.LOCAL_WINS);
+    }
+
+    @When("^the client selects \"CUSTOM\" merge strategy for record \"([^\"]*)\"$")
+    public void the_client_selects_merge_strategy_for_record(String recordName) throws Throwable {
+        record.setMergeStrategy(new RecordMergeStrategy() {
+            @Override
+            public JsonElement merge(Record record, JsonElement remoteValue, int remoteVersion) throws RecordMergeStrategyException {
+                remoteValue.getAsJsonObject().addProperty( "key", "customValue" );
+                return remoteValue;
+            }
+        });
     }
 
 

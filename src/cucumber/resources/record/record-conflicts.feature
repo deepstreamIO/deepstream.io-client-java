@@ -9,29 +9,66 @@ Feature: Record Conflicts
 	If a conflict does occur, the client should
 	recieve a VERSION_EXISTS error.
 
-Scenario: Record Conflicts
-
-	# The client is connected
+Background:
 	Given the test server is ready
-		And the client is initialised
-		And the server sends the message C|A+
-		And the client logs in with username "XXX" and password "YYY"
-		And the server sends the message A|A+
-
-	# The server requests a record
-	Given the client creates a record named "mergeRecord"
-
-	# The server responds with ack and read
-	When the server sends the message R|A|S|mergeRecord+
+	And the client is initialised
+	And the server sends the message C|A+
+	And the client logs in with username "XXX" and password "YYY"
+	And the server sends the message A|A+
+	And the client creates a record named "mergeRecord"
+	And the server sends the message R|A|S|mergeRecord+
 	And the server sends the message R|R|mergeRecord|100|{"key":"value1"}+
+	And the client sets the record "mergeRecord" "key" to "anotherValue"
 
-	# The client recieves an out of sync update
-	When the server sends the message R|U|mergeRecord|102|{"key":"value3"}+
-	Then the client throws a "VERSION_EXISTS" error with message "mergeRecord"
 
-	# The client sends an partial update
-	When the client sets the record "mergeRecord" "key" to "value4"
+Scenario: Remote Merging Strategy On Read
+	When the client selects "REMOTE_WINS" merge strategy for record "mergeRecord"
+	And the server sends the message R|R|mergeRecord|104|{"key":"value3"}+
+	Then the last message the server recieved is R|U|mergeRecord|105|{"key":"value3"}+
 
-	# The client recieves an error saying version already exists
-	When the server sends the message R|E|VERSION_EXISTS|mergeRecord|102+
-	Then the client throws a "VERSION_EXISTS" error with message "mergeRecord"
+Scenario: Local Merge Strategy On Read
+	When the client selects "LOCAL_WINS" merge strategy for record "mergeRecord"
+	And the server sends the message R|R|mergeRecord|104|{"key":"value3"}+
+	Then the last message the server recieved is R|U|mergeRecord|105|{"key":"anotherValue"}+
+
+Scenario: Custom Merge Strategy On Read
+	When the client selects "CUSTOM" merge strategy for record "mergeRecord"
+	And the server sends the message R|R|mergeRecord|104|{"key":"value3"}+
+	Then the last message the server recieved is R|U|mergeRecord|105|{"key":"customValue"}+
+
+Scenario: Remote Merging Strategy On Update
+	When the client selects "REMOTE_WINS" merge strategy for record "mergeRecord"
+	And the server sends the message R|U|mergeRecord|104|{"key":"value3"}+
+	Then the last message the server recieved is R|U|mergeRecord|105|{"key":"value3"}+
+
+Scenario: Local Merge Strategy On Update
+	When the client selects "LOCAL_WINS" merge strategy for record "mergeRecord"
+	And the server sends the message R|U|mergeRecord|104|{"key":"value3"}+
+	Then the last message the server recieved is R|U|mergeRecord|105|{"key":"anotherValue"}+
+
+Scenario: Custom Merge Strategy On Update
+	When the client selects "CUSTOM" merge strategy for record "mergeRecord"
+	And the server sends the message R|U|mergeRecord|104|{"key":"value3"}+
+	Then the last message the server recieved is R|U|mergeRecord|105|{"key":"customValue"}+
+
+Scenario: Remote Merging Strategy On Patch
+	When the client selects "REMOTE_WINS" merge strategy for record "mergeRecord"
+	And the server sends the message R|P|mergeRecord|104|key|Svalue3+
+	Then the last message the server recieved is R|SN|mergeRecord+
+	And the server sends the message R|R|mergeRecord|104|{"key":"value3"}+
+	Then the last message the server recieved is R|U|mergeRecord|105|{"key":"value3"}+
+
+Scenario: Local Merging Strategy On Patch
+	When the client selects "LOCAL_WINS" merge strategy for record "mergeRecord"
+	And the server sends the message R|P|mergeRecord|104|key|Svalue3+
+	Then the last message the server recieved is R|SN|mergeRecord+
+	And the server sends the message R|R|mergeRecord|104|{"key":"value3"}+
+	Then the last message the server recieved is R|U|mergeRecord|105|{"key":"anotherValue"}+
+
+Scenario: Remote Merging Strategy On Patch
+	When the client selects "CUSTOM" merge strategy for record "mergeRecord"
+	And the server sends the message R|P|mergeRecord|104|key|Svalue3+
+	Then the last message the server recieved is R|SN|mergeRecord+
+	And the server sends the message R|R|mergeRecord|104|{"key":"value3"}+
+	Then the last message the server recieved is R|U|mergeRecord|105|{"key":"customValue"}+
+

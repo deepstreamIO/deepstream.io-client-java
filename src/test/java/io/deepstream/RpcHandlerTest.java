@@ -1,5 +1,6 @@
 package io.deepstream;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.deepstream.constants.Actions;
 import io.deepstream.constants.ConnectionState;
@@ -13,7 +14,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.net.URISyntaxException;
-import java.util.Map;
 import java.util.Properties;
 
 import static org.mockito.Mockito.*;
@@ -30,9 +30,8 @@ public class RpcHandlerTest {
         @Override
         public void Call(Object data, RpcResponse response) {
             rpcCalls++;
-            Map m = (Map) data;
-            double numA = (double) m.get( "numA" );
-            double numB = (double) m.get( "numB" );
+            double numA = ((JsonElement) data).getAsJsonObject().get("numA").getAsDouble();
+            double numB = ((JsonElement) data).getAsJsonObject().get("numB").getAsDouble();
             response.send( numA + numB );
         }
     };

@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.gson.JsonElement;
+
 public interface RecordMergeStrategy {
-    void merge( Record record, Object remoteValue, int remoteVersion, RecordMergeCallback callback );
+    JsonElement merge(Record record, JsonElement remoteValue, int remoteVersion ) throws RecordMergeStrategyException;
 }

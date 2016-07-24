@@ -4,14 +4,13 @@ package io.deepstream;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import io.deepstream.constants.Actions;
-import io.deepstream.constants.ConnectionState;
-import io.deepstream.constants.Event;
-import io.deepstream.constants.Topic;
+import io.deepstream.constants.*;
 import javafx.util.Pair;
 
-import java.util.*;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 public class Record implements UtilResubscribeCallback {
@@ -70,6 +69,11 @@ public class Record implements UtilResubscribeCallback {
         return this;
     }
 
+    public Record setMergeStrategy(MergeStrategy mergeStrategy) {
+        this.mergeStrategy = RecordMergeStrategies.INSTANCE.getMergeStrategy( mergeStrategy );
+        return this;
+    }
+
     public Record setMergeStrategy(RecordMergeStrategy mergeStrategy) {
         this.mergeStrategy = mergeStrategy;
         return this;
@@ -94,11 +98,14 @@ public class Record implements UtilResubscribeCallback {
     }
 
     public Record set( Object value ) throws DeepstreamRecordDestroyedException {
-        this.set( null, value );
-        return this;
+        return this.set( null, value, false );
     }
 
     public Record set(String path, Object value ) throws DeepstreamRecordDestroyedException {
+        return this.set( path, value, false );
+    }
+
+    private Record set(String path, Object value, boolean force ) throws DeepstreamRecordDestroyedException {
         throwExceptionIfDestroyed( "set" );
 
         JsonElement element = gson.toJsonTree( value );
@@ -109,10 +116,13 @@ public class Record implements UtilResubscribeCallback {
         }
 
         JsonElement object = this.path.get( path );
-        if( object != null && object.equals( value ) ) {
-            return this;
-        } else if( path == null && this.data.equals( value ) ) {
-            return this;
+
+        if( force == false ) {
+            if( object != null && object.equals( value ) ) {
+                return this;
+            } else if( path == null && this.data.equals( value ) ) {
+                return this;
+            }
         }
 
         Map oldValues = beginChange();
@@ -199,9 +209,9 @@ public class Record implements UtilResubscribeCallback {
     protected void onMessage(Message message) {
         if( message.action == Actions.ACK ) {
             processAckMessage( message );
-        } else if( message.action == Actions.READ ) {
+        } else if( message.action == Actions.READ && this.version == -1 ) {
             onRead( message );
-        } else if( message.action == Actions.UPDATE || message.action == Actions.PATCH ) {
+        } else if( message.action == Actions.READ || message.action == Actions.UPDATE || message.action == Actions.PATCH ) {
             applyUpdate( message );
         } else if( message.data[ 0 ] == Event.VERSION_EXISTS.toString() ) {
             recoverRecord( Integer.parseInt( message.data[ 2 ] ), gson.fromJson( message.data[ 3 ], JsonElement.class ), message );
@@ -249,8 +259,14 @@ public class Record implements UtilResubscribeCallback {
 
     }
 
-    private void recoverRecord(int version, Object data, Message message) {
-        // TODO: Apply merge strategy
+    private void recoverRecord(int remoteVersion, JsonElement remoteData, Message message) {
+        try {
+            JsonElement mergedData = this.mergeStrategy.merge( this, remoteData, remoteVersion );
+            this.version = remoteVersion;
+            this.set( null, mergedData, true );
+        } catch( RecordMergeStrategyException ex ) {
+            this.client.onError( Topic.RECORD, Event.VERSION_EXISTS, "Received update for " + remoteVersion + " but version is " + this.version );
+        }
     }
 
     private void scheduleAcks() {
@@ -308,7 +324,6 @@ public class Record implements UtilResubscribeCallback {
         for( String key : oldValues.keySet() ) {
             oldValue = oldValues.get( key );
             newValue = this.get( key );
-            System.out.println( "Key: " + key + " value: " + oldValue );
             if( oldValue == null || !oldValue.equals( newValue ) ) {
                 listeners = this.subscribers.listeners( key );
                 for( Object listener : listeners ) {

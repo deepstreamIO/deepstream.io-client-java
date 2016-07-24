@@ -78,8 +78,6 @@ public class ServerStepDefs {
             } else if( msg.equals( context.recieveMessage( message ) ) ) {
                 Assert.assertTrue( true );
                 return;
-            } else {
-                System.out.println( "Not a match " +  message + " " + context.sendMessage( msg ) );
             }
         }
 

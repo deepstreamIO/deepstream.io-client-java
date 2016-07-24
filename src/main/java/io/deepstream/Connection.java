@@ -67,9 +67,7 @@ class Connection implements IConnection {
     public void send( String message ) {
         if( this.connectionState != ConnectionState.OPEN ) {
             this.messageBuffer.append( message );
-            System.out.println( "Buffering " + message );
         } else {
-            System.out.println( "Sending " + message );
             this.endpoint.send( message );
         }
     }
@@ -130,7 +128,6 @@ class Connection implements IConnection {
     void onMessage(String rawMessage) {
         List<Message> parsedMessages = MessageParser.parse( rawMessage, this.client );
         for (Message message : parsedMessages) {
-            System.out.println("Normal message of type " + message.topic + " " + message.raw );
             if (message.topic == Topic.CONNECTION) {
                 handleConnectionResponse(message);
             } else if (message.topic == Topic.AUTH) {
