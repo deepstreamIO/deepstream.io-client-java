@@ -5,7 +5,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.deepstream.constants.*;
-import javafx.util.Pair;
 
 import java.util.HashMap;
 import java.util.List;
@@ -28,7 +27,6 @@ class Record implements UtilResubscribeCallback {
     private final UtilAckTimeoutRegistry ackTimeoutRegistry;
     private final IConnection connection;
     private final IDeepstreamClient client;
-    private final UtilObjectDiffer differ;
     private final Gson gson;
     private final UtilJSONPath path;
     private final UtilEmitter subscribers;
@@ -36,12 +34,9 @@ class Record implements UtilResubscribeCallback {
     private RecordEventsListener recordEventsListener;
     private RecordMergeStrategy mergeStrategy;
 
-    private Class clazz;
-
     private JsonElement data;
     private String name;
     private Map options;
-    private String rawData;
 
     public Record(String name, Map recordOptions, IConnection connection, Map options, IDeepstreamClient client) {
         this.ackTimeoutRegistry = client.getAckTimeoutRegistry();
@@ -53,7 +48,6 @@ class Record implements UtilResubscribeCallback {
         this.connection = connection;
         this.client = client;
         this.gson = new Gson();
-        this.differ = new UtilObjectDiffer();
         this.data = new JsonObject();
         this.path = new UtilJSONPath( this.data );
         this.subscribers = new UtilEmitter();
@@ -408,34 +402,6 @@ class Record implements UtilResubscribeCallback {
         this.utilResubscribeNotifier.destroy();
         this.isReady = false;
         this.isDestroyed = true;
-    }
-
-    /**
-     * Class API
-     */
-    public void set( Class obj ) {
-        this.version++;
-        Pair<String, Object> pair = differ.getDiff(this.data, obj);
-        sendUpdate( pair.getKey(), pair.getValue() );
-    }
-
-    private <T> T clone(T data) {
-        String serialized = gson.toJson( data );
-        return (T) gson.fromJson(serialized, this.clazz);
-    }
-
-    /**
-     * Gets the record as a typed object
-     *
-     * @param clazz type of class to deserialize json into
-     * @return a deserialized object of type T
-     */
-    public <T> T get( Class<T> clazz ) {
-        if( this.rawData != null ) {
-            this.clazz = clazz;
-            return clone((T) gson.fromJson( this.rawData, clazz ));
-        }
-        return null;
     }
 
     public JsonElement deepCopy(JsonElement element) {

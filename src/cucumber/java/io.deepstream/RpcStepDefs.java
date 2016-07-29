@@ -72,9 +72,8 @@ public class RpcStepDefs {
     }
 
     class RpcRequestedMock implements RpcRequested {
-
         @Override
-        public void Call(Object data, RpcResponse response) {
+        public void onRPCRequested(Object data, RpcResponse response) {
             request = (String) data;
             rpcResponse = response;
         }
