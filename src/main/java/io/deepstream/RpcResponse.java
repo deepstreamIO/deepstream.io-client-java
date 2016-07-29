@@ -4,7 +4,7 @@ package io.deepstream;
 import io.deepstream.constants.Actions;
 import io.deepstream.constants.Topic;
 
-public class RpcResponse {
+class RpcResponse {
 
     private IConnection connection;
     private String name;

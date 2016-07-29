@@ -15,19 +15,19 @@ import java.net.URISyntaxException;
 import static org.mockito.Mockito.*;
 
 @RunWith( JUnit4.class )
-public class AckTimeoutTest {
+public class UtilAckTimeoutTest {
 
-    ErrorCallback errorCallbackMock;
+    DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandlerMock;
     DeepstreamClientMock deepstreamClientMock;
     UtilAckTimeoutRegistry ackTimeoutRegistry;
     Message message;
 
     @Before
     public void setUp() throws URISyntaxException {
-        this.errorCallbackMock = mock( ErrorCallback.class );
-        this.deepstreamClientMock = new DeepstreamClientMock( this.errorCallbackMock );
+        this.deepstreamRuntimeErrorHandlerMock = mock( DeepstreamRuntimeErrorHandler.class );
+        this.deepstreamClientMock = new DeepstreamClientMock();
         this.deepstreamClientMock.setConnectionState( ConnectionState.OPEN );
-
+        this.deepstreamClientMock.setRuntimeErrorHandler( this.deepstreamRuntimeErrorHandlerMock );
         ackTimeoutRegistry = new UtilAckTimeoutRegistry( this.deepstreamClientMock );
         message = new Message(null, null, null, new String[2]);
     }
@@ -41,7 +41,7 @@ public class AckTimeoutTest {
     public void onTimeoutCalledWhenNoAckReceived() throws InterruptedException {
         ackTimeoutRegistry.add( Topic.EVENT, Actions.SUBSCRIBE, "Event1", 20 );
         Thread.sleep(50);
-        verify(this.errorCallbackMock, times(1)).onError(  Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE Event1" );
+        verify(this.deepstreamRuntimeErrorHandlerMock, times(1)).onException(  Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE Event1" );
     }
 
     @Test
@@ -54,7 +54,7 @@ public class AckTimeoutTest {
         ackTimeoutRegistry.add( Topic.EVENT, Actions.SUBSCRIBE, "Event1", 20 );
         ackTimeoutRegistry.clear( message );
         Thread.sleep(50);
-        verify(this.errorCallbackMock, times(0)).onError( Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE Event1" );
+        verify(this.deepstreamRuntimeErrorHandlerMock, times(0)).onException( Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE Event1" );
     }
 
     @Test
@@ -63,11 +63,11 @@ public class AckTimeoutTest {
 
         ackTimeoutRegistry.add( Topic.EVENT, Actions.SUBSCRIBE, "Event1", 20 );
         Thread.sleep(50);
-        verify(this.errorCallbackMock, times(0)).onError(  Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE Event1" );
+        verify(this.deepstreamRuntimeErrorHandlerMock, times(0)).onException(  Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE Event1" );
 
         deepstreamClientMock.setConnectionState( ConnectionState.OPEN );
         Thread.sleep(50);
-        verify(this.errorCallbackMock, times(1)).onError(  Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE Event1" );
+        verify(this.deepstreamRuntimeErrorHandlerMock, times(1)).onException(  Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE Event1" );
     }
 
     @Test
@@ -75,6 +75,6 @@ public class AckTimeoutTest {
         ackTimeoutRegistry.add( Topic.EVENT, Actions.SUBSCRIBE, "Event1", 20 );
         ackTimeoutRegistry.add( Topic.EVENT, Actions.SUBSCRIBE, "Event1", 20);
         Thread.sleep(50);
-        verify(this.errorCallbackMock, times(1)).onError( Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE Event1" );
+        verify(this.deepstreamRuntimeErrorHandlerMock, times(1)).onException( Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE Event1" );
     }
 }

@@ -1,20 +1,17 @@
 package io.deepstream;
 
+import com.google.gson.JsonElement;
 import io.deepstream.constants.ConnectionState;
-import io.deepstream.constants.Event;
-import io.deepstream.constants.Topic;
 
 import java.util.ArrayList;
 
-public class DeepstreamClientMock extends IDeepstreamClient implements ErrorCallback {
+public class DeepstreamClientMock extends IDeepstreamClient {
 
     private ArrayList<ConnectionChangeListener> connectionListeners;
     private ConnectionState connectionState;
-    private ErrorCallback errorCallback;
 
-    public DeepstreamClientMock( ErrorCallback errorCallback ) {
+    public DeepstreamClientMock() {
         this.connectionListeners = new ArrayList();
-        this.errorCallback = errorCallback;
     }
 
     public DeepstreamClientMock addConnectionChangeListener( ConnectionChangeListener connectionChangeListener ) {
@@ -30,6 +27,21 @@ public class DeepstreamClientMock extends IDeepstreamClient implements ErrorCall
         return this.connectionState;
     }
 
+    @Override
+    IDeepstreamClient login(JsonElement data) throws DeepstreamLoginException {
+        return this;
+    }
+
+    @Override
+    IDeepstreamClient login(JsonElement data, LoginCallback loginCallback) throws DeepstreamLoginException {
+        return this;
+    }
+
+    @Override
+    IDeepstreamClient close() {
+        return this;
+    }
+
     public String getUid() {
         return "1";
     }
@@ -39,10 +51,5 @@ public class DeepstreamClientMock extends IDeepstreamClient implements ErrorCall
         for ( ConnectionChangeListener listener : this.connectionListeners ) {
             listener.connectionStateChanged( state );
         }
-    }
-
-    @Override
-    public void onError(Topic topic, Event event, String message) {
-        this.errorCallback.onError( topic, event, message );
     }
 }

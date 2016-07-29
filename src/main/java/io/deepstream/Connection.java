@@ -1,14 +1,15 @@
 package io.deepstream;
 
-import com.google.gson.JsonObject;
+import com.google.gson.JsonElement;
 import io.deepstream.constants.*;
 
 import java.net.URISyntaxException;
 import java.util.*;
+import java.util.List;
 
 class Connection implements IConnection {
 
-    Endpoint endpoint;
+    private Endpoint endpoint;
 
     private DeepstreamClient client;
     private String originalUrl;
@@ -25,10 +26,10 @@ class Connection implements IConnection {
     private StringBuilder messageBuffer;
 
     private LoginCallback loginCallback;
-    private JsonObject authParameters;
+    private JsonElement authParameters;
     private Map options;
 
-    public Connection(final String url, final Map options, DeepstreamClient client ) throws URISyntaxException {
+    Connection(final String url, final Map options, DeepstreamClient client ) throws URISyntaxException {
         this( url, options, client, null );
         this.endpoint = createEndpoint();
     }
@@ -50,7 +51,7 @@ class Connection implements IConnection {
         this.endpoint = endpoint;
     }
 
-    public void authenticate(JsonObject authParameters, LoginCallback loginCallback ) throws DeepstreamLoginException {
+    void authenticate(JsonElement authParameters, LoginCallback loginCallback ) throws DeepstreamLoginException {
         if( this.tooManyAuthAttempts || this.challengeDenied ) {
             this.client.onError( Topic.ERROR, Event.IS_CLOSED, "The client\'s connection was closed" );
             return;
@@ -63,16 +64,16 @@ class Connection implements IConnection {
         }
     }
 
+    @Override
     public void send( String message ) {
         if( this.connectionState != ConnectionState.OPEN ) {
             this.messageBuffer.append( message );
-            System.out.println( "Buffering " + message );
         } else {
-            System.out.println( "Sending " + message );
             this.endpoint.send( message );
         }
     }
 
+    @Override
     public void sendMsg( Topic topic, Actions action, String[] data ) {
         this.send( MessageBuilder.getMsg( topic, action, data ) );
     }
@@ -83,15 +84,15 @@ class Connection implements IConnection {
         this.endpoint.send( authMessage );
     }
 
-    public void addConnectionChangeListener( ConnectionChangeListener connectionChangeListener ) {
+    void addConnectionChangeListener( ConnectionChangeListener connectionChangeListener ) {
         this.connectStateListeners.add( connectionChangeListener );
     }
 
-    public void removeConnectionChangeListener( ConnectionChangeListener connectionChangeListener ) {
+    void removeConnectionChangeListener( ConnectionChangeListener connectionChangeListener ) {
         this.connectStateListeners.remove( connectionChangeListener );
     }
 
-    public ConnectionState getConnectionState() {
+    ConnectionState getConnectionState() {
         return this.connectionState;
     }
 
@@ -129,7 +130,6 @@ class Connection implements IConnection {
     void onMessage(String rawMessage) {
         List<Message> parsedMessages = MessageParser.parse( rawMessage, this.client );
         for (Message message : parsedMessages) {
-            System.out.println("Normal message of type " + message.topic + " " + message.raw );
             if (message.topic == Topic.CONNECTION) {
                 handleConnectionResponse(message);
             } else if (message.topic == Topic.AUTH) {
@@ -138,8 +138,10 @@ class Connection implements IConnection {
                 this.client.event.handle(message);
             } else if (message.topic == Topic.RPC) {
                 this.client.rpc.handle(message);
+            } else if ( message.topic == Topic.RECORD ) {
+                this.client.record.handle(message);
             } else {
-
+                //TODO: Throw error
             }
         }
     }

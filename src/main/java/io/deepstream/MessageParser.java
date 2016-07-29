@@ -1,6 +1,7 @@
 package io.deepstream;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import io.deepstream.constants.Actions;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
@@ -34,7 +35,7 @@ class MessageParser {
         return messages;
     }
 
-    static private Message parseMessage( String message, IDeepstreamClient client ) {
+    static Message parseMessage( String message, IDeepstreamClient client ) {
         String[] parts = message.split( MPS );
 
         if( parts.length < 2 ) {
@@ -55,7 +56,7 @@ class MessageParser {
         return new Message( message, Topic.getTopic( parts[ 0 ] ), Actions.getAction( parts[ 1 ] ), Arrays.copyOfRange( parts, 2, parts.length ) );
     }
 
-    public static Object convertTyped( String value, IDeepstreamClient client ) {
+    static Object convertTyped( String value, IDeepstreamClient client ) {
 
         char type = value.charAt(0);
 
@@ -75,7 +76,7 @@ class MessageParser {
             return false;
         }
         else if( Types.getType( type ) == Types.OBJECT ) {
-            return new Gson().fromJson( value.substring( 1 ), Object.class );
+            return parseObject( value.substring( 1 ) );
         }
         else if( Types.getType( type ) == Types.UNDEFINED ) {
             // Undefined isn't a thing in Java..
@@ -85,4 +86,7 @@ class MessageParser {
         return null;
     }
 
+    static Object parseObject(String value) {
+        return new Gson().fromJson( value, JsonElement.class );
+    }
 }

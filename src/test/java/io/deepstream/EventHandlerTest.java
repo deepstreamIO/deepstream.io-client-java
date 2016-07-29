@@ -21,16 +21,17 @@ public class EventHandlerTest {
     DeepstreamClientMock deepstreamClientMock;
     ConnectionMock connectionMock;
     EventHandler eventHandler;
-    Emitter.Listener callbackMock;
-    ErrorCallback errorCallbackMock;
+    EventCallback callbackMock;
+    DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler;
 
     @Before
     public void setUp() throws URISyntaxException {
-        callbackMock = mock( Emitter.Listener.class );
+        callbackMock = mock( EventCallback.class );
 
         this.connectionMock = new ConnectionMock();
-        this.errorCallbackMock = mock( ErrorCallback.class );
-        this.deepstreamClientMock = new DeepstreamClientMock( this.errorCallbackMock );
+        this.deepstreamRuntimeErrorHandler = mock( DeepstreamRuntimeErrorHandler.class );
+        this.deepstreamClientMock = new DeepstreamClientMock();
+        this.deepstreamClientMock.setRuntimeErrorHandler( this.deepstreamRuntimeErrorHandler );
         this.deepstreamClientMock.setConnectionState( ConnectionState.OPEN );
 
         Map options = new Properties();
@@ -61,7 +62,7 @@ public class EventHandlerTest {
     public void emitsErrorIfNotAckReceivedForSubscribe() throws InterruptedException {
         eventHandler.subscribe( "myEvent", callbackMock );
         Thread.sleep(50);
-        verify( errorCallbackMock, times(1) ).onError(Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE myEvent");
+        verify( deepstreamRuntimeErrorHandler, times(1) ).onException(Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE myEvent");
     }
 
     @Test
@@ -69,7 +70,7 @@ public class EventHandlerTest {
         eventHandler.subscribe( "myEvent", callbackMock );
         eventHandler.emit( "myEvent", 8 );
         Thread.sleep(30);
-        verify( callbackMock, times(1) ).call( new Object[] { 8 } );
+        verify( callbackMock, times(1) ).onEvent( "myEvent", new Object[] { 8 } );
     }
 
     @Test
@@ -82,7 +83,7 @@ public class EventHandlerTest {
                 new String[] { "myEvent", "N23" }
         ));
         Thread.sleep(30);
-        verify( callbackMock, times(1) ).call( (float) 23 );
+        verify( callbackMock, times(1) ).onEvent( "myEvent", (float) 23 );
     }
 
     @Test
@@ -94,7 +95,7 @@ public class EventHandlerTest {
                 Actions.EVENT,
                 new String[] { "myEvent" }
         ));
-        verify( callbackMock, times(1) ).call( );
+        verify( callbackMock, times(1) ).onEvent( "myEvent" );
     }
 
     @Test
@@ -112,7 +113,7 @@ public class EventHandlerTest {
                 Actions.EVENT,
                 new String[] { "myEvent", "notTyped" }
         ));
-        verify( errorCallbackMock, times(1) ).onError( Topic.ERROR, Event.MESSAGE_PARSE_ERROR, "UNKNOWN_TYPE (notTyped)" );
+        verify( deepstreamRuntimeErrorHandler, times(1) ).onException( Topic.ERROR, Event.MESSAGE_PARSE_ERROR, "UNKNOWN_TYPE (notTyped)" );
     }
 
     @Test
@@ -120,7 +121,7 @@ public class EventHandlerTest {
         eventHandler.subscribe( "myEvent", callbackMock );
         eventHandler.unsubscribe( "myEvent", callbackMock );
         eventHandler.emit( "myEvent", 11 );
-        verify( callbackMock, times(0) ).call( 11 );
+        verify( callbackMock, times(0) ).onEvent( "myEvent", 11 );
     }
 
     @Test
@@ -134,7 +135,7 @@ public class EventHandlerTest {
         ));
         eventHandler.unsubscribe( "myEvent", callbackMock );
         Thread.sleep(30);
-        verify( errorCallbackMock, times(1) ).onError(Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for UNSUBSCRIBE myEvent");
+        verify( deepstreamRuntimeErrorHandler, times(1) ).onException(Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for UNSUBSCRIBE myEvent");
     }
 
     @Test
@@ -145,6 +146,6 @@ public class EventHandlerTest {
                 Actions.LISTEN,
                 new String[] { "myEvent" }
         ));
-        verify( errorCallbackMock, times(1) ).onError( Topic.EVENT, Event.UNSOLICITED_MESSAGE, "myEvent" );
+        verify( deepstreamRuntimeErrorHandler, times(1) ).onException( Topic.EVENT, Event.UNSOLICITED_MESSAGE, "myEvent" );
     }
 }

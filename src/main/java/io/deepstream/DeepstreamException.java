@@ -8,6 +8,7 @@ public class DeepstreamException extends RuntimeException {
     public String message;
     public Topic topic;
 
+
     public DeepstreamException(String message ) {
         super( message );
     }

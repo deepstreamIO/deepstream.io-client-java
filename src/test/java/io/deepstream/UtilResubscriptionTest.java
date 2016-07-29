@@ -12,19 +12,20 @@ import java.net.URISyntaxException;
 import static org.mockito.Mockito.*;
 
 @RunWith( JUnit4.class )
-public class ResubscriptionTest {
+public class UtilResubscriptionTest {
 
     DeepstreamClientMock deepstreamClientMock;
     UtilResubscribeCallback resubscribeCallbackMock;
     UtilResubscribeNotifier resubscribeNotifier;
-    ErrorCallback errorCallbackMock;
+    DeepstreamRuntimeErrorHandler errorCallbackMock;
 
     @Before
     public void setUp() throws URISyntaxException {
         this.resubscribeCallbackMock = mock( UtilResubscribeCallback.class );
 
-        this.errorCallbackMock = mock( ErrorCallback.class );
-        this.deepstreamClientMock = new DeepstreamClientMock( this.errorCallbackMock );
+        this.errorCallbackMock = mock( DeepstreamRuntimeErrorHandler.class );
+        this.deepstreamClientMock = new DeepstreamClientMock();
+        this.deepstreamClientMock.setRuntimeErrorHandler(this.errorCallbackMock);
         this.deepstreamClientMock.setConnectionState( ConnectionState.OPEN );
 
         this.resubscribeNotifier = new UtilResubscribeNotifier( this.deepstreamClientMock, this.resubscribeCallbackMock );

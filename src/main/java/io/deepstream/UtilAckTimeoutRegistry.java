@@ -8,7 +8,7 @@ import io.deepstream.constants.Topic;
 import java.util.Map;
 import java.util.concurrent.*;
 
-class UtilAckTimeoutRegistry implements ConnectionChangeListener, TimeoutListener {
+class UtilAckTimeoutRegistry implements ConnectionChangeListener, UtilTimeoutListener {
 
     private Map<String, ScheduledFuture> register;
     private ScheduledExecutorService executor;
@@ -25,7 +25,7 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, TimeoutListene
         this.client = client;
         this.register = new ConcurrentHashMap<String, ScheduledFuture>();
         this.ackTimers = new LinkedBlockingQueue<AckTimeout>();
-        this.executor = new ErrorReportingThreadPoolExecutor(1);
+        this.executor = new ScheduledThreadPoolExecutor(1);
 
         this.state = client.getConnectionState();
         this.client.addConnectionChangeListener( this );
@@ -91,7 +91,7 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, TimeoutListene
      * @param name The name to be added to the register
      * @param action The action to be added to the register
      */
-    public void add( Topic topic, Actions action, String name, Event event, TimeoutListener timeoutListener, int timeout ) {
+    public void add(Topic topic, Actions action, String name, Event event, UtilTimeoutListener timeoutListener, int timeout ) {
         String uniqueName = this.getUniqueName( topic, action, name );
         this.clear( uniqueName );
 
@@ -126,7 +126,7 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, TimeoutListene
      * Adds the uniqueName to the register. Only schedules the timer if
      * the connection state is OPEN, otherwise it adds to the queue of waiting acks.
      */
-    private void addToRegister( Topic topic, Actions action, String name, Event event, TimeoutListener timeoutListener, int timeoutDuration ) {
+    private void addToRegister(Topic topic, Actions action, String name, Event event, UtilTimeoutListener timeoutListener, int timeoutDuration ) {
         AckTimeout task = new AckTimeout( topic, action, name, event, timeoutListener, timeoutDuration );
 
         if( this.state == ConnectionState.OPEN ) {
@@ -135,7 +135,6 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, TimeoutListene
             String uniqueName = this.getUniqueName( topic, action, name );
             register.put( uniqueName, scheduledFuture );
         } else {
-            System.out.println( "Buffering timeout " + this.state );
             this.ackTimers.add( task );
         }
     }
@@ -167,58 +166,33 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, TimeoutListene
     }
 
     private class AckTimeout implements Runnable {
-        private TimeoutListener timeoutListener;
+        private UtilTimeoutListener timeoutListener;
         private Topic topic;
         private Actions action;
         private String name;
         private Event event;
         private int timeout;
 
-        AckTimeout( Topic topic, Actions action, String name,  Event event, TimeoutListener timeoutListener, int timeout ) {
+        AckTimeout(Topic topic, Actions action, String name, Event event, UtilTimeoutListener timeoutListener, int timeout ) {
             this.topic = topic;
             this.action = action;
             this.name = name;
             this.event = event;
             this.timeoutListener = timeoutListener;
             this.timeout = timeout;
-
-            System.out.println( "Creating timeout for " + topic + " " + action + " " + name + " " + event + " " + timeout );
         }
 
         @Override
         public void run() {
+            String msg;
+
             timeoutListener.onTimeout( topic, action, event, name );
-            String msg = "No ACK message received in time for " + action.name() + " " + name;
-            System.out.println( "Running timeout" );
+            if( event == Event.ACK_TIMEOUT ) {
+               msg = "No ACK message received in time for " + action.name() + " " + name;
+            } else {
+                msg = "No message received in time for " + action.name() + " " + name;
+            }
             client.onError( topic, event, msg );
-        }
-    }
-
-
-    private class ErrorReportingThreadPoolExecutor extends ScheduledThreadPoolExecutor {
-
-        public ErrorReportingThreadPoolExecutor(int corePoolSize) {
-            super(corePoolSize);
-        }
-
-        @Override
-        protected void afterExecute(Runnable r, Throwable t) {
-            super.afterExecute(r, t);
-
-            if (t == null && r instanceof Future<?>) {
-                try {
-                    Object result = ((Future<?>) r).get();
-                } catch (CancellationException ce) {
-                    //t = ce;
-                } catch (ExecutionException ee) {
-                    t = ee.getCause();
-                } catch (InterruptedException ie) {
-                    //Thread.currentThread().interrupt();
-                }
-            }
-            if (t != null) {
-                System.out.println( "Timeout executed " +  t );
-            }
         }
     }
 }

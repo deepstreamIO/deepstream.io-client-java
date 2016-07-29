@@ -7,6 +7,8 @@ public enum Event {
     CONNECTION_STATE_CHANGED,
     ACK_TIMEOUT,
     RESPONSE_TIMEOUT,
+    CACHE_RETRIEVAL_TIMEOUT,
+    STORAGE_RETRIEVAL_TIMEOUT,
     DELETE_TIMEOUT,
     UNSOLICITED_MESSAGE,
     MESSAGE_PARSE_ERROR,
@@ -19,9 +21,10 @@ public enum Event {
     INVALID_AUTH_DATA,
     IS_CLOSED,
     UNKNOWN_CALLEE,
-    RECORD_NOT_FOUND;
+    RECORD_NOT_FOUND,
+    MESSAGE_DENIED;
 
-    static public Event getEvent( String event ) {
+    static public Event getEvent(String event ) {
 
         for( Event s : EnumSet.allOf( Event.class ) ) {
             if( s.name().equals( event ) ) {

@@ -50,7 +50,7 @@ public class ServerStepDefs {
             message = message.replace( "<UID>", clientUid );
         }
         server.send( context.sendMessage( message ) );
-        Thread.sleep(GENERAL_TIMEOUT);
+        Thread.sleep(GENERAL_TIMEOUT * 3);
     }
 
     @Then("^the second server sends the message (.*?)$")
@@ -65,7 +65,7 @@ public class ServerStepDefs {
         message = context.recieveMessage( message );
         System.out.println( "Server Received: " + message + " " + lastMsg );
         if(  lastMsg.equals( message ) == false ) {
-            Assert.assertTrue( "Expected '" + lastMsg + "' to match '" + message + "'", lastMsg.matches( message ) );
+            Assert.assertTrue( "Expected \n\t'" + lastMsg + "' to match \n\t'" + message + "'", lastMsg.matches( message ) );
         }
     }
 
@@ -75,9 +75,13 @@ public class ServerStepDefs {
             if( msg.matches(context.recieveMessage( message )) ) {
                 Assert.assertTrue( true );
                 return;
+            } else if( msg.equals( context.recieveMessage( message ) ) ) {
+                Assert.assertTrue( true );
+                return;
             }
         }
-        Assert.assertTrue( false );
+
+        Assert.assertTrue( "Expected " + context.recieveMessage( message ) + " from " + server.messages, false );
     }
 
     @Then("^the last message the second server recieved is (.*?)$")

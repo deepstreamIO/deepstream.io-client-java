@@ -1,9 +1,8 @@
 package io.deepstream;
 
 
-import io.deepstream.constants.Actions;
+import com.google.gson.JsonObject;
 import io.deepstream.constants.ConnectionState;
-import io.deepstream.constants.Topic;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -17,28 +16,33 @@ import java.util.Map;
 import java.util.Properties;
 
 import static org.mockito.Mockito.mock;
+
 @RunWith( JUnit4.class )
 public class RecordSetTest {
 
     private Record record;
     private ConnectionMock connectionMock;
     private DeepstreamClientMock deepstreamClientMock;
-    private Person personMock;
-    private ErrorCallback errorCallbackMock;
+    private DeepstreamRuntimeErrorHandler errorCallbackMock;
 
     @Before
     public void setUp() throws URISyntaxException {
-        this.personMock = new Person( "Fred", "Weasley" );
-
         this.connectionMock = new ConnectionMock();
-        this.errorCallbackMock = mock( ErrorCallback.class );
-        this.deepstreamClientMock = new DeepstreamClientMock( this.errorCallbackMock );
+        this.errorCallbackMock = mock( DeepstreamRuntimeErrorHandler.class );
+        this.deepstreamClientMock = new DeepstreamClientMock();
+        this.deepstreamClientMock.setRuntimeErrorHandler( errorCallbackMock );
         this.deepstreamClientMock.setConnectionState( ConnectionState.OPEN );
 
         Map options = new Properties();
+        options.put( "subscriptionTimeout", "10" );
+        options.put( "recordDeleteTimeout", "10" );
         options.put( "recordReadAckTimeout", "10" );
-        options.put( "recordReadTimeout", "10" );
+        options.put( "recordReadTimeout", "20" );
+
         this.record = new Record( "testRecord", new HashMap(), connectionMock, options, deepstreamClientMock );
+        record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|A|S|testRecord" ), deepstreamClientMock ) );
+        record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|testRecord|0|{}" ), deepstreamClientMock ) );
+        Assert.assertEquals( new JsonObject(), record.get() );
     }
 
     @After
@@ -46,76 +50,28 @@ public class RecordSetTest {
 
     }
 
-    /*
-        Typed record tests
-     */
     @Test
-    public void createsTheRecord() {
-        record.onMessage( new Message(
-                "raw",
-                Topic.RECORD,
-                Actions.READ,
-                new String[] { "testRecord", String.valueOf( 0 ), "{\"firstName\":\"Fred\",\"lastName\":\"Weasley\"}" }
-        ));
-        Person person = record.get( Person.class );
-        Assert.assertTrue( person.equals( personMock )  );
-        Assert.assertEquals( TestUtil.replaceSeperators("R|CR|testRecord+"), connectionMock.lastSentMessage );
+    public void sendsUpdateMessageForEntireRecord() throws DeepstreamRecordDestroyedException {
+        JsonObject object = new JsonObject();
+        object.addProperty( "firstname", "Wolfram" );
+        record.set( object );
+
+        Assert.assertEquals( connectionMock.lastSentMessage, TestUtil.replaceSeperators( "R|U|testRecord|1|{\"firstname\":\"Wolfram\"}+" ) );
+        Assert.assertEquals( object, record.get() );
     }
 
     @Test
-    public void sendsUpdateForEntireDataChange() {
-        record.onMessage( new Message(
-                "raw",
-                Topic.RECORD,
-                Actions.READ,
-                new String[] { "testRecord", String.valueOf( 0 ), "{\"firstName\":\"Fred\",\"lastName\":\"Weasley\"}" }
-        ));
-        record.set( new Person( "Harry" ) );
-        Assert.assertEquals( TestUtil.replaceSeperators("R|U|testRecord|1|{\"firstName\":\"Harry\"}+"), connectionMock.lastSentMessage );
+    public void sendsUpdateMessageForPathChange() throws DeepstreamRecordDestroyedException {
+        sendsUpdateMessageForEntireRecord();
+
+        record.set( "lastname", "Hempel" );
+
+        Assert.assertEquals( connectionMock.lastSentMessage, TestUtil.replaceSeperators( "R|P|testRecord|2|lastname|SHempel+" ) );
+        Assert.assertEquals( "Hempel", record.get( "lastname" ).getAsString() );
     }
 
-    //Todo: once paths have been done
-    /*it( 'sends update messages for path changes ', function(){
-        record.set( 'lastname', 'Hempel' );
-        expect( connection.lastSendMessage ).toBe( msg( 'R|P|testRecord|2|lastname|SHempel+' ) );
-    });
-
-    it( 'deletes value when sending undefined', function(){
-        record.set( 'lastname', undefined );
-        expect( connection.lastSendMessage ).toBe( msg( 'R|P|testRecord|3|lastname|U+' ) );
-        expect( record.get() ).toEqual( { firstname: 'Wolfram' } );
-    });
-
-    it( 'throws error for invalid record data', function(){
-        expect(function(){ record.set( undefined ); }).toThrow();
-    });*/
-
-
-    class Person {
-
-        String firstName;
-        String lastName;
-
-        Person( String firstName ) {
-            this.firstName = firstName;
-        }
-
-        Person( String firstName, String lastName ) {
-            this.firstName = firstName;
-            this.lastName = lastName;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if( !( obj instanceof Person ) ) {
-                return false;
-            }
-
-            Person other = (Person) obj;
-            if( this.firstName.equals( other.firstName) && this.lastName.equals( other.lastName ) )
-                return true;
-            else
-                return false;
-        }
+    @Test
+    public void deletesValueWhenSendingUndefined() throws DeepstreamRecordDestroyedException {
+        //TODO
     }
 }

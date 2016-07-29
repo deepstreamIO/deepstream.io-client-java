@@ -9,7 +9,7 @@ public enum Actions {
     REDIRECT( "RED" ),
     CHALLENGE( "CH" ),
     CHALLENGE_RESPONSE( "CHR" ),
-    READ( "T" ),
+    READ( "R" ),
     CREATE( "C" ),
     UPDATE( "U" ),
     PATCH( "P" ),
