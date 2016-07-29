@@ -52,7 +52,7 @@ public class RecordTest {
     @Test
     public void recordHasCorrectDefaultState() {
         record = new Record( "recordA", new HashMap(), connectionMock, options, deepstreamClientMock );
-        record.setRecordEventsListener( recordEventsListeners );
+        record.addRecordEventsListener( recordEventsListeners );
         Assert.assertFalse( record.isReady );
         Assert.assertFalse( record.isDestroyed );
     }

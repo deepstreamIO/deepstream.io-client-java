@@ -6,10 +6,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.deepstream.constants.*;
 
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 
 class Record implements UtilResubscribeCallback {
@@ -31,7 +29,7 @@ class Record implements UtilResubscribeCallback {
     private final UtilJSONPath path;
     private final UtilEmitter subscribers;
 
-    private RecordEventsListener recordEventsListener;
+    private ArrayList<RecordEventsListener> recordEventsListeners;
     private RecordMergeStrategy mergeStrategy;
 
     private JsonElement data;
@@ -53,13 +51,19 @@ class Record implements UtilResubscribeCallback {
         this.subscribers = new UtilEmitter();
         this.isReady = false;
         this.isDestroyed = false;
+        this.recordEventsListeners = new ArrayList<>();
 
         this.scheduleAcks();
         this.sendRead();
     }
 
-    public Record setRecordEventsListener(RecordEventsListener recordEventsListener) {
-        this.recordEventsListener = recordEventsListener;
+    public Record addRecordEventsListener(RecordEventsListener recordEventsListener) {
+        this.recordEventsListeners.add( recordEventsListener );
+        return this;
+    }
+
+    public Record removeRecordEventsListener(RecordEventsListener recordEventsListener) {
+        this.recordEventsListeners.remove( recordEventsListener );
         return this;
     }
 
@@ -149,6 +153,12 @@ class Record implements UtilResubscribeCallback {
             this.subscribers.on( ALL_EVENT, recordChangedCallback );
         } else {
             this.subscribers.on( path, recordChangedCallback );
+        }
+
+        if( triggerNow && path == null ) {
+            recordChangedCallback.onRecordChanged( this.name, this.get() );
+        } else {
+            recordChangedCallback.onRecordChanged( this.name, path, this.get( path ) );
         }
 
         return this;
@@ -338,13 +348,13 @@ class Record implements UtilResubscribeCallback {
         this.ackTimeoutRegistry.clear( message );
 
         if( action.equals( Actions.DELETE ) ) {
-            if( this.recordEventsListener != null ) {
+            for(RecordEventsListener recordEventsListener: this.recordEventsListeners) {
                 recordEventsListener.onRecordDeleted( this.name );
             }
             this.destroy();
         }
         else if( action.equals( Actions.UNSUBSCRIBE ) ) {
-            if( this.recordEventsListener != null ) {
+            for(RecordEventsListener recordEventsListener: this.recordEventsListeners) {
                 recordEventsListener.onRecordDiscarded( this.name );
             }
             this.destroy();
@@ -364,7 +374,7 @@ class Record implements UtilResubscribeCallback {
 
     private void setReady() {
         this.isReady = true;
-        if( this.recordEventsListener != null ) {
+        for(RecordEventsListener recordEventsListener: this.recordEventsListeners) {
             recordEventsListener.onRecordReady( this );
         }
     }

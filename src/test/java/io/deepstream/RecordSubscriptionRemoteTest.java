@@ -58,7 +58,7 @@ public class RecordSubscriptionRemoteTest {
     @Test
     public void callsSubscriptionOnFirstReady() throws DeepstreamRecordDestroyedException {
 
-        record.setRecordEventsListener(new RecordEventsListener() {
+        record.addRecordEventsListener(new RecordEventsListener() {
             @Override
             public void onError(String recordName, Event errorType, String errorMessage) {
 

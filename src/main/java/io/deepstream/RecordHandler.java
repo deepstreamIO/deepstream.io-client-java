@@ -52,7 +52,7 @@ public class RecordHandler implements RecordEventsListener {
         if( record == null ) {
             record = new Record( name, new HashMap(), connection, options, client );
             records.put( name, record );
-            record.setRecordEventsListener( this );
+            record.addRecordEventsListener( this );
         }
         record.usages++;
         return record;
