@@ -24,7 +24,8 @@ public class RecordTest {
     RecordHandler recordHandler;
     DeepstreamRuntimeErrorHandler errorCallbackMock;
     Record record;
-    RecordEventsListener recordEventsListeners;
+    RecordEventsListener recordEventsListener;
+    RecordReadyListener recordReadyListener;
 
     @Before
     public void setUp() {
@@ -42,7 +43,8 @@ public class RecordTest {
         options.put( "recordReadTimeout", "20" );
 
         recordHandler = new RecordHandler( options, connectionMock, deepstreamClientMock );
-        recordEventsListeners = mock(RecordEventsListener.class);
+        recordEventsListener = mock(RecordEventsListener.class);
+        recordReadyListener = mock(RecordReadyListener.class);
     }
 
     @After
@@ -52,7 +54,8 @@ public class RecordTest {
     @Test
     public void recordHasCorrectDefaultState() {
         record = new Record( "recordA", new HashMap(), connectionMock, options, deepstreamClientMock );
-        record.addRecordEventsListener( recordEventsListeners );
+        record.addRecordEventsListener(recordEventsListener);
+        record.addRecordReadyListener( recordReadyListener );
         Assert.assertFalse( record.isReady );
         Assert.assertFalse( record.isDestroyed );
     }
@@ -69,7 +72,7 @@ public class RecordTest {
         record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|A|S|recordA" ), deepstreamClientMock ) );
         record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|recordA|0|{ \"name\": \"sam\" }" ), deepstreamClientMock ) );
         Assert.assertTrue( record.isReady );
-        verify( recordEventsListeners, times(1) ).onRecordReady( record );
+        verify( recordReadyListener, times(1) ).onRecordReady( "recordA", record );
     }
 
     @Test
@@ -108,7 +111,7 @@ public class RecordTest {
         Assert.assertFalse( record.isReady );
         Assert.assertTrue( record.isDestroyed );
 
-        verify( recordEventsListeners, times(1) ).onRecordDiscarded( "recordA" );
+        verify(recordEventsListener, times(1) ).onRecordDiscarded( "recordA" );
     }
 
     @Test
@@ -129,7 +132,7 @@ public class RecordTest {
         Assert.assertFalse( record.isReady );
         Assert.assertTrue( record.isDestroyed );
 
-        verify( recordEventsListeners, times(1) ).onRecordDeleted( "recordA" );
+        verify(recordEventsListener, times(1) ).onRecordDeleted( "recordA" );
     }
 
     @Test

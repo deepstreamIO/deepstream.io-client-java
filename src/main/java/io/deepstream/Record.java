@@ -30,6 +30,7 @@ class Record implements UtilResubscribeCallback {
     private final UtilEmitter subscribers;
 
     private ArrayList<RecordEventsListener> recordEventsListeners;
+    private ArrayList<RecordReadyListener> recordReadyListeners;
     private RecordMergeStrategy mergeStrategy;
 
     private JsonElement data;
@@ -51,10 +52,22 @@ class Record implements UtilResubscribeCallback {
         this.subscribers = new UtilEmitter();
         this.isReady = false;
         this.isDestroyed = false;
+
+        this.recordReadyListeners = new ArrayList<>();
         this.recordEventsListeners = new ArrayList<>();
 
         this.scheduleAcks();
         this.sendRead();
+    }
+
+    public Record addRecordReadyListener( RecordReadyListener recordReadyListener ) {
+        this.recordReadyListeners.add( recordReadyListener );
+        return this;
+    }
+
+    public Record removeRecordReadyListener(RecordReadyListener recordReadyListener) {
+        this.recordEventsListeners.remove( recordReadyListener );
+        return this;
     }
 
     public Record addRecordEventsListener(RecordEventsListener recordEventsListener) {
@@ -374,8 +387,8 @@ class Record implements UtilResubscribeCallback {
 
     private void setReady() {
         this.isReady = true;
-        for(RecordEventsListener recordEventsListener: this.recordEventsListeners) {
-            recordEventsListener.onRecordReady( this );
+        for(RecordReadyListener recordReadyListener: this.recordReadyListeners) {
+            recordReadyListener.onRecordReady( this.name, this );
         }
     }
 

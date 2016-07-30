@@ -7,5 +7,4 @@ public interface RecordEventsListener {
     void onDestroyPending(String recordName );
     void onRecordDeleted( String recordName );
     void onRecordDiscarded(String recordName);
-    void onRecordReady(Record record);
 }

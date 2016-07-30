@@ -14,13 +14,14 @@ import java.util.ArrayList;
  * setName method is called and the detail panel will update to
  * show the selected user's details
  */
-class AnonymousRecord  {
+class AnonymousRecord implements RecordReadyListener {
     public String name;
 
     private final ArrayList<Subscription> subscriptions;
     private final ArrayList<AnonymousRecordNameChangedListener> anonymousRecordNameChangedCallbacks;
     private final RecordHandler recordHandler;
     private Record record;
+    private ArrayList<AnonymousRecordReadyListener> recordReadyListeners;
 
     /**
      * @param recordHandler
@@ -29,6 +30,17 @@ class AnonymousRecord  {
         this.recordHandler = recordHandler;
         this.subscriptions = new ArrayList();
         this.anonymousRecordNameChangedCallbacks = new ArrayList();
+        this.recordReadyListeners = new ArrayList();
+    }
+
+    public AnonymousRecord addRecordReadyListener( AnonymousRecordReadyListener recordReadyListener ) {
+        this.recordReadyListeners.add( recordReadyListener );
+        return this;
+    }
+
+    public AnonymousRecord removeRecordReadyListener(AnonymousRecordReadyListener recordEventsListener) {
+        this.recordReadyListeners.remove( recordEventsListener );
+        return this;
     }
 
     /**
@@ -236,7 +248,9 @@ class AnonymousRecord  {
         this.record = this.recordHandler.getRecord( recordName );
         this.subscribeRecord();
 
-        //TODO: Notify ready event if it is already loaded?
+        if( this.record.isReady ) {
+            this.onRecordReady( this.name, this.record );
+        }
 
         for( AnonymousRecordNameChangedListener anonymousRecordNameChangedCallback : this.anonymousRecordNameChangedCallbacks ) {
             anonymousRecordNameChangedCallback.recordNameChanged( recordName, this );
@@ -254,6 +268,7 @@ class AnonymousRecord  {
                 this.record.subscribe( subscription.path, subscription.recordChangedCallback, true );
             }
         }
+        this.record.addRecordReadyListener( this );
     }
 
     /**
@@ -268,8 +283,18 @@ class AnonymousRecord  {
             if( subscription.recordChangedCallback != null ) {
                 this.record.unsubscribe( subscription.path, subscription.recordChangedCallback );
             }
+
         }
+
+        this.record.removeRecordReadyListener( this );
         this.record.discard();
+    }
+
+    @Override
+    public void onRecordReady(String recordName, Record record) {
+        for( AnonymousRecordReadyListener anonymousRecordReadyListener : this.recordReadyListeners) {
+            anonymousRecordReadyListener.onRecordReady(recordName, this);
+        }
     }
 
     private class Subscription {

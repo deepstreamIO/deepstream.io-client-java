@@ -9,7 +9,7 @@ import io.deepstream.constants.Topic;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RecordHandler implements RecordEventsListener {
+public class RecordHandler implements RecordEventsListener, RecordReadyListener {
 
     private final Map options;
     private final IConnection connection;
@@ -320,7 +320,7 @@ public class RecordHandler implements RecordEventsListener {
     }
 
     @Override
-    public void onRecordReady(Record record) {
+    public void onRecordReady(String recordName, Record record) {
 
     }
 }
