@@ -114,7 +114,9 @@ public class ListChangedTest {
 
         verify( listChangedListener, times( 1 ) ).onEntryAdded( listName, "a", 3 );
         verify( listChangedListener, times( 0 ) ).onEntryRemoved( anyString(), anyString(), anyInt() );
-        verify( listChangedListener, times( 0 ) ).onEntryMoved( anyString(), anyString(), anyInt() );
+
+        verify( listChangedListener, times( 1 ) ).onEntryMoved(  listName, "d" , 4 );
+        verify( listChangedListener, times( 1 ) ).onEntryMoved(  listName, "e" , 5 );
     }
 
     @Test

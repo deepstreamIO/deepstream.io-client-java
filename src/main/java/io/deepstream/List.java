@@ -271,14 +271,17 @@ public class List {
                     }
                 }
             } else {
-                for( Integer index : newIndexes ) {
-                    if( oldIndexes.size() == 0 ) {
-                        for( ListChangedListener listChangedListener : this.listChangedListeners ) {
-                            listChangedListener.onEntryAdded( this.name, entryName, index );
-                        }
-                    } else if( oldIndexes.size() <= index || !oldIndexes.get( index ).equals( newIndexes.get( index ) ) ) {
-                        for( ListChangedListener listChangedListener : this.listChangedListeners ) {
-                            listChangedListener.onEntryMoved( this.name, entryName, index );
+                for( int i=0; i<newIndexes.size(); i++ ) {
+                    Integer index = newIndexes.get( i );
+                    if( oldIndexes.size() < i || !oldIndexes.get( i ).equals( newIndexes.get( i ) ) ) {
+                        if( oldIndexes.size() < i ) {
+                            for( ListChangedListener listChangedListener : this.listChangedListeners ) {
+                                listChangedListener.onEntryAdded( this.name, entryName, index );
+                            }
+                        } else {
+                            for( ListChangedListener listChangedListener : this.listChangedListeners ) {
+                                listChangedListener.onEntryMoved( this.name, entryName, index );
+                            }
                         }
                     }
                 }
