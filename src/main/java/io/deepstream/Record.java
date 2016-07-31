@@ -188,7 +188,7 @@ class Record {
 
         if( triggerNow && path == null ) {
             recordChangedCallback.onRecordChanged( this.name, this.get() );
-        } else {
+        } else if( triggerNow ) {
             recordChangedCallback.onRecordChanged( this.name, path, this.get( path ) );
         }
 

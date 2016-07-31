@@ -16,5 +16,12 @@ before_install:
   - ./setupJ2OBJC.sh
   - ./installJava.sh
 
+after_script:
+  - curl \
+      -T "build/libs/deepstream.io.*.jar" \
+      -H "X-Bintray-Publish:1" \
+      -u yasserf:$BINTRAY_API_KEY \
+      "https://api.bintray.com/content/deepstreamio/maven/deepstream.io-client-java/${TRAVIS_TAG}/deepstream.io-client-java_${TRAVIS_TAG}.jar"
+
 script:
   - ./gradlew test
