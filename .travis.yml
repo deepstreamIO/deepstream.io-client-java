@@ -24,4 +24,4 @@ after_script:
       "https://api.bintray.com/content/deepstreamio/maven/deepstream.io-client-java/${TRAVIS_TAG}/deepstream.io-client-java_${TRAVIS_TAG}.jar"
 
 script:
-  - ./gradlew test
+  - ./gradlew cucumber
