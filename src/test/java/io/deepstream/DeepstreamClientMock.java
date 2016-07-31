@@ -9,9 +9,15 @@ public class DeepstreamClientMock extends IDeepstreamClient {
 
     private ArrayList<ConnectionChangeListener> connectionListeners;
     private ConnectionState connectionState;
+    private DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler;
 
     public DeepstreamClientMock() {
         this.connectionListeners = new ArrayList();
+    }
+
+    public DeepstreamClientMock setRuntimeErrorHandler( DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler )  {
+        this.deepstreamRuntimeErrorHandler = deepstreamRuntimeErrorHandler;
+        return this;
     }
 
     public DeepstreamClientMock addConnectionChangeListener( ConnectionChangeListener connectionChangeListener ) {

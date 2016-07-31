@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.gson.JsonElement;
+
 import java.util.ArrayList;
 
 /**
@@ -14,9 +16,10 @@ import java.util.ArrayList;
  * setName method is called and the detail panel will update to
  * show the selected user's details
  */
-class AnonymousRecord implements RecordReadyListener {
+public class AnonymousRecord {
     public String name;
 
+    private final RecordListeners recordListeners;
     private final ArrayList<Subscription> subscriptions;
     private final ArrayList<AnonymousRecordNameChangedListener> anonymousRecordNameChangedCallbacks;
     private final RecordHandler recordHandler;
@@ -24,20 +27,35 @@ class AnonymousRecord implements RecordReadyListener {
     private ArrayList<AnonymousRecordReadyListener> recordReadyListeners;
 
     /**
+     * This constructor is called by the {@link RecordHandler#getAnonymousRecord(String)}
      * @param recordHandler
      */
-    public AnonymousRecord(RecordHandler recordHandler) {
+    AnonymousRecord(RecordHandler recordHandler) {
         this.recordHandler = recordHandler;
         this.subscriptions = new ArrayList();
         this.anonymousRecordNameChangedCallbacks = new ArrayList();
         this.recordReadyListeners = new ArrayList();
+        this.recordListeners = new AnonymousRecord.RecordListeners( this );
     }
 
+    /**
+     * Add a ready listener to the anonymousRecord. Whenever the record state is you'll get notified via
+     * {@link AnonymousRecordReadyListener#onRecordReady(String, AnonymousRecord)}. Note that since you can
+     * change the underlying record at will, this method can be called multiple times.
+     * @param recordReadyListener
+     * @return
+     */
     public AnonymousRecord addRecordReadyListener( AnonymousRecordReadyListener recordReadyListener ) {
         this.recordReadyListeners.add( recordReadyListener );
         return this;
     }
 
+    /**
+     * Remove a readyListener added via {@link AnonymousRecord#addRecordReadyListener(AnonymousRecordReadyListener)}
+     *
+     * @param recordEventsListener
+     * @return
+     */
     public AnonymousRecord removeRecordReadyListener(AnonymousRecordReadyListener recordEventsListener) {
         this.recordReadyListeners.remove( recordEventsListener );
         return this;
@@ -101,7 +119,7 @@ class AnonymousRecord implements RecordReadyListener {
     }
 
     /**
-     * Proxies to the actual{@link Record#delete()} method. If a record does
+     * Proxies to the actual {@link Record#delete()} method. If a record does
      * not exist it will throw a {@see AnonymousRecordUninitialized} exception
      * @return
      */
@@ -114,12 +132,12 @@ class AnonymousRecord implements RecordReadyListener {
     }
 
     /**
-     * Proxies to the actual{@link Record#get()} method. It is valid
+     * Proxies to the actual {@link Record#get()} method. It is valid
      * to call get prior to setName - if no record exists,
      * the method returns null
      * @return
      */
-    public Object get() {
+    public JsonElement get() {
         if( this.record == null ) {
             return null;
         }
@@ -133,7 +151,7 @@ class AnonymousRecord implements RecordReadyListener {
      * @param path
      * @return
      */
-    public Object get( String path ) {
+    public JsonElement get(String path ) {
         if( this.record == null ) {
             return null;
         }
@@ -249,7 +267,7 @@ class AnonymousRecord implements RecordReadyListener {
         this.subscribeRecord();
 
         if( this.record.isReady ) {
-            this.onRecordReady( this.name, this.record );
+            this.recordListeners.onRecordReady( this.name, this.record );
         }
 
         for( AnonymousRecordNameChangedListener anonymousRecordNameChangedCallback : this.anonymousRecordNameChangedCallbacks ) {
@@ -268,7 +286,7 @@ class AnonymousRecord implements RecordReadyListener {
                 this.record.subscribe( subscription.path, subscription.recordChangedCallback, true );
             }
         }
-        this.record.addRecordReadyListener( this );
+        this.record.addRecordReadyListener( this.recordListeners );
     }
 
     /**
@@ -286,17 +304,13 @@ class AnonymousRecord implements RecordReadyListener {
 
         }
 
-        this.record.removeRecordReadyListener( this );
+        this.record.removeRecordReadyListener( this.recordListeners );
         this.record.discard();
     }
 
-    @Override
-    public void onRecordReady(String recordName, Record record) {
-        for( AnonymousRecordReadyListener anonymousRecordReadyListener : this.recordReadyListeners) {
-            anonymousRecordReadyListener.onRecordReady(recordName, this);
-        }
-    }
-
+    /**
+     * A class that contains subscriptions to remove/add when changing the underlying record
+     */
     private class Subscription {
         String path;
         RecordChangedCallback recordChangedCallback;
@@ -309,4 +323,23 @@ class AnonymousRecord implements RecordReadyListener {
             this.recordEventsListener = recordEventsListener;
         }
     }
+
+    /**
+     * An inner class to avoid having interface methods on the public API
+     */
+    private class RecordListeners implements RecordReadyListener {
+        private final AnonymousRecord anonymousRecord;
+
+        RecordListeners(AnonymousRecord anonymousRecord) {
+            this.anonymousRecord = anonymousRecord;
+        }
+
+        @Override
+        public void onRecordReady(String recordName, Record record) {
+            for( AnonymousRecordReadyListener anonymousRecordReadyListener : this.anonymousRecord.recordReadyListeners) {
+                anonymousRecordReadyListener.onRecordReady(recordName, this.anonymousRecord );
+            }
+        }
+    }
+
 }

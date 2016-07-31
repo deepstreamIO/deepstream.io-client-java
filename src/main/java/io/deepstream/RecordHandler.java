@@ -28,7 +28,7 @@ public class RecordHandler implements RecordEventsListener, RecordReadyListener 
      * @param connection
      * @param client
      */
-    public RecordHandler( Map options, IConnection connection, IDeepstreamClient client) {
+    RecordHandler( Map options, IConnection connection, IDeepstreamClient client) {
         this.options = options;
         this.connection = connection;
         this.client = client;
@@ -45,7 +45,7 @@ public class RecordHandler implements RecordEventsListener, RecordReadyListener 
     /**
      * Returns an existing record or creates a new one
      * @param name
-     * @return
+     * @return Record
      */
     public Record getRecord( String name ) {
         Record record = records.get( name );
@@ -63,10 +63,14 @@ public class RecordHandler implements RecordEventsListener, RecordReadyListener 
      * type of record that holds an array of recordNames.
      *
      * @param name
-     * @return
+     * @return List
      */
     public List getList( String name ) {
-        return new List( this, name, options );
+        List list = lists.get( name );
+        if( list == null ) {
+            list = new List( this, name, options );
+        }
+        return list;
     }
 
     /**
@@ -80,7 +84,7 @@ public class RecordHandler implements RecordEventsListener, RecordReadyListener 
      * The only API difference to a normal record is an additional setName( name ) method.
      *
      * @param name
-     * @return
+     * @return AnonymousRecord
      */
     public AnonymousRecord getAnonymousRecord( String name ) {
         return new AnonymousRecord( this );
@@ -94,7 +98,7 @@ public class RecordHandler implements RecordEventsListener, RecordReadyListener 
      * @param pattern
      * @param listenCallback
      */
-    public void listen( String pattern, ListenCallback listenCallback ) {
+    public void listen( String pattern, ListenListener listenCallback ) {
         if( listeners.containsKey( pattern ) ) {
             // TODO: Do we really want to throw an error here?
             client.onError( Topic.RECORD, Event.LISTENER_EXISTS, pattern );
@@ -248,7 +252,7 @@ public class RecordHandler implements RecordEventsListener, RecordReadyListener 
      * A (presumably unsolvable) problem remains when a client deletes a record in the exact moment
      * between another clients creation and read message for the same record
      * @param message
-     * @return
+     * @return Boolean
      */
     private boolean isDiscardAck( Message message ) {
         Event event = Event.getEvent( message.data[ 0 ] );
@@ -266,7 +270,7 @@ public class RecordHandler implements RecordEventsListener, RecordReadyListener 
 
     /**
      * @param message
-     * @return
+     * @return Boolean
      */
     private Boolean isUnhandledError(Message message) {
         if( message.action != Actions.ERROR ) {

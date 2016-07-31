@@ -6,12 +6,22 @@ import io.socket.engineio.client.Socket;
 import java.net.URISyntaxException;
 import java.util.Map;
 
+/**
+ * An implementation of {@link Endpoint} that allows use to interact with an engine.io server
+ * for benefits such connection upgrades against the disadvantage of more processing.
+ */
 class EndpointEngineIO implements Endpoint {
 
     Map options;
     Connection connection;
     Socket socket;
 
+    /**
+     * @param url
+     * @param options
+     * @param connection
+     * @throws URISyntaxException
+     */
     public EndpointEngineIO(String url, Map options, Connection connection) throws URISyntaxException {
         this.connection = connection;
 
@@ -20,6 +30,9 @@ class EndpointEngineIO implements Endpoint {
         this.socket.open();
     }
 
+    /**
+     *
+     */
     private void addConnectionListeners() {
         final Connection connection = this.connection;
 
@@ -39,6 +52,9 @@ class EndpointEngineIO implements Endpoint {
             }
         });
 
+        /**
+         *
+         */
         this.socket.on(Socket.EVENT_ERROR, new Emitter.Listener() {
             public void call(Object... args) {
                 Exception e = (Exception)args[ 0 ];

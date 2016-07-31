@@ -21,7 +21,7 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, UtilTimeoutLis
      *
      * @param client The client it sends errors to
      */
-    public UtilAckTimeoutRegistry(IDeepstreamClient client) {
+    UtilAckTimeoutRegistry(IDeepstreamClient client) {
         this.client = client;
         this.register = new ConcurrentHashMap<String, ScheduledFuture>();
         this.ackTimers = new LinkedBlockingQueue<AckTimeout>();
@@ -36,7 +36,7 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, UtilTimeoutLis
      *
      * @param message The message received to remove the ack timer for
      */
-    public void clear( Message message ) {
+    void clear( Message message ) {
         Actions action;
         String name;
         if( message.action == Actions.ACK ) {
@@ -57,7 +57,7 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, UtilTimeoutLis
      * Clears the ack timeout for a message.
 
      */
-    public void clear(  Topic topic, Actions action, String name ) {
+    void clear(  Topic topic, Actions action, String name ) {
         String uniqueName = this.getUniqueName( topic, action, name );
         this.clear( uniqueName );
     }
@@ -69,7 +69,7 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, UtilTimeoutLis
      * @param name The name to be added to the register
      * @param action The action to be added to the register
      */
-    public void add( Topic topic, Actions action, String name, Event event, int timeout ) {
+    void add( Topic topic, Actions action, String name, Event event, int timeout ) {
         this.add( topic, action, name, event, this, timeout );
     }
 
@@ -80,7 +80,7 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, UtilTimeoutLis
      * @param name The name to be added to the register
      * @param action The action to be added to the register
      */
-    public void add( Topic topic, Actions action, String name, int timeout ) {
+    void add( Topic topic, Actions action, String name, int timeout ) {
         this.add( topic, action, name, Event.ACK_TIMEOUT, this, timeout );
     }
 
@@ -91,7 +91,7 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, UtilTimeoutLis
      * @param name The name to be added to the register
      * @param action The action to be added to the register
      */
-    public void add(Topic topic, Actions action, String name, Event event, UtilTimeoutListener timeoutListener, int timeout ) {
+    void add(Topic topic, Actions action, String name, Event event, UtilTimeoutListener timeoutListener, int timeout ) {
         String uniqueName = this.getUniqueName( topic, action, name );
         this.clear( uniqueName );
 

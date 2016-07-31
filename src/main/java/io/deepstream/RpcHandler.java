@@ -7,7 +7,7 @@ import io.deepstream.constants.Topic;
 import java.util.HashMap;
 import java.util.Map;
 
-class RpcHandler implements UtilResubscribeCallback {
+public class RpcHandler implements UtilResubscribeCallback {
 
     private int timeoutDuration;
     private Map options;
@@ -18,7 +18,7 @@ class RpcHandler implements UtilResubscribeCallback {
     private UtilResubscribeNotifier resubscribeNotifier;
     private Map<String, Rpc> rpcs;
 
-    public RpcHandler( Map options, IConnection connection, IDeepstreamClient client ) {
+    RpcHandler( Map options, IConnection connection, IDeepstreamClient client ) {
         this.options = options;
         this.connection = connection;
         this.client = client;

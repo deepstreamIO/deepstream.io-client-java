@@ -18,8 +18,8 @@ public class EventStepDefs {
         this.server2Port = context.server2port;
     }
 
-    ListenCallback listenCallback = mock( ListenCallback.class );
-    EventCallback callback = mock( EventCallback.class );
+    ListenListener listenCallback = mock( ListenListener.class );
+    EventListener callback = mock( EventListener.class );
 
     @Then("^the client subscribes to an event named \"(.*?)\"$")
     public void the_client_subscribes_to_event( String eventName ) throws InterruptedException {

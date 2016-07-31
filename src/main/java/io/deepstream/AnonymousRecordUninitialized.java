@@ -1,7 +1,15 @@
 package io.deepstream;
 
-public class AnonymousRecordUninitialized extends Throwable {
-    public AnonymousRecordUninitialized(String methodName) {
+/**
+ * An exception that is thrown if you try to do a {@link AnonymousRecord#discard()} or {@link AnonymousRecord#delete()}
+ * before a record has been set via {@link AnonymousRecord#setName(String)}
+ */
+public class AnonymousRecordUninitialized extends Exception {
+    /**
+     * This Exception is thrown by {@see AnonymousRecord} and should not be constructed by consumers of this library
+     * @param methodName
+     */
+    AnonymousRecordUninitialized(String methodName) {
         super( "Can`t invoke " + methodName + ". AnonymousRecord not initialised. Call setName first" );
     }
 }

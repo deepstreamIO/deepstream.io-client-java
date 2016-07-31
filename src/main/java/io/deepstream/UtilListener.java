@@ -10,13 +10,13 @@ class UtilListener implements UtilResubscribeCallback {
     private UtilAckTimeoutRegistry ackTimoutRegistry;
     private Topic topic;
     private String pattern;
-    private ListenCallback listenerCallback;
+    private ListenListener listenerCallback;
     private Map options;
     private IDeepstreamClient client;
     private IConnection connection;
     private UtilResubscribeNotifier resubscribeNotifier;
 
-    public UtilListener(Topic topic, String pattern, ListenCallback listenerCallback, Map options, IDeepstreamClient client, IConnection connection ) {
+    public UtilListener(Topic topic, String pattern, ListenListener listenerCallback, Map options, IDeepstreamClient client, IConnection connection ) {
         this.topic = topic;
         this.pattern = pattern;
         this.listenerCallback = listenerCallback;

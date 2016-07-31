@@ -10,7 +10,7 @@ import java.util.Properties;
 import java.util.UUID;
 
 /**
- *
+ * deepstream.io java client
  */
 public class DeepstreamClient extends IDeepstreamClient {
 
@@ -21,11 +21,23 @@ public class DeepstreamClient extends IDeepstreamClient {
     public final RecordHandler record;
     public final EventHandler event;
     public final RpcHandler rpc;
+    private DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler;
+
+    /**
+     * deepstream.io javascript client, defaults to using default properties
+     * {@link DeepstreamClient#DeepstreamClient(String, Properties)}
+     *
+     * @throws URISyntaxException
+     * @throws IOException
+     */
+    public DeepstreamClient( final String url ) throws URISyntaxException, IOException {
+        this( url, new Properties() );
+    }
 
     /**
      * deepstream.io java client
-     * @param url
-     * @param options
+     * @param url URL to connect to. The protocol can be omited, e.g. <host>:<port>
+     * @param options A map of options that extend the ones specified in DefaultConfig.properties
      * @throws URISyntaxException
      * @throws IOException
      */
@@ -38,13 +50,15 @@ public class DeepstreamClient extends IDeepstreamClient {
     }
 
     /**
-     * deepstream.io javascript client
-     * @param url
-     * @throws URISyntaxException
-     * @throws IOException
+     * Adds a {@link DeepstreamRuntimeErrorHandler} that will catch all RuntimeErrors such as AckTimeouts and allow
+     * the user to gracefully handle them.
+     *
+     * @param deepstreamRuntimeErrorHandler
+     * @return
      */
-    public DeepstreamClient( final String url ) throws URISyntaxException, IOException {
-        this( url, new Properties() );
+    public DeepstreamClient setRuntimeErrorHandler( DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler )  {
+        this.deepstreamRuntimeErrorHandler = deepstreamRuntimeErrorHandler;
+        return this;
     }
 
     /**
@@ -68,7 +82,7 @@ public class DeepstreamClient extends IDeepstreamClient {
      * login can be called multiple times until either the connection is authenticated or
      * forcefully closed by the server since its maxAuthAttempts threshold has been exceeded
      *
-     * @param authParams
+     * @param authParams JSON.serializable authentication data
      * @return
      * @throws DeepstreamLoginException
      */
@@ -98,7 +112,8 @@ public class DeepstreamClient extends IDeepstreamClient {
     }
 
     /**
-     *
+     * Add a listener that can be notified via {@link ConnectionChangeListener#connectionStateChanged(ConnectionState)}
+     * whenever the {@link ConnectionState} changes
      * @param connectionChangeListener
      * @return
      */
@@ -108,7 +123,7 @@ public class DeepstreamClient extends IDeepstreamClient {
     }
 
     /**
-     *
+     * Removes a {@link ConnectionChangeListener} added via {@link DeepstreamClient#addConnectionChangeListener(ConnectionChangeListener)}
      * @param connectionChangeListener
      * @return
      */

@@ -21,12 +21,12 @@ public class EventHandlerTest {
     DeepstreamClientMock deepstreamClientMock;
     ConnectionMock connectionMock;
     EventHandler eventHandler;
-    EventCallback callbackMock;
+    EventListener callbackMock;
     DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler;
 
     @Before
     public void setUp() throws URISyntaxException {
-        callbackMock = mock( EventCallback.class );
+        callbackMock = mock( EventListener.class );
 
         this.connectionMock = new ConnectionMock();
         this.deepstreamRuntimeErrorHandler = mock( DeepstreamRuntimeErrorHandler.class );

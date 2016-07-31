@@ -24,11 +24,6 @@ abstract class IDeepstreamClient {
         return utilAckTimeoutRegistry;
     }
 
-    public IDeepstreamClient setRuntimeErrorHandler( DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler )  {
-        this.deepstreamRuntimeErrorHandler = deepstreamRuntimeErrorHandler;
-        return this;
-    }
-
     void onError(Topic topic, Event event, String msg) throws DeepstreamException {
         /*
          * Help to diagnose the problem quicker by checking for

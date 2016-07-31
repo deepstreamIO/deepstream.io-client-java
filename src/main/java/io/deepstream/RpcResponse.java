@@ -4,7 +4,7 @@ package io.deepstream;
 import io.deepstream.constants.Actions;
 import io.deepstream.constants.Topic;
 
-class RpcResponse {
+public class RpcResponse {
 
     private IConnection connection;
     private String name;
@@ -12,6 +12,11 @@ class RpcResponse {
     private boolean isAcknowledged;
     private boolean isComplete;
 
+    /**
+     * @param connection
+     * @param name
+     * @param correlationId
+     */
     public RpcResponse( IConnection connection, String name, String correlationId ) {
         this.connection = connection;
         this.name = name;
@@ -21,7 +26,7 @@ class RpcResponse {
         this.ack();
     }
 
-    private void ack() {
+    public void ack() {
         if( this.isAcknowledged == false ) {
             this.connection.sendMsg( Topic.RPC, Actions.ACK, new String[] { this.name, this.correlationId } );
             this.isAcknowledged = true;

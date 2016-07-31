@@ -8,6 +8,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * A List is a specialised Record that contains
+ * an Array of recordNames and provides a number
+ * of convinience methods for interacting with them.
+ */
 public class List {
     public boolean isReady;
     public boolean isDestroyed;
@@ -20,17 +25,9 @@ public class List {
     private final ArrayList<ListChangedListener> listChangedListeners;
 
     /**
-     * A List is a specialised Record that contains
-     * an Array of recordNames and provides a number
-     * of convinience methods for interacting with them.
-     *
-     * @param recordHandler
-     * @param name
-     * @param options
-     *
-     * @constructor
+     * Constructor is not public since it is created via {@link RecordHandler#getList(String)}
      */
-    public List(RecordHandler recordHandler, String name, Map options) {
+    List(RecordHandler recordHandler, String name, Map options) {
         this.recordHandler = recordHandler;
         this.record = this.recordHandler.getRecord( name );
 
@@ -43,22 +40,42 @@ public class List {
         this.refreshInheritedState();
     }
 
+    /**
+     * Adds a Listener that will notify you if a Discard, Delete or Error event occurs
+     * @param recordEventsListener
+     * @return
+     */
     public List addRecordEventsListener( RecordEventsListener recordEventsListener ) {
         this.record.addRecordEventsListener( recordEventsListener );
         return this;
     }
 
-    public List removeRecordReadyListener(RecordEventsListener recordEventsListener) {
+    /**
+     * Remove listener added via {@link List#addRecordEventsListener(RecordEventsListener)}
+     * @param recordEventsListener
+     * @return
+     */
+    public List removeRecordEventsListener(RecordEventsListener recordEventsListener) {
         this.record.removeRecordEventsListener( recordEventsListener );
         return this;
     }
 
 
+    /**
+     * Add listener to be notified when the List has been loaded from the server
+     * @param listReadyListener
+     * @return
+     */
     public List addListReadyListener( ListReadyListener listReadyListener ) {
         this.listReadyListeners.add( listReadyListener );
         return this;
     }
 
+    /**
+     * Remove listener added via {@link List#addListReadyListener(ListReadyListener)}
+     * @param listReadyListener
+     * @return
+     */
     public List removeListReadyListener(ListReadyListener listReadyListener) {
         this.listReadyListeners.remove( listReadyListener );
         return this;
@@ -80,7 +97,7 @@ public class List {
     }
 
     /**
-     *
+     * Updates the list with a new set of entries
      * @param entries
      * @return
      */
@@ -95,8 +112,7 @@ public class List {
     }
 
     /**
-     * Removes an entry from the list if it resides at
-     * a specific index
+     * Removes the first occurrence of an entry from the list
      * @param entry
      * @return
      */
@@ -113,7 +129,8 @@ public class List {
     }
 
     /**
-     * Removes an entry from the list
+     * Removes an entry from the list if it resides at
+     * a specific index
      * @param entry
      * @param index
      * @return
@@ -133,6 +150,11 @@ public class List {
         return this;
     }
 
+    /**
+     * Add an entry to the end of the list
+     * @param entry
+     * @return
+     */
     public List addEntry( String entry ) {
         if( !this.isReady ) {
             //TODO: Buffer ( to disable events from being emitted )
@@ -145,6 +167,12 @@ public class List {
         return this;
     }
 
+    /**
+     * Add an entry at a certain index into the list
+     * @param entry
+     * @param index
+     * @return
+     */
     public List addEntry( String entry, int index ) {
         if( !this.isReady ) {
             //TODO: Buffer ( to disable events from being emitted )
@@ -166,9 +194,8 @@ public class List {
     }
 
     /**
-     * Proxies the underlying Record's subscibe method
+     * Notifies the user whenever the list has changed
      * @param listChangedListener
-     * @param triggerNow
      * @return
      */
     public List subscribe(ListChangedListener listChangedListener) {
@@ -176,7 +203,7 @@ public class List {
     }
 
     /**
-     * Proxies the underlying Record's subscibe method
+     * Notifies the user whenever the list has changed, and notifies immediately if triggerNow is true
      * @param listChangedListener
      * @param triggerNow
      * @return
@@ -198,7 +225,7 @@ public class List {
     }
 
     /**
-     * Proxies the underlying Record's unsubscribe method
+     * Removes the listener added via {@link List#subscribe(ListChangedListener, boolean)}
      * @param listChangedListener
      * @return
      */
@@ -212,6 +239,10 @@ public class List {
         return this;
     }
 
+    /**
+     * Useful entry point for diffing previous list and new one to get entries added, removed and moved
+     * @param entries
+     */
     private void updateList(Collection entries) {
         Map oldStructure = this.beforeChange();
         this.record.set( entries );
@@ -317,11 +348,17 @@ public class List {
         return structure;
     }
 
+    /**
+     * Mirror properties on record onto list
+     */
     private void refreshInheritedState() {
         this.isReady = this.record.isReady;
         this.isDestroyed = this.record.isDestroyed;
     }
 
+    /**
+     * A class to contain all the interface implementations to not pollute the public API
+     */
     private class RecordListeners implements RecordReadyListener, RecordChangedCallback, RecordEventsListener, Record.RecordRemoteUpdateListener {
 
         private final List list;

@@ -7,6 +7,10 @@ import java.net.URISyntaxException;
 import java.util.*;
 import java.util.List;
 
+/**
+ * Establishes a connection to a deepstream server, either
+ * using TCP or engine.io.
+ */
 class Connection implements IConnection {
 
     private Endpoint endpoint;
@@ -29,6 +33,13 @@ class Connection implements IConnection {
     private JsonElement authParameters;
     private Map options;
 
+    /**
+     *
+     * @param url The endpoint url
+     * @param options
+     * @param client
+     * @throws URISyntaxException
+     */
     Connection(final String url, final Map options, DeepstreamClient client ) throws URISyntaxException {
         this( url, options, client, null );
         this.endpoint = createEndpoint();
@@ -51,6 +62,11 @@ class Connection implements IConnection {
         this.endpoint = endpoint;
     }
 
+    /**
+     * @param authParameters
+     * @param loginCallback
+     * @throws DeepstreamLoginException
+     */
     void authenticate(JsonElement authParameters, LoginCallback loginCallback ) throws DeepstreamLoginException {
         if( this.tooManyAuthAttempts || this.challengeDenied ) {
             this.client.onError( Topic.ERROR, Event.IS_CLOSED, "The client\'s connection was closed" );
@@ -78,6 +94,9 @@ class Connection implements IConnection {
         this.send( MessageBuilder.getMsg( topic, action, data ) );
     }
 
+    /**
+     *
+     */
     private void sendAuthMessage() {
         setState( ConnectionState.AUTHENTICATING );
         String authMessage = MessageBuilder.getMsg( Topic.AUTH, Actions.REQUEST, this.authParameters.toString() );

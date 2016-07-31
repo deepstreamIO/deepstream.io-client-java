@@ -11,6 +11,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Parses ASCII control character seperated
+ * message strings into {@link Message}
+ */
 class MessageParser {
 
     static private final String MPS = Character.toString( '\u001f' );
@@ -35,6 +39,13 @@ class MessageParser {
         return messages;
     }
 
+    /**
+     * Parses an individual message (as oposed to a
+     * block of multiple messages as is processed by {@link MessageParser#parse(String, IDeepstreamClient)})
+     * @param message
+     * @param client
+     * @return
+     */
     static Message parseMessage( String message, IDeepstreamClient client ) {
         String[] parts = message.split( MPS );
 
@@ -56,6 +67,14 @@ class MessageParser {
         return new Message( message, Topic.getTopic( parts[ 0 ] ), Actions.getAction( parts[ 1 ] ), Arrays.copyOfRange( parts, 2, parts.length ) );
     }
 
+    /**
+     * Deserializes values created by {@link MessageBuilder#typed(Object)} to
+     * their original format
+     *
+     * @param value
+     * @param client
+     * @return
+     */
     static Object convertTyped( String value, IDeepstreamClient client ) {
 
         char type = value.charAt(0);

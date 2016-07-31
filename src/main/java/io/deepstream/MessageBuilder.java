@@ -6,6 +6,10 @@ import io.deepstream.constants.Actions;
 import io.deepstream.constants.Topic;
 import io.deepstream.constants.Types;
 
+/**
+ * Creates a deepstream message string, based on the
+ * provided parameters
+ */
 class MessageBuilder {
 
     static private final String MPS = Character.toString( '\u001f' );

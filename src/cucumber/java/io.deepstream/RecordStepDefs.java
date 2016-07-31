@@ -20,7 +20,7 @@ public class RecordStepDefs {
     int server2Port;
     int GENERAL_TIMEOUT = Context.GENERAL_TIMEOUT;
 
-    ListenCallback listenCallback = mock( ListenCallback.class );
+    ListenListener listenCallback = mock( ListenListener.class );
     RecordChangedCallback recordChangedCallback = mock( RecordChangedCallback.class );
     RecordHasCallback recordHasCallback = mock( RecordHasCallback.class );
     RecordSnapshotCallback recordSnapshotCallback = mock( RecordSnapshotCallback.class );

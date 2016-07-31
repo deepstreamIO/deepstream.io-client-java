@@ -52,7 +52,7 @@ class Application implements ConnectionChangeListener, LoginCallback {
         System.out.println( "Connection state changed " +  connectionState );
     }
 
-    public void loginSuccess( Map loginData ) {
+    public void loginSuccess( Map userData) {
         System.out.println( "Login Success" );
     }
 

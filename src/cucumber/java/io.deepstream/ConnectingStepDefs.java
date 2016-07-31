@@ -78,7 +78,7 @@ public class ConnectingStepDefs {
         Boolean success;
 
         @Override
-        public void loginSuccess( Map loginData ) {
+        public void loginSuccess( Map userData) {
             this.success = true;
         }
 
