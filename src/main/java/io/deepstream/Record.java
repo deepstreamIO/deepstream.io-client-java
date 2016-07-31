@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.List;
 
 
-class Record implements UtilResubscribeCallback {
+class Record {
 
     private static final String ALL_EVENT = "ALL_EVENT";
     private static final String DESTROY_PENDING = "DESTROY_PENDING";
@@ -31,15 +31,16 @@ class Record implements UtilResubscribeCallback {
 
     private ArrayList<RecordEventsListener> recordEventsListeners;
     private ArrayList<RecordReadyListener> recordReadyListeners;
+    private ArrayList<RecordReadyListener> onceRecordReadyListeners;
     private RecordMergeStrategy mergeStrategy;
 
     private JsonElement data;
     private String name;
     private Map options;
+    private RecordRemoteUpdateListener recordRemoteUpdateListener;
 
     public Record(String name, Map recordOptions, IConnection connection, Map options, IDeepstreamClient client) {
         this.ackTimeoutRegistry = client.getAckTimeoutRegistry();
-        this.utilResubscribeNotifier = new UtilResubscribeNotifier( client, this );
         this.name = name;
         this.options = options;
         this.usages = 0;
@@ -55,9 +56,17 @@ class Record implements UtilResubscribeCallback {
 
         this.recordReadyListeners = new ArrayList<>();
         this.recordEventsListeners = new ArrayList<>();
+        this.onceRecordReadyListeners = new ArrayList<>();
 
         this.scheduleAcks();
         this.sendRead();
+
+        this.utilResubscribeNotifier = new UtilResubscribeNotifier(client, new UtilResubscribeCallback() {
+            @Override
+            public void resubscribe() {
+                sendRead();
+            }
+        });
     }
 
     public Record addRecordReadyListener( RecordReadyListener recordReadyListener ) {
@@ -95,6 +104,15 @@ class Record implements UtilResubscribeCallback {
      *
      * @return
      */
+    public <T> T get( Class<T> type ) {
+        return deepCopy( this.data, type );
+    }
+
+    /**
+     * Gets the record as a JSON object
+     *
+     * @return
+     */
     public JsonElement get( String path ) {
         return deepCopy( this.path.get( path ) );
     }
@@ -121,7 +139,7 @@ class Record implements UtilResubscribeCallback {
 
         JsonElement element = gson.toJsonTree( value );
 
-        if( !this.isReady && path != null ) {
+        if( !this.isReady ) {
             System.out.println( "Not ready, should queue!" );
             return this;
         }
@@ -151,7 +169,7 @@ class Record implements UtilResubscribeCallback {
     }
 
     public Record subscribe( RecordChangedCallback recordChangedCallback ) throws DeepstreamRecordDestroyedException {
-        return subscribe( recordChangedCallback, false );
+        return subscribe( null, recordChangedCallback, false );
     }
 
     public Record subscribe( RecordChangedCallback recordChangedCallback, boolean triggerNow ) throws DeepstreamRecordDestroyedException {
@@ -218,8 +236,12 @@ class Record implements UtilResubscribeCallback {
         return this;
     }
 
-    public Record whenReady() {
-        // TODO: Architectural Decision, how do we want async to work?!
+    public Record whenReady( RecordReadyListener recordReadyListener ) {
+        if( this.isReady ) {
+            recordReadyListener.onRecordReady( this.name, this );
+        } else {
+            this.onceRecordReadyListeners.add( recordReadyListener );
+        }
         return this;
     }
 
@@ -235,6 +257,10 @@ class Record implements UtilResubscribeCallback {
         } else if( message.data[ 0 ] == Event.MESSAGE_DENIED.toString() ) {
            clearTimeouts();
         }
+    }
+
+    void setRecordRemoteUpdateListener( RecordRemoteUpdateListener recordRemoteUpdateListener ) {
+        this.recordRemoteUpdateListener = recordRemoteUpdateListener;
     }
 
     private void applyUpdate(Message message) {
@@ -261,6 +287,10 @@ class Record implements UtilResubscribeCallback {
             return;
         }
 
+        if( this.recordRemoteUpdateListener != null ) {
+            this.recordRemoteUpdateListener.beforeRecordUpdate();
+        }
+
         Map oldValues = beginChange();
 
         this.version = version;
@@ -274,6 +304,9 @@ class Record implements UtilResubscribeCallback {
 
         completeChange( oldValues );
 
+        if( this.recordRemoteUpdateListener != null ) {
+            this.recordRemoteUpdateListener.afterRecordUpdate();
+        }
     }
 
     private void recoverRecord(int remoteVersion, JsonElement remoteData, Message message) {
@@ -379,7 +412,7 @@ class Record implements UtilResubscribeCallback {
 
         Map oldValues = beginChange();
         this.version = Integer.parseInt( message.data[ 1 ] );
-        this.data = gson.fromJson( message.data[ 2 ], JsonObject.class );
+        this.data = gson.fromJson( message.data[ 2 ], JsonElement.class );
         this.path.setCoreElement(this.data);
         completeChange( oldValues );
         setReady();
@@ -387,6 +420,12 @@ class Record implements UtilResubscribeCallback {
 
     private void setReady() {
         this.isReady = true;
+
+        for(RecordReadyListener recordReadyListener: this.onceRecordReadyListeners) {
+            recordReadyListener.onRecordReady( this.name, this );
+        }
+        this.onceRecordReadyListeners.clear();
+
         for(RecordReadyListener recordReadyListener: this.recordReadyListeners) {
             recordReadyListener.onRecordReady( this.name, this );
         }
@@ -415,10 +454,6 @@ class Record implements UtilResubscribeCallback {
             });
         }
     }
-    @Override
-    public void resubscribe() {
-        sendRead();
-    }
 
     private void destroy() {
         this.clearTimeouts();
@@ -427,13 +462,21 @@ class Record implements UtilResubscribeCallback {
         this.isDestroyed = true;
     }
 
-    public JsonElement deepCopy(JsonElement element) {
+    private JsonElement deepCopy(JsonElement element) {
         try {
-            Gson gson = new Gson();
             return gson.fromJson(gson.toJson(element, JsonElement.class), JsonElement.class);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
+    }
+
+    private <T> T deepCopy(JsonElement element, Class<T> type) {
+        return gson.fromJson(gson.toJson(element, JsonElement.class), type);
+    }
+
+    static interface RecordRemoteUpdateListener {
+        void beforeRecordUpdate();
+        void afterRecordUpdate();
     }
 }

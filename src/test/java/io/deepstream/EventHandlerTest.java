@@ -134,7 +134,7 @@ public class EventHandlerTest {
                 new String[] { "S", "myEvent" }
         ));
         eventHandler.unsubscribe( "myEvent", callbackMock );
-        Thread.sleep(30);
+        Thread.sleep(50);
         verify( deepstreamRuntimeErrorHandler, times(1) ).onException(Topic.EVENT, Event.ACK_TIMEOUT, "No ACK message received in time for UNSUBSCRIBE myEvent");
     }
 
