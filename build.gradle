@@ -1,12 +1,13 @@
 plugins {
     id 'java'
     id "com.github.samueltbrown.cucumber" version "0.9"
-    //id 'com.github.j2objccontrib.j2objcgradle' version '0.6.0-alpha'
 }
 
 // Java compatability
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
+
+defaultTasks 'cucumber'
 
 group 'io.io.deepstream.gherkin'
 version '1.0-SNAPSHOT'
@@ -43,14 +44,3 @@ cucumber {
     dryRun = false
     ignoreFailures = false
 }
-
-//j2objcConfig {
-//    // Sets up libraries you depend on
-//    skipJ2objcVerification true
-//    autoConfigureDeps true
-//    supportedArchs += ['ios_i386']
-//    testPattern {
-//        include '**/*Test.java'
-//    }
-//    finalConfigure()          // Must be last call to configuration
-//}

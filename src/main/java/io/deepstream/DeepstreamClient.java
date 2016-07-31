@@ -12,7 +12,7 @@ import java.util.UUID;
 /**
  * deepstream.io java client
  */
-public class DeepstreamClient extends IDeepstreamClient {
+public class DeepstreamClient extends DeepstreamClientAbstract {
 
     private String uuid;
     private final Connection connection;
@@ -21,7 +21,6 @@ public class DeepstreamClient extends IDeepstreamClient {
     public final RecordHandler record;
     public final EventHandler event;
     public final RpcHandler rpc;
-    private DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler;
 
     /**
      * deepstream.io javascript client, defaults to using default properties
@@ -54,11 +53,9 @@ public class DeepstreamClient extends IDeepstreamClient {
      * the user to gracefully handle them.
      *
      * @param deepstreamRuntimeErrorHandler
-     * @return
      */
-    public DeepstreamClient setRuntimeErrorHandler( DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler )  {
-        this.deepstreamRuntimeErrorHandler = deepstreamRuntimeErrorHandler;
-        return this;
+    public void setRuntimeErrorHandler( DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler )  {
+        super.setRuntimeErrorHandler( deepstreamRuntimeErrorHandler );
     }
 
     /**

@@ -179,7 +179,7 @@ public class RpcHandlerTest {
 
         Assert.assertEquals( TestUtil.replaceSeperators("P|REQ|addTwo|1|O{\"numA\":3,\"numB\":8}+"), connectionMock.lastSentMessage);
 
-        Thread.sleep(40);
+        Thread.sleep(100);
         verify(callbackMock, times(1)).onError( Event.RESPONSE_TIMEOUT.toString() );
     }
 }

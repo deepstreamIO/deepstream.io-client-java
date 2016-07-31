@@ -13,7 +13,7 @@ public class RecordHandler implements RecordEventsListener, RecordReadyListener 
 
     private final Map options;
     private final IConnection connection;
-    private final IDeepstreamClient client;
+    private final DeepstreamClientAbstract client;
     private final Map<String, Record> records;
     private final Map<String, List> lists;
     private final UtilSingleNotifier hasRegistry;
@@ -28,7 +28,7 @@ public class RecordHandler implements RecordEventsListener, RecordReadyListener 
      * @param connection
      * @param client
      */
-    RecordHandler( Map options, IConnection connection, IDeepstreamClient client) {
+    RecordHandler( Map options, IConnection connection, DeepstreamClientAbstract client) {
         this.options = options;
         this.connection = connection;
         this.client = client;

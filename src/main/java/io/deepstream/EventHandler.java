@@ -13,13 +13,13 @@ public class EventHandler {
     private final UtilEmitter emitter;
     private final Map options;
     private final IConnection connection;
-    private final IDeepstreamClient client;
+    private final DeepstreamClientAbstract client;
     private final UtilAckTimeoutRegistry ackTimeoutRegistry;
     private final UtilResubscribeNotifier resubscribeNotifier;
     private final Map<String, UtilListener> listeners;
     private final List<String> subscriptions;
 
-    public EventHandler(Map options, final IConnection connection, IDeepstreamClient client ) {
+    public EventHandler(Map options, final IConnection connection, DeepstreamClientAbstract client ) {
         this.subscriptionTimeout = Integer.parseInt( (String) options.get( "subscriptionTimeout" ) );
         this.emitter = new UtilEmitter();
         this.connection = connection;

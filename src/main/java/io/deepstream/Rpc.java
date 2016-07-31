@@ -12,10 +12,10 @@ class Rpc implements UtilTimeoutListener {
     private String uid;
     private UtilAckTimeoutRegistry ackTimeoutRegistry;
     Map properties;
-    IDeepstreamClient client;
+    DeepstreamClientAbstract client;
     RpcResponseCallback callback;
 
-    public Rpc( Map properties, IDeepstreamClient client, String uid, RpcResponseCallback callback ) {
+    public Rpc(Map properties, DeepstreamClientAbstract client, String uid, RpcResponseCallback callback ) {
         this.properties = properties;
         this.client = client;
         this.uid = uid;

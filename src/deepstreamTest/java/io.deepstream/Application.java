@@ -1,9 +1,7 @@
 package io.deepstream;
 
 import com.google.gson.JsonObject;
-import io.deepstream.constants.ConnectionState;
-import io.deepstream.constants.Event;
-import io.deepstream.constants.Topic;
+import io.deepstream.constants.*;
 
 import java.util.Map;
 
@@ -18,13 +16,13 @@ class Application implements ConnectionChangeListener, LoginCallback {
             DeepstreamClient ds = new DeepstreamClient( "localhost:6021" );
             ds
                     .addConnectionChangeListener( this )
+                    .login( authData, this )
                     .setRuntimeErrorHandler(new DeepstreamRuntimeErrorHandler() {
                         @Override
                         public void onException(Topic topic, Event event, String msg) {
                             System.out.println( "Error occured " + topic + " " + event + " " + msg );
                         }
-                    })
-                    .login( authData, this );
+                    });
 
             Thread.sleep(1000);
             authData = new JsonObject();
@@ -33,13 +31,13 @@ class Application implements ConnectionChangeListener, LoginCallback {
             DeepstreamClient ds2 = new DeepstreamClient( "localhost:6021" );
             ds2
                     .addConnectionChangeListener( this )
+                    .login( authData, this )
                     .setRuntimeErrorHandler(new DeepstreamRuntimeErrorHandler() {
                         @Override
                         public void onException(Topic topic, Event event, String msg) {
                             System.out.println( "Error occured " + topic + " " + event + " " + msg );
                         }
-                    })
-                    .login( authData, this );
+                    });
         }
 
         catch( Exception e ) {
@@ -48,15 +46,18 @@ class Application implements ConnectionChangeListener, LoginCallback {
 
     }
 
-    public void connectionStateChanged( ConnectionState connectionState ) {
-        System.out.println( "Connection state changed " +  connectionState );
-    }
 
     public void loginSuccess( Map userData) {
         System.out.println( "Login Success" );
     }
 
-    public void loginFailed(Event errorEvent, Object errorMessage ) {
+    @Override
+    public void loginFailed(Event errorEvent, Object data) {
         System.out.println( "Login failed " + errorEvent.toString() );
+    }
+
+    @Override
+    public void connectionStateChanged(ConnectionState connectionState) {
+        System.out.println( "Connection state changed " +  connectionState );
     }
 }

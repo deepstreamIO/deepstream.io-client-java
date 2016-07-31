@@ -28,7 +28,7 @@ class Record {
     private final UtilResubscribeNotifier utilResubscribeNotifier;
     private final UtilAckTimeoutRegistry ackTimeoutRegistry;
     private final IConnection connection;
-    private final IDeepstreamClient client;
+    private final DeepstreamClientAbstract client;
     private final Gson gson;
     private final UtilJSONPath path;
     private final UtilEmitter subscribers;
@@ -51,7 +51,7 @@ class Record {
      * @param options Deepstream options
      * @param client deepstream.io client
      */
-    Record(String name, Map recordOptions, IConnection connection, Map options, IDeepstreamClient client) {
+    Record(String name, Map recordOptions, IConnection connection, Map options, DeepstreamClientAbstract client) {
         this.ackTimeoutRegistry = client.getAckTimeoutRegistry();
         this.name = name;
         this.options = options;

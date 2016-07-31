@@ -13,7 +13,7 @@ class UtilSingleNotifier implements UtilResubscribeCallback {
     private final Topic topic;
     private final Actions action;
     private final int timeoutDuration;
-    private final IDeepstreamClient client;
+    private final DeepstreamClientAbstract client;
     private final IConnection connection;
     private final Map requests;
     private final UtilAckTimeoutRegistry ackTimeoutRegistry;
@@ -30,7 +30,7 @@ class UtilSingleNotifier implements UtilResubscribeCallback {
      * @param action
      * @param timeoutDuration
      */
-    public UtilSingleNotifier(IDeepstreamClient client, IConnection connection, Topic topic, Actions action, int timeoutDuration ) {
+    public UtilSingleNotifier(DeepstreamClientAbstract client, IConnection connection, Topic topic, Actions action, int timeoutDuration ) {
         this.ackTimeoutRegistry = client.getAckTimeoutRegistry();
         this.client = client;
         this.connection = connection;

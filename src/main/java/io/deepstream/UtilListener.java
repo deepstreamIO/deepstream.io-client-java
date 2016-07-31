@@ -12,11 +12,11 @@ class UtilListener implements UtilResubscribeCallback {
     private String pattern;
     private ListenListener listenerCallback;
     private Map options;
-    private IDeepstreamClient client;
+    private DeepstreamClientAbstract client;
     private IConnection connection;
     private UtilResubscribeNotifier resubscribeNotifier;
 
-    public UtilListener(Topic topic, String pattern, ListenListener listenerCallback, Map options, IDeepstreamClient client, IConnection connection ) {
+    public UtilListener(Topic topic, String pattern, ListenListener listenerCallback, Map options, DeepstreamClientAbstract client, IConnection connection ) {
         this.topic = topic;
         this.pattern = pattern;
         this.listenerCallback = listenerCallback;

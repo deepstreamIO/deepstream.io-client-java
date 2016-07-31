@@ -5,19 +5,13 @@ import io.deepstream.constants.ConnectionState;
 
 import java.util.ArrayList;
 
-public class DeepstreamClientMock extends IDeepstreamClient {
+public class DeepstreamClientMock extends DeepstreamClientAbstract {
 
     private ArrayList<ConnectionChangeListener> connectionListeners;
     private ConnectionState connectionState;
-    private DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler;
 
     public DeepstreamClientMock() {
         this.connectionListeners = new ArrayList();
-    }
-
-    public DeepstreamClientMock setRuntimeErrorHandler( DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler )  {
-        this.deepstreamRuntimeErrorHandler = deepstreamRuntimeErrorHandler;
-        return this;
     }
 
     public DeepstreamClientMock addConnectionChangeListener( ConnectionChangeListener connectionChangeListener ) {
@@ -34,17 +28,17 @@ public class DeepstreamClientMock extends IDeepstreamClient {
     }
 
     @Override
-    IDeepstreamClient login(JsonElement data) throws DeepstreamLoginException {
+    DeepstreamClientAbstract login(JsonElement data) throws DeepstreamLoginException {
         return this;
     }
 
     @Override
-    IDeepstreamClient login(JsonElement data, LoginCallback loginCallback) throws DeepstreamLoginException {
+    DeepstreamClientAbstract login(JsonElement data, LoginCallback loginCallback) throws DeepstreamLoginException {
         return this;
     }
 
     @Override
-    IDeepstreamClient close() {
+    DeepstreamClientAbstract close() {
         return this;
     }
 

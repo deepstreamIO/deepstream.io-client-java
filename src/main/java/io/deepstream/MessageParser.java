@@ -26,7 +26,7 @@ class MessageParser {
      * and returns an array of parsed message objects
      * or null for invalid messages
      */
-    static List<Message> parse( String message, IDeepstreamClient client ) {
+    static List<Message> parse( String message, DeepstreamClientAbstract client ) {
         List<Message> messages = new ArrayList();
         String[] rawMessages = message.split( MS );
         Message parsedMessage;
@@ -41,12 +41,12 @@ class MessageParser {
 
     /**
      * Parses an individual message (as oposed to a
-     * block of multiple messages as is processed by {@link MessageParser#parse(String, IDeepstreamClient)})
+     * block of multiple messages as is processed by {@link MessageParser#parse(String, DeepstreamClientAbstract)})
      * @param message
      * @param client
      * @return
      */
-    static Message parseMessage( String message, IDeepstreamClient client ) {
+    static Message parseMessage( String message, DeepstreamClientAbstract client ) {
         String[] parts = message.split( MPS );
 
         if( parts.length < 2 ) {
@@ -75,7 +75,7 @@ class MessageParser {
      * @param client
      * @return
      */
-    static Object convertTyped( String value, IDeepstreamClient client ) {
+    static Object convertTyped( String value, DeepstreamClientAbstract client ) {
 
         char type = value.charAt(0);
 

@@ -12,7 +12,7 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, UtilTimeoutLis
 
     private Map<String, ScheduledFuture> register;
     private ScheduledExecutorService executor;
-    private IDeepstreamClient client;
+    private DeepstreamClientAbstract client;
     private ConnectionState state;
     private LinkedBlockingQueue<AckTimeout> ackTimers;
 
@@ -21,11 +21,11 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, UtilTimeoutLis
      *
      * @param client The client it sends errors to
      */
-    UtilAckTimeoutRegistry(IDeepstreamClient client) {
+    UtilAckTimeoutRegistry(DeepstreamClientAbstract client) {
         this.client = client;
         this.register = new ConcurrentHashMap<String, ScheduledFuture>();
         this.ackTimers = new LinkedBlockingQueue<AckTimeout>();
-        this.executor = new ScheduledThreadPoolExecutor(1);
+        this.executor = new ScheduledThreadPoolExecutor(5);
 
         this.state = client.getConnectionState();
         this.client.addConnectionChangeListener( this );

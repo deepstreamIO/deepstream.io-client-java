@@ -12,13 +12,13 @@ public class RpcHandler implements UtilResubscribeCallback {
     private int timeoutDuration;
     private Map options;
     private IConnection connection;
-    private IDeepstreamClient client;
+    private DeepstreamClientAbstract client;
     private Map<String, RpcRequested> providers;
     private UtilAckTimeoutRegistry ackTimeoutRegistry;
     private UtilResubscribeNotifier resubscribeNotifier;
     private Map<String, Rpc> rpcs;
 
-    RpcHandler( Map options, IConnection connection, IDeepstreamClient client ) {
+    RpcHandler( Map options, IConnection connection, DeepstreamClientAbstract client ) {
         this.options = options;
         this.connection = connection;
         this.client = client;
