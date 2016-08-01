@@ -17,13 +17,11 @@ import java.util.concurrent.ConcurrentMap;
  */
 class UtilEmitter {
 
-    private ConcurrentMap<String, ConcurrentLinkedQueue<Object>> callbacks
-            = new ConcurrentHashMap<String, ConcurrentLinkedQueue<Object>>();
+    private ConcurrentMap<String, ConcurrentLinkedQueue<Object>> callbacks = new ConcurrentHashMap<>();
 
     /**
-     *
      * @param enu eventName as an Enum
-     * @param fn
+     * @param fn The listener to invoke
      * @return a reference to this object.
      */
     public UtilEmitter on(Enum enu, Object fn ) {
@@ -34,13 +32,13 @@ class UtilEmitter {
     /**
      * Listens on the event.
      * @param event event name.
-     * @param fn
+     * @param fn The listener to invoke
      * @return a reference to this object.
      */
     public UtilEmitter on(String event, Object fn) {
         ConcurrentLinkedQueue<Object> callbacks = this.callbacks.get(event);
         if (callbacks == null) {
-            callbacks = new ConcurrentLinkedQueue <Object>();
+            callbacks = new ConcurrentLinkedQueue<>();
             ConcurrentLinkedQueue<Object> _callbacks = this.callbacks.putIfAbsent(event, callbacks);
             if (_callbacks != null) {
                 callbacks = _callbacks;
@@ -54,7 +52,7 @@ class UtilEmitter {
      * Adds a one time listener for the event.
      *
      * @param event an event name.
-     * @param fn
+     * @param fn The listener to invoke
      * @return a reference to this object.
      */
     public UtilEmitter once(final String event, final Listener fn) {
@@ -87,7 +85,7 @@ class UtilEmitter {
      * Removes the listener.
      *
      * @param event an event name.
-     * @param fn
+     * @param fn The listener to invoke
      * @return a reference to this object.
      */
     public UtilEmitter off(String event, Object fn) {
@@ -106,13 +104,7 @@ class UtilEmitter {
     }
 
     private static boolean sameAs(Object fn, Object internal) {
-        if (fn.equals(internal)) {
-            return true;
-        } else if (internal instanceof OnceListener) {
-            return fn.equals(((OnceListener) internal).fn);
-        } else {
-            return false;
-        }
+        return fn.equals(internal) || internal instanceof OnceListener && fn.equals(((OnceListener) internal).fn);
     }
 
     /**
@@ -124,14 +116,14 @@ class UtilEmitter {
     public List<Object> listeners(String event) {
         ConcurrentLinkedQueue<Object> callbacks = this.callbacks.get(event);
         return callbacks != null ?
-                new ArrayList<Object>(callbacks) : new ArrayList<Object>(0);
+                new ArrayList<>(callbacks) : new ArrayList<>(0);
     }
 
     /**
      * Check if this emitter has listeners for the specified event.
      *
      * @param event an event name.
-     * @return
+     * @return true if a listener exists for that eventname
      */
     public boolean hasListeners(String event) {
         ConcurrentLinkedQueue<Object> callbacks = this.callbacks.get(event);
@@ -140,24 +132,23 @@ class UtilEmitter {
 
     /**
      * Check if this emitter has any listeners
-     *
-     * @return
+     * @return all listeners
      */
-    public Set getEvents() {
+    public Set<String> getEvents() {
         return this.callbacks.keySet();
     }
 
     /**
      * Check if this emitter has any listeners
      *
-     * @return
+     * @return true if any listeners exist
      */
     public boolean hasListeners() {
         return this.callbacks.isEmpty();
     }
 
-    public static interface Listener {
-        public void call(Object... args);
+    interface Listener {
+        void call(Object... args);
     }
 
     private class OnceListener implements Listener {

@@ -10,7 +10,7 @@ import io.deepstream.constants.ConnectionState;
  *
  * Resubscribe logic should only occur once per connection loss
  */
-class UtilResubscribeNotifier implements ConnectionChangeListener {
+class UtilResubscribeNotifier implements ConnectionStateListener {
 
     private DeepstreamClientAbstract client;
     private UtilResubscribeCallback resubscribe;
@@ -39,21 +39,15 @@ class UtilResubscribeNotifier implements ConnectionChangeListener {
         this.resubscribe = null;
     }
 
-    @Override
     /**
-     * Handles any connection state changes, if the connection state is RECONNECTING,
-     * it sets a flag to say isReconnecting = true. This allows the resubscribe method
-     * to be called when the connection state is opened after a reconnection.
-     *
-     * @param {ConnectionState} state          The state to handle
-     *
-     * @returns {void}
+     * @see ConnectionStateListener
      */
+    @Override
     public void connectionStateChanged(ConnectionState state) {
-        if( state == ConnectionState.RECONNECTING && this.isReconnecting == false ) {
+        if( state == ConnectionState.RECONNECTING && !this.isReconnecting) {
                 this.isReconnecting = true;
         }
-        if( state == ConnectionState.OPEN && this.isReconnecting == true ) {
+        if( state == ConnectionState.OPEN && this.isReconnecting) {
             this.isReconnecting = false;
             this.resubscribe.resubscribe();
         }

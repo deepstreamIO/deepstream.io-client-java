@@ -3,6 +3,7 @@ package io.deepstream.constants;
 import java.util.EnumSet;
 
 public enum Event {
+    UNAUTHENTICATED_CONNECTION_TIMEOUT,
     CONNECTION_ERROR,
     CONNECTION_STATE_CHANGED,
     ACK_TIMEOUT,

@@ -8,15 +8,15 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Properties;
 
-public class Singleton {
+class Singleton {
 
-    int serverPort = 7777;
-    int server2port = 8888;
+    private int serverPort = 7777;
+    private int server2port = 8888;
 
-    String lastErrorMessage;
-    MockTcpServer server = new MockTcpServer( serverPort );;
-    MockTcpServer server2 = new MockTcpServer( server2port );;
-    DeepstreamClient client;
+    private String lastErrorMessage;
+    private MockTcpServer server = new MockTcpServer( serverPort );
+    private MockTcpServer server2 = new MockTcpServer( server2port );
+    private DeepstreamClient client;
 
     private static Singleton singleton;
 
@@ -65,13 +65,13 @@ public class Singleton {
 
         this.client.setRuntimeErrorHandler(new DeepstreamRuntimeErrorHandler() {
             @Override
-            public void onException(Topic topic, Event event, String msg) {
-                System.out.println( "Uncaught error via the DeepstreamRuntimeErrorHandler: " + topic + " " + event + " " +  msg );
-                lastErrorMessage = event + ": " + msg;
+            public void onException(Topic topic, Event event, String errorMessage) {
+                System.out.println( "Uncaught error via the DeepstreamRuntimeErrorHandler: " + topic + " " + event + " " + errorMessage);
+                lastErrorMessage = event + ": " + errorMessage;
             }
         });
 
-        this.client.addConnectionChangeListener(new ConnectionChangeListener() {
+        this.client.addConnectionChangeListener(new ConnectionStateListener() {
             @Override
             public void connectionStateChanged(ConnectionState connectionState) {
                 System.out.println( "Connection state changed to: " + connectionState );
@@ -83,7 +83,7 @@ public class Singleton {
         return this.client;
     }
 
-    public String getLastErrorMessage() {
+    String getLastErrorMessage() {
         return lastErrorMessage;
     }
 }

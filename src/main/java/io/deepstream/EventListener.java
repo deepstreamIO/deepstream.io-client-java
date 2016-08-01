@@ -7,8 +7,8 @@ public interface EventListener {
     /**
      * Triggered whenever an event you have subscribed to is triggered,
      * with a flexible array of arguments
-     * @param eventName
-     * @param args
+     * @param eventName The event name that has occurred
+     * @param args The arguments that the event has been triggered with
      */
     void onEvent( String eventName, Object... args );
 }

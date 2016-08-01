@@ -9,8 +9,8 @@ abstract class DeepstreamClientAbstract {
     private UtilAckTimeoutRegistry utilAckTimeoutRegistry;
     private DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler;
 
-    abstract DeepstreamClientAbstract addConnectionChangeListener(ConnectionChangeListener connectionChangeListener);
-    abstract DeepstreamClientAbstract removeConnectionChangeListener(ConnectionChangeListener connectionChangeListener );
+    abstract DeepstreamClientAbstract addConnectionChangeListener(ConnectionStateListener connectionStateListener);
+    abstract DeepstreamClientAbstract removeConnectionChangeListener(ConnectionStateListener connectionStateListener);
     abstract ConnectionState getConnectionState();
     abstract DeepstreamClientAbstract login(JsonElement data )throws DeepstreamLoginException ;
     abstract DeepstreamClientAbstract login(JsonElement data, LoginCallback loginCallback ) throws DeepstreamLoginException ;
@@ -28,8 +28,7 @@ abstract class DeepstreamClientAbstract {
      * Adds a {@link DeepstreamRuntimeErrorHandler} that will catch all RuntimeErrors such as AckTimeouts and allow
      * the user to gracefully handle them.
      *
-     * @param deepstreamRuntimeErrorHandler
-     * @return
+     * @param deepstreamRuntimeErrorHandler The listener to set
      */
     public void setRuntimeErrorHandler( DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler )  {
         this.deepstreamRuntimeErrorHandler = deepstreamRuntimeErrorHandler;

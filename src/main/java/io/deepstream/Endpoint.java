@@ -8,7 +8,7 @@ package io.deepstream;
 interface Endpoint {
     /**
      * Message to send to the deepstream server
-     * @param message
+     * @param message The message to send (TOPIC|ACTION|ARRAY+)
      */
     void send(String message);
 

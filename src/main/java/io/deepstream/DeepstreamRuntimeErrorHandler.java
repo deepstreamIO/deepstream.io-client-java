@@ -19,9 +19,9 @@ public interface DeepstreamRuntimeErrorHandler {
      * Triggered whenever a runtime error occurs ( mostly async such as TimeOuts or MergeConflicts ).
      * Recieves a topic to indicate if it was e.g. RPC, event and a english error message to simplify
      * debugging purposes.
-     * @param topic
-     * @param event
-     * @param msg
+     * @param topic The Topic the error occured on
+     * @param event The Error Event
+     * @param errorMessage The error message
      */
-    void onException(Topic topic, Event event, String msg);
+    void onException(Topic topic, Event event, String errorMessage);
 }

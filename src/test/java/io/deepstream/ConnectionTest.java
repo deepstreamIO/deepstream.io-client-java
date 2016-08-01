@@ -25,7 +25,7 @@ public class ConnectionTest {
     DeepstreamClient deepstreamClientMock;
     EndpointMock endpointMock;
     Connection connection;
-    ConnectionChangeListener connectionChangeListenerMock;
+    ConnectionStateListener connectionStateListenerMock;
     LoginCallback loginCallback;
 
     @Before
@@ -36,10 +36,10 @@ public class ConnectionTest {
         this.connection = new Connection(originalUrl, new HashMap(), this.deepstreamClientMock, this.endpointMock);
         this.endpointMock.setConnection( this.connection );
 
-        this.connectionChangeListenerMock = mock(ConnectionChangeListener.class);
+        this.connectionStateListenerMock = mock(ConnectionStateListener.class);
         this.loginCallback = mock( LoginCallback.class );
 
-        this.connection.addConnectionChangeListener( this.connectionChangeListenerMock );
+        this.connection.addConnectionChangeListener( this.connectionStateListenerMock);
     }
 
     @After
@@ -120,6 +120,6 @@ public class ConnectionTest {
 
     private void verifyConnectionState( ConnectionState connectionState) {
         assertEquals( this.connection.getConnectionState(), connectionState);
-        verify( this.connectionChangeListenerMock, atLeastOnce() ).connectionStateChanged(connectionState);
+        verify( this.connectionStateListenerMock, atLeastOnce() ).connectionStateChanged(connectionState);
     }
 }

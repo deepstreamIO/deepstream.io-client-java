@@ -19,8 +19,8 @@ public enum Actions {
     HAS( "H" ),
     SNAPSHOT( "SN" ),
     INVOKE( "I" ),
-    SUBSCRIBTION_FOR_PATTERN_FOUND( "SP" ),
-    SUBSCRIBTION_FOR_PATTERN_REMOVED( "SR" ),
+    SUBSCRIPTION_FOR_PATTERN_FOUND( "SP" ),
+    SUBSCRIPTION_FOR_PATTERN_REMOVED( "SR" ),
     LISTEN( "L" ),
     UNLISTEN( "UL" ),
     PROVIDER_UPDATE( "PU" ),
@@ -42,7 +42,7 @@ public enum Actions {
         return this.action;
     }
 
-    private static final Map<String,Actions> lookup  = new HashMap<String,Actions>();
+    private static final Map<String,Actions> lookup  = new HashMap<>();
     static {
         for( Actions s : EnumSet.allOf( Actions.class ) )
             lookup.put( s.toString(), s);

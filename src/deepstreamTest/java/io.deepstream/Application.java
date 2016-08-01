@@ -5,9 +5,9 @@ import io.deepstream.constants.*;
 
 import java.util.Map;
 
-class Application implements ConnectionChangeListener, LoginCallback {
+class Application implements ConnectionStateListener, LoginCallback {
 
-    public Application() {
+    Application() {
 
         try {
             JsonObject authData = new JsonObject();
@@ -19,8 +19,8 @@ class Application implements ConnectionChangeListener, LoginCallback {
                     .login( authData, this )
                     .setRuntimeErrorHandler(new DeepstreamRuntimeErrorHandler() {
                         @Override
-                        public void onException(Topic topic, Event event, String msg) {
-                            System.out.println( "Error occured " + topic + " " + event + " " + msg );
+                        public void onException(Topic topic, Event event, String errorMessage) {
+                            System.out.println( "Error occured " + topic + " " + event + " " + errorMessage);
                         }
                     });
 
@@ -34,14 +34,14 @@ class Application implements ConnectionChangeListener, LoginCallback {
                     .login( authData, this )
                     .setRuntimeErrorHandler(new DeepstreamRuntimeErrorHandler() {
                         @Override
-                        public void onException(Topic topic, Event event, String msg) {
-                            System.out.println( "Error occured " + topic + " " + event + " " + msg );
+                        public void onException(Topic topic, Event event, String errorMessage) {
+                            System.out.println( "Error occured " + topic + " " + event + " " + errorMessage);
                         }
                     });
         }
 
         catch( Exception e ) {
-            System.out.println( e );
+           e.printStackTrace();
         }
 
     }

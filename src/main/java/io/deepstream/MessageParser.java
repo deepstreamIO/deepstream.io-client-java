@@ -27,13 +27,13 @@ class MessageParser {
      * or null for invalid messages
      */
     static List<Message> parse( String message, DeepstreamClientAbstract client ) {
-        List<Message> messages = new ArrayList();
+        List<Message> messages = new ArrayList<>();
         String[] rawMessages = message.split( MS );
         Message parsedMessage;
-        for( short i=0; i < rawMessages.length; i++ ) {
-            parsedMessage = parseMessage( rawMessages[ i ], client );
-            if( parsedMessage != null ) {
-                messages.add( parsedMessage );
+        for (String rawMessage : rawMessages) {
+            parsedMessage = parseMessage(rawMessage, client);
+            if (parsedMessage != null) {
+                messages.add(parsedMessage);
             }
         }
         return messages;
@@ -42,9 +42,9 @@ class MessageParser {
     /**
      * Parses an individual message (as oposed to a
      * block of multiple messages as is processed by {@link MessageParser#parse(String, DeepstreamClientAbstract)})
-     * @param message
-     * @param client
-     * @return
+     * @param message The message parse
+     * @param client The deepstream client to notify if errors occur
+     * @return The {@link Message} object that represents the message string
      */
     static Message parseMessage( String message, DeepstreamClientAbstract client ) {
         String[] parts = message.split( MPS );
@@ -71,9 +71,9 @@ class MessageParser {
      * Deserializes values created by {@link MessageBuilder#typed(Object)} to
      * their original format
      *
-     * @param value
-     * @param client
-     * @return
+     * @param value The value to deserialise
+     * @param client The deepstream client to notify if errors occur
+     * @return The object the value represented
      */
     static Object convertTyped( String value, DeepstreamClientAbstract client ) {
 

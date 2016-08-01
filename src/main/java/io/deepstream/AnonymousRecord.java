@@ -27,14 +27,14 @@ public class AnonymousRecord {
     private ArrayList<AnonymousRecordReadyListener> recordReadyListeners;
 
     /**
-     * This constructor is called by the {@link RecordHandler#getAnonymousRecord(String)}
-     * @param recordHandler
+     * This constructor is called by the {@link RecordHandler#getAnonymousRecord()}
+     * @param recordHandler The recordHandler used to get record instances
      */
     AnonymousRecord(RecordHandler recordHandler) {
         this.recordHandler = recordHandler;
-        this.subscriptions = new ArrayList();
-        this.anonymousRecordNameChangedCallbacks = new ArrayList();
-        this.recordReadyListeners = new ArrayList();
+        this.subscriptions = new ArrayList<>();
+        this.anonymousRecordNameChangedCallbacks = new ArrayList<>();
+        this.recordReadyListeners = new ArrayList<>();
         this.recordListeners = new AnonymousRecord.RecordListeners( this );
     }
 
@@ -42,8 +42,8 @@ public class AnonymousRecord {
      * Add a ready listener to the anonymousRecord. Whenever the record state is you'll get notified via
      * {@link AnonymousRecordReadyListener#onRecordReady(String, AnonymousRecord)}. Note that since you can
      * change the underlying record at will, this method can be called multiple times.
-     * @param recordReadyListener
-     * @return
+     * @param recordReadyListener The listener to add
+     * @return The AnonymousRecord
      */
     public AnonymousRecord addRecordReadyListener( AnonymousRecordReadyListener recordReadyListener ) {
         this.recordReadyListeners.add( recordReadyListener );
@@ -53,8 +53,8 @@ public class AnonymousRecord {
     /**
      * Remove a readyListener added via {@link AnonymousRecord#addRecordReadyListener(AnonymousRecordReadyListener)}
      *
-     * @param recordEventsListener
-     * @return
+     * @param recordEventsListener The listener to remove
+     * @return The AnonymousRecord
      */
     public AnonymousRecord removeRecordReadyListener(AnonymousRecordReadyListener recordEventsListener) {
         this.recordReadyListeners.remove( recordEventsListener );
@@ -63,8 +63,8 @@ public class AnonymousRecord {
 
     /**
      * Add a callback to be notified whenever {@link AnonymousRecord#setName(String)} is called.
-     * @param anonymousRecordNameChangedCallback
-     * @return
+     * @param anonymousRecordNameChangedCallback The listener to add
+     * @return The AnonymousRecord
      */
     public AnonymousRecord addRecordNameChangedListener(AnonymousRecordNameChangedListener anonymousRecordNameChangedCallback ) {
         this.anonymousRecordNameChangedCallbacks.add( anonymousRecordNameChangedCallback );
@@ -73,8 +73,8 @@ public class AnonymousRecord {
 
     /**
      * Remove a callback used to be notified whenever {@link AnonymousRecord#setName(String)} is called.
-     * @param anonymousRecordNameChangedCallback
-     * @return
+     * @param anonymousRecordNameChangedCallback The listener to remove
+     * @return The AnonymousRecord
      */
     public AnonymousRecord removeRecordNameChangedCallback(AnonymousRecordNameChangedListener anonymousRecordNameChangedCallback ) {
         this.anonymousRecordNameChangedCallbacks.remove( anonymousRecordNameChangedCallback );
@@ -85,7 +85,7 @@ public class AnonymousRecord {
      * Proxies to the actual{@link Record#set(Object)} method. It is valid
      * to call get prior to setName - if no record exists,
      * the method returns null
-     * @return
+     * @return The AnonymousRecord
      */
     public AnonymousRecord set( Object data ) throws AnonymousRecordUninitialized {
         return this.set( null, data );
@@ -95,7 +95,7 @@ public class AnonymousRecord {
      * Proxies to the actual{@link Record#set(String, Object)} method. It is valid
      * to call get prior to setName - if no record exists,
      * the method returns null
-     * @return
+     * @return The AnonymousRecord
      */
     public AnonymousRecord set( String path, Object data ) throws AnonymousRecordUninitialized {
         if( this.record == null ) {
@@ -107,8 +107,8 @@ public class AnonymousRecord {
 
     /**
      * Proxies to the actual{@link Record#discard()} method. If a record does
-     * not exist it will throw a {@see AnonymousRecordUninitialized} exception
-     * @return
+     * not exist it will throw a {@link AnonymousRecordUninitialized} exception
+     * @return The AnonymousRecord
      */
     public AnonymousRecord discard() throws AnonymousRecordUninitialized {
         if( this.record == null ) {
@@ -120,8 +120,8 @@ public class AnonymousRecord {
 
     /**
      * Proxies to the actual {@link Record#delete()} method. If a record does
-     * not exist it will throw a {@see AnonymousRecordUninitialized} exception
-     * @return
+     * not exist it will throw a {@link AnonymousRecordUninitialized} exception
+     * @return The AnonymousRecord
      */
     public AnonymousRecord delete() throws AnonymousRecordUninitialized {
         if( this.record == null ) {
@@ -135,7 +135,7 @@ public class AnonymousRecord {
      * Proxies to the actual {@link Record#get()} method. It is valid
      * to call get prior to setName - if no record exists,
      * the method returns null
-     * @return
+     * @return The JsonElement
      */
     public JsonElement get() {
         if( this.record == null ) {
@@ -148,8 +148,8 @@ public class AnonymousRecord {
      * Proxies to the actual {@link Record#get(String)} method. It is valid
      * to call get prior to setName - if no record exists,
      * the method returns null
-     * @param path
-     * @return
+     * @param path The path to retrieve
+     * @return The JsonElement
      */
     public JsonElement get(String path ) {
         if( this.record == null ) {
@@ -160,8 +160,8 @@ public class AnonymousRecord {
 
     /**
      * @see AnonymousRecord#subscribe
-     * @param recordChangedCallback
-     * @return
+     * @param recordChangedCallback The listener to add
+     * @return The AnonymousRecord
      */
     public AnonymousRecord subscribe( RecordChangedCallback recordChangedCallback ) {
         return this.subscribe( null, recordChangedCallback );
@@ -171,9 +171,9 @@ public class AnonymousRecord {
      * Proxies the actual {@link Record#subscribe} method. The same parameters
      * can be used. Can be called prior to {@link AnonymousRecord#setName}). Please note, triggerIfReady
      * will always be set to true to reflect changes in the underlying record.
-     * @param path
-     * @param recordChangedCallback
-     * @return
+     * @param path The path to listen to
+     * @param recordChangedCallback The listener to add
+     * @return The AnonymousRecord
      */
     public AnonymousRecord subscribe( String path, RecordChangedCallback recordChangedCallback ) {
         this.subscriptions.add( new Subscription( path, recordChangedCallback ) );
@@ -187,8 +187,8 @@ public class AnonymousRecord {
 
     /**
      * @see AnonymousRecord#unsubscribe
-     * @param recordChangedCallback
-     * @return
+     * @param recordChangedCallback The listener to remove
+     * @return The AnonymousRecord
      */
     public AnonymousRecord unsubscribe( RecordChangedCallback recordChangedCallback ) {
         return this.unsubscribe( null, recordChangedCallback );
@@ -197,9 +197,9 @@ public class AnonymousRecord {
     /**
      * Proxies the actual {@link Record#unsubscribe} method. The same parameters
      * can be used. Can be called prior to {@link AnonymousRecord#setName}).
-     * @param path
-     * @param recordChangedCallback
-     * @return
+     * @param path The path to unlisten to
+     * @param recordChangedCallback The listen to remove
+     * @return The AnonymousRecord
      */
     public AnonymousRecord unsubscribe( String path, RecordChangedCallback recordChangedCallback ) {
         this.subscriptions.remove( new Subscription( path, recordChangedCallback ) );
@@ -220,8 +220,8 @@ public class AnonymousRecord {
     /**
      * Proxies the actual {@link Record#addRecordEventsListener} method. The same parameters
      * can be used. Can be called prior to {@link AnonymousRecord#setName}).
-     * @param recordEventListener
-     * @return
+     * @param recordEventListener The listener to add
+     * @return The AnonymousRecord
      */
     public AnonymousRecord addRecordEventsListener(RecordEventsListener recordEventListener ) {
         this.subscriptions.add( new Subscription( recordEventListener ) );
@@ -236,8 +236,8 @@ public class AnonymousRecord {
     /**
      * Proxies the actual {@link Record#removeRecordEventsListener} method. The same parameters
      * can be used. Can be called prior to {@link AnonymousRecord#setName}).
-     * @param recordEventListener
-     * @return
+     * @param recordEventListener The listener to remove
+     * @return The AnonymousRecord
      */
     public AnonymousRecord removeRecordEventsListener(RecordEventsListener recordEventListener ) {
         for( Subscription subscription : this.subscriptions ) {
@@ -257,8 +257,8 @@ public class AnonymousRecord {
      * Sets the underlying record the anonymous record is bound
      * to. Can be called multiple times.
      *
-     * @param recordName
-     * @return
+     * @param recordName The name of the underlying record to use
+     * @return The AnonymousRecord
      */
     public AnonymousRecord setName( String recordName ) {
         this.name = recordName;
@@ -293,7 +293,7 @@ public class AnonymousRecord {
      * Unsubscribe all callbacks from current record
      */
     private void unsubscribeRecord() {
-        if( this.record == null || this.record.isDestroyed == true ) {
+        if( this.record == null || this.record.isDestroyed) {
             return;
         }
 

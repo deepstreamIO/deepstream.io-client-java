@@ -43,7 +43,7 @@ class UtilListener implements UtilResubscribeCallback {
         if( message.action.equals( Actions.ACK ) ) {
             this.ackTimoutRegistry.clear( message );
         } else {
-            boolean isFound = message.action.equals( Actions.SUBSCRIBTION_FOR_PATTERN_FOUND );
+            boolean isFound = message.action.equals( Actions.SUBSCRIPTION_FOR_PATTERN_FOUND);
             if( isFound ) {
                 this.listenerCallback.onSubscriptionForPatternAdded( message.data[ 1 ] );
             } else {

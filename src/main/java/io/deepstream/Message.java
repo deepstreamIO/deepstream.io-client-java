@@ -7,18 +7,18 @@ import io.deepstream.constants.*;
  * server
  */
 class Message {
-    public String raw;
-    public Actions action;
-    public Topic topic;
-    public String[] data;
+    String raw;
+    Actions action;
+    Topic topic;
+    String[] data;
 
     /**
      * @param raw The raw data recieved
-     * @param topic
-     * @param action
-     * @param data
+     * @param topic The message topic
+     * @param action The message action
+     * @param data The message data, as an array
      */
-    public Message( String raw, Topic topic, Actions action, String[] data ) {
+    Message( String raw, Topic topic, Actions action, String[] data ) {
         this.raw = raw;
         this.topic = topic;
         this.action = action;

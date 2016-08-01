@@ -8,7 +8,7 @@ import io.deepstream.constants.Topic;
 import java.util.Map;
 import java.util.concurrent.*;
 
-class UtilAckTimeoutRegistry implements ConnectionChangeListener, UtilTimeoutListener {
+class UtilAckTimeoutRegistry implements ConnectionStateListener, UtilTimeoutListener {
 
     private Map<String, ScheduledFuture> register;
     private ScheduledExecutorService executor;
@@ -23,8 +23,8 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, UtilTimeoutLis
      */
     UtilAckTimeoutRegistry(DeepstreamClientAbstract client) {
         this.client = client;
-        this.register = new ConcurrentHashMap<String, ScheduledFuture>();
-        this.ackTimers = new LinkedBlockingQueue<AckTimeout>();
+        this.register = new ConcurrentHashMap<>();
+        this.ackTimers = new LinkedBlockingQueue<>();
         this.executor = new ScheduledThreadPoolExecutor(5);
 
         this.state = client.getConnectionState();
@@ -48,7 +48,7 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, UtilTimeoutLis
         }
 
         String uniqueName = this.getUniqueName( message.topic, action, name );
-        if( this.clear( uniqueName ) == false ) {
+        if(!this.clear(uniqueName)) {
             this.client.onError( message.topic, Event.UNSOLICITED_MESSAGE, message.raw );
         }
     }
@@ -151,7 +151,7 @@ class UtilAckTimeoutRegistry implements ConnectionChangeListener, UtilTimeoutLis
             try {
                 task = this.ackTimers.take();
             } catch (InterruptedException e) {
-                System.out.println( e );
+                e.printStackTrace();
             }
 
             if( task != null ) {

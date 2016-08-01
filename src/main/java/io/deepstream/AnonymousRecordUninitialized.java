@@ -7,7 +7,7 @@ package io.deepstream;
 public class AnonymousRecordUninitialized extends Exception {
     /**
      * This Exception is thrown by {@see AnonymousRecord} and should not be constructed by consumers of this library
-     * @param methodName
+     * @param methodName The method name that was called
      */
     AnonymousRecordUninitialized(String methodName) {
         super( "Can`t invoke " + methodName + ". AnonymousRecord not initialised. Call setName first" );

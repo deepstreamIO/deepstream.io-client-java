@@ -7,19 +7,19 @@ import java.util.ArrayList;
 
 public class DeepstreamClientMock extends DeepstreamClientAbstract {
 
-    private ArrayList<ConnectionChangeListener> connectionListeners;
+    private ArrayList<ConnectionStateListener> connectionListeners;
     private ConnectionState connectionState;
 
     public DeepstreamClientMock() {
-        this.connectionListeners = new ArrayList();
+        this.connectionListeners = new ArrayList<>();
     }
 
-    public DeepstreamClientMock addConnectionChangeListener( ConnectionChangeListener connectionChangeListener ) {
-        connectionListeners.add( connectionChangeListener );
+    public DeepstreamClientMock addConnectionChangeListener( ConnectionStateListener connectionStateListener) {
+        connectionListeners.add(connectionStateListener);
         return this;
     }
 
-    public DeepstreamClientMock removeConnectionChangeListener(ConnectionChangeListener connectionChangeListener) {
+    public DeepstreamClientMock removeConnectionChangeListener(ConnectionStateListener connectionStateListener) {
         return null;
     }
 
@@ -48,7 +48,7 @@ public class DeepstreamClientMock extends DeepstreamClientAbstract {
 
     public void setConnectionState( ConnectionState state ) {
         this.connectionState = state;
-        for ( ConnectionChangeListener listener : this.connectionListeners ) {
+        for ( ConnectionStateListener listener : this.connectionListeners ) {
             listener.connectionStateChanged( state );
         }
     }

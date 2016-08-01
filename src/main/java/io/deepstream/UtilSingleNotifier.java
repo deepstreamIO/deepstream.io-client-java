@@ -15,7 +15,7 @@ class UtilSingleNotifier implements UtilResubscribeCallback {
     private final int timeoutDuration;
     private final DeepstreamClientAbstract client;
     private final IConnection connection;
-    private final Map requests;
+    private final Map<String, ArrayList<UtilSingleNotifierCallback> > requests;
     private final UtilAckTimeoutRegistry ackTimeoutRegistry;
     private final UtilResubscribeNotifier resubscribeNotifier;
 
@@ -24,11 +24,11 @@ class UtilSingleNotifier implements UtilResubscribeCallback {
      * and HAS functionality. The SingleNotifier multiplexes all the client requests so
      * that they can can be notified at once, and also includes reconnection funcionality
      * incase the connection drops.
-     * @param client
-     * @param connection
-     * @param topic
-     * @param action
-     * @param timeoutDuration
+     * @param client The deepstream client
+     * @param connection The deepstream connection
+     * @param topic The Topic
+     * @param action The Action
+     * @param timeoutDuration The timeout duration before an ack timeout is triggered
      */
     public UtilSingleNotifier(DeepstreamClientAbstract client, IConnection connection, Topic topic, Actions action, int timeoutDuration ) {
         this.ackTimeoutRegistry = client.getAckTimeoutRegistry();
@@ -39,13 +39,13 @@ class UtilSingleNotifier implements UtilResubscribeCallback {
         this.timeoutDuration = timeoutDuration;
 
         resubscribeNotifier = new UtilResubscribeNotifier(client, this);
-        requests = new HashMap<String, ArrayList>();
+        requests = new HashMap<>();
     }
 
     /**
      * Check if there is a request pending with a specified name
-     * @param name
-     * @return
+     * @param name The name of the object being requested
+     * @return true if the request exists
      */
     public boolean hasRequest( String name ) {
         return requests.containsKey( name );
@@ -55,18 +55,18 @@ class UtilSingleNotifier implements UtilResubscribeCallback {
      * Add a request. If one has already been made it will skip the server request
      * and multiplex the response
      *
-     * @param name
-     * @param callback
+     * @param name The name of the object being requested
+     * @param utilSingleNotifierCallback The callback to call once the request is completed
      */
-    public void request( String name, UtilSingleNotifierCallback callback ) {
-        ArrayList callbacks = (ArrayList) requests.get( name );
+    public void request( String name, UtilSingleNotifierCallback utilSingleNotifierCallback ) {
+        ArrayList<UtilSingleNotifierCallback> callbacks = requests.get( name );
         if( callbacks == null ) {
-            callbacks = new ArrayList();
+            callbacks = new ArrayList<>();
             requests.put( name, callbacks );
             send( name );
         }
 
-        callbacks.add( callback );
+        callbacks.add( utilSingleNotifierCallback );
         ackTimeoutRegistry.add( topic, action, name, Event.RESPONSE_TIMEOUT, timeoutDuration );
     }
 
@@ -74,12 +74,12 @@ class UtilSingleNotifier implements UtilResubscribeCallback {
      * Process a response for a request. This has quite a flexible API since callback functions
      * differ greatly and helps maximise reuse.
      *
-     * @param name
-     * @param error
-     * @param data
+     * @param name The name of the object being requested
+     * @param error An error that may have occured during the request
+     * @param data The result data from the request
      */
     public void recieve( String name, DeepstreamException error, Object data ) {
-        ArrayList<UtilSingleNotifierCallback> callbacks = (ArrayList<UtilSingleNotifierCallback>) requests.get( name );
+        ArrayList<UtilSingleNotifierCallback> callbacks = requests.get( name );
         for (UtilSingleNotifierCallback callback : callbacks) {
             if( error != null ) {
                 callback.onSingleNotifierError( name, error );

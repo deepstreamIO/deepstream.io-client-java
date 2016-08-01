@@ -9,7 +9,7 @@ import io.deepstream.constants.Topic;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RecordHandler implements RecordEventsListener, RecordReadyListener {
+public class RecordHandler implements RecordEventsListener {
 
     private final Map options;
     private final IConnection connection;
@@ -24,9 +24,9 @@ public class RecordHandler implements RecordEventsListener, RecordReadyListener 
      * A collection of factories for records. This class
      * is exposed as client.record
      *
-     * @param options
-     * @param connection
-     * @param client
+     * @param options The options the client was created with
+     * @param connection The connection
+     * @param client The deepstream client
      */
     RecordHandler( Map options, IConnection connection, DeepstreamClientAbstract client) {
         this.options = options;
@@ -43,9 +43,10 @@ public class RecordHandler implements RecordEventsListener, RecordReadyListener 
     }
 
     /**
-     * Returns an existing record or creates a new one
-     * @param name
-     * @return Record
+     * Returns an existing record or creates a new one. If creating a new one the record
+     * will not be in a ready state till it is loaded from the server.
+     * @param name The name of the record to get
+     * @return Record The record
      */
     public Record getRecord( String name ) {
         Record record = records.get( name );
@@ -62,8 +63,8 @@ public class RecordHandler implements RecordEventsListener, RecordReadyListener 
      * Returns an existing List or creates a new one. A list is a specialised
      * type of record that holds an array of recordNames.
      *
-     * @param name
-     * @return List
+     * @param name The name of the list to retrieve
+     * @return List The List
      */
     public List getList( String name ) {
         List list = lists.get( name );
@@ -76,27 +77,32 @@ public class RecordHandler implements RecordEventsListener, RecordReadyListener 
     /**
      * Returns an anonymous record. A anonymous record is effectively
      * a wrapper that mimicks the API of a record, but allows for the
-     * underlying record to be swapped without loosing subscriptions etc.
+     * underlying record to be swapped without losing subscriptions etc.<br/>
      *
      * This is particularly useful when selecting from a number of similarly
-     * structured records. E.g. a list of users that can be choosen from a list
+     * structured records. E.g. a list of users that can be choosen from a list<br/>
      *
-     * The only API difference to a normal record is an additional setName( name ) method.
+     * The only API differences to a normal record is an additional {@link AnonymousRecord#setName(String)} method
      *
-     * @param name
+     * Also worth mentioning that {@link AnonymousRecordReadyListener#onRecordReady(String, AnonymousRecord)}
+     * can be called multiple times!
+     *
      * @return AnonymousRecord
      */
-    public AnonymousRecord getAnonymousRecord( String name ) {
+    public AnonymousRecord getAnonymousRecord() {
         return new AnonymousRecord( this );
     }
 
     /**
      * Allows to listen for record subscriptions made by this or other clients. This
      * is useful to create "active" data providers, e.g. providers that only provide
-     * data for a particular record if a user is actually interested in it
+     * data for a particular record if a user is actually interested in it.<br/>
      *
-     * @param pattern
-     * @param listenCallback
+     * You can only listen to a pattern once, and if multiple listeners match the same pattern only
+     * a single one will be notified!
+     *
+     * @param pattern The pattern to match all records your interested in
+     * @param listenCallback The listen callback when a match has been found or removed.
      */
     public void listen( String pattern, ListenListener listenCallback ) {
         if( listeners.containsKey( pattern ) ) {
@@ -110,7 +116,7 @@ public class RecordHandler implements RecordEventsListener, RecordReadyListener 
     /**
      * Removes a listener that was previously registered with listenForSubscriptions
      *
-     * @param pattern
+     * @param pattern The pattern to stop listening to
      */
     public void unlisten( String pattern ) {
         UtilListener listener = listeners.get( pattern );
@@ -124,34 +130,43 @@ public class RecordHandler implements RecordEventsListener, RecordReadyListener 
     }
 
     /**
-     * Retrieve the current record data without subscribing to changes
+     * Retrieve the current record data without subscribing to changee<br/>
      *
-     * @param name
+     * If the record is loaded and ready the listener will be called sync, else
+     * once the record is ready.<br/>
+     *
+     * If the record does not exist an error will be passed to {@link RecordSnapshotCallback#onRecordSnapshotError(String, DeepstreamException)}
+     *
+     * @param name The name of the record which state to retrieve
+     * @param recordSnapshotCallback The callback of the successful/unsuccesful snapshot action
      */
-    public void snapshot(String name, final RecordSnapshotCallback callback ) {
+    public void snapshot(String name, final RecordSnapshotCallback recordSnapshotCallback ) {
         Record record = records.get( name );
         if( record != null && record.isReady ) {
-            callback.onRecordSnapshot( name, record.get() );
+            recordSnapshotCallback.onRecordSnapshot( name, record.get() );
         } else {
             snapshotRegistry.request(name, new UtilSingleNotifierCallback() {
                 @Override
                 public void onSingleNotifierError(String name, DeepstreamException error) {
-                    callback.onRecordSnapshotError( name, error );
+                    recordSnapshotCallback.onRecordSnapshotError( name, error );
                 }
 
                 @Override
                 public void onSingleNotifierResponse(String name, Object data) {
-                    callback.onRecordSnapshot(name, (JsonElement) data);
+                    recordSnapshotCallback.onRecordSnapshot(name, (JsonElement) data);
                 }
             });
         }
     }
 
     /**
-     *  Allows the user to query to see whether or not the record exists
+     * Allows the user to query to see whether or not the record exists<br/>
      *
-     * @param name
-     * @param callback
+     * If the record is created locally the listener will be called sync, else
+     * once the record is ready.<br/>
+     *
+     * @param name The name of the record to check
+     * @param callback The callback to indicate if the record exists
      */
     public void has(String name, final RecordHasCallback callback ) {
         Record record = records.get( name );
@@ -179,7 +194,6 @@ public class RecordHandler implements RecordEventsListener, RecordReadyListener 
 
     /**
      * Will be called by the client for incoming messages on the RECORD topic
-     * @param message
      */
     protected void handle( Message message ) {
         Record record;
@@ -251,8 +265,6 @@ public class RecordHandler implements RecordEventsListener, RecordReadyListener 
      *
      * A (presumably unsolvable) problem remains when a client deletes a record in the exact moment
      * between another clients creation and read message for the same record
-     * @param message
-     * @return Boolean
      */
     private boolean isDiscardAck( Message message ) {
         Event event = Event.getEvent( message.data[ 0 ] );
@@ -261,31 +273,23 @@ public class RecordHandler implements RecordEventsListener, RecordReadyListener 
         }
 
         Actions action = Actions.getAction( message.data[ 0 ] );
-        if( action == Actions.DELETE || action == Actions.UNSUBSCRIBE ) {
-            return true;
-        }
 
+        if (action == Actions.DELETE) return true;
+        if (action == Actions.UNSUBSCRIBE) return true;
         return false;
     }
 
-    /**
-     * @param message
-     * @return Boolean
-     */
     private Boolean isUnhandledError(Message message) {
         if( message.action != Actions.ERROR ) {
             return false;
         }
 
         String errorType =  message.data[ 0 ];
-        if( errorType.equals( Event.VERSION_EXISTS.toString() )
-                || errorType.equals(Event.MESSAGE_DENIED.toString() )
-                || errorType.equals(Actions.SNAPSHOT.toString() )
-                || errorType.equals(Actions.HAS.toString() )) {
-            return false;
-        }
+        return !(errorType.equals(Event.VERSION_EXISTS.toString())
+                || errorType.equals(Event.MESSAGE_DENIED.toString())
+                || errorType.equals(Actions.SNAPSHOT.toString())
+                || errorType.equals(Actions.HAS.toString()));
 
-        return true;
     }
 
     @Override
@@ -321,10 +325,5 @@ public class RecordHandler implements RecordEventsListener, RecordReadyListener 
     public void onRecordDiscarded(String recordName) {
         records.remove( recordName );
         lists.remove( recordName );
-    }
-
-    @Override
-    public void onRecordReady(String recordName, Record record) {
-
     }
 }

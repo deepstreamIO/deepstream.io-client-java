@@ -23,9 +23,12 @@ public class List {
     private final RecordHandler recordHandler;
     private final ArrayList<ListReadyListener> listReadyListeners;
     private final ArrayList<ListChangedListener> listChangedListeners;
-
+    
     /**
-     * Constructor is not public since it is created via {@link RecordHandler#getList(String)}
+     * Constructor is not public since it is created via {@link RecordHandler#getList(String)} 
+     * @param recordHandler The recordHandler to get the underlying record
+     * @param name The list name
+     * @param options Options client was created with
      */
     List(RecordHandler recordHandler, String name, Map options) {
         this.recordHandler = recordHandler;
@@ -42,8 +45,8 @@ public class List {
 
     /**
      * Adds a Listener that will notify you if a Discard, Delete or Error event occurs
-     * @param recordEventsListener
-     * @return
+     * @param recordEventsListener The listener to add
+     * @return The list
      */
     public List addRecordEventsListener( RecordEventsListener recordEventsListener ) {
         this.record.addRecordEventsListener( recordEventsListener );
@@ -52,8 +55,8 @@ public class List {
 
     /**
      * Remove listener added via {@link List#addRecordEventsListener(RecordEventsListener)}
-     * @param recordEventsListener
-     * @return
+     * @param recordEventsListener The listener to remove
+     * @return The list
      */
     public List removeRecordEventsListener(RecordEventsListener recordEventsListener) {
         this.record.removeRecordEventsListener( recordEventsListener );
@@ -63,8 +66,8 @@ public class List {
 
     /**
      * Add listener to be notified when the List has been loaded from the server
-     * @param listReadyListener
-     * @return
+     * @param listReadyListener The listener to add
+     * @return The list
      */
     public List addListReadyListener( ListReadyListener listReadyListener ) {
         this.listReadyListeners.add( listReadyListener );
@@ -73,8 +76,8 @@ public class List {
 
     /**
      * Remove listener added via {@link List#addListReadyListener(ListReadyListener)}
-     * @param listReadyListener
-     * @return
+     * @param listReadyListener The listener to remove
+     * @return The list
      */
     public List removeListReadyListener(ListReadyListener listReadyListener) {
         this.listReadyListeners.remove( listReadyListener );
@@ -84,12 +87,13 @@ public class List {
     /**
      * Returns the array of list entries or an
      * empty array if the list hasn't been populated yet.
-     * @return
+     * @return A List containing all the recordNames
      */
-    public java.util.List getEntries() {
-        ArrayList<String> entries;
+    @SuppressWarnings("unchecked")
+    public java.util.List<String> getEntries() {
+        java.util.List<String>  entries;
         try {
-            entries = this.record.get( ArrayList.class );
+            entries = (java.util.List<String>) this.record.get( java.util.List.class );
         } catch( Exception ex ) {
             entries = new ArrayList<>();
         }
@@ -98,11 +102,11 @@ public class List {
 
     /**
      * Updates the list with a new set of entries
-     * @param entries
-     * @return
+     * @param entries The recordNames to update the list with
+     * @return The list
      */
     public List setEntries( java.util.List<String> entries ) {
-        if( this.record.isReady == false ) {
+        if( !this.record.isReady ) {
             //TODO: Buffer ( to disable events from being emitted )
         }
         else {
@@ -113,8 +117,8 @@ public class List {
 
     /**
      * Removes the first occurrence of an entry from the list
-     * @param entry
-     * @return
+     * @param entry The entry to remove from the list
+     * @return The list
      */
     public List removeEntry( String entry ) {
         if( !this.isReady ) {
@@ -131,9 +135,9 @@ public class List {
     /**
      * Removes an entry from the list if it resides at
      * a specific index
-     * @param entry
-     * @param index
-     * @return
+     * @param entry The entry to remove from the list
+     * @param index The index at which the entry should reside at
+     * @return The list
      */
     public List removeEntry( String entry, int index ) {
         if( !this.isReady ) {
@@ -152,8 +156,8 @@ public class List {
 
     /**
      * Add an entry to the end of the list
-     * @param entry
-     * @return
+     * @param entry The entry to add to the list
+     * @return The list
      */
     public List addEntry( String entry ) {
         if( !this.isReady ) {
@@ -161,7 +165,7 @@ public class List {
             return this;
         }
 
-        java.util.List entries = this.getEntries();
+        java.util.List<String> entries = this.getEntries();
         entries.add( entry );
         this.updateList( entries );
         return this;
@@ -169,9 +173,9 @@ public class List {
 
     /**
      * Add an entry at a certain index into the list
-     * @param entry
-     * @param index
-     * @return
+     * @param entry The entry to add to the list
+     * @param index The index to add the entry to
+     * @return The list
      */
     public List addEntry( String entry, int index ) {
         if( !this.isReady ) {
@@ -179,7 +183,7 @@ public class List {
             return this;
         }
 
-        java.util.List entries = this.getEntries();
+        java.util.List<String> entries = this.getEntries();
         entries.add( index, entry );
         this.updateList( entries );
         return this;
@@ -187,7 +191,7 @@ public class List {
 
     /**
      * Returns true if the list is empty
-     * @return
+     * @return true if this list contains no elements
      */
     public boolean isEmpty() {
         return this.getEntries().size() == 0;
@@ -195,8 +199,8 @@ public class List {
 
     /**
      * Notifies the user whenever the list has changed
-     * @param listChangedListener
-     * @return
+     * @param listChangedListener The listener to add
+     * @return The list
      */
     public List subscribe(ListChangedListener listChangedListener) {
         return this.subscribe( listChangedListener, false );
@@ -204,9 +208,9 @@ public class List {
 
     /**
      * Notifies the user whenever the list has changed, and notifies immediately if triggerNow is true
-     * @param listChangedListener
-     * @param triggerNow
-     * @return
+     * @param listChangedListener The listener to add
+     * @param triggerNow Whether to trigger the listener immediately
+     * @return The list
      */
     public List subscribe(ListChangedListener listChangedListener, boolean triggerNow ) {
         this.listChangedListeners.add( listChangedListener );
@@ -226,8 +230,8 @@ public class List {
 
     /**
      * Removes the listener added via {@link List#subscribe(ListChangedListener, boolean)}
-     * @param listChangedListener
-     * @return
+     * @param listChangedListener The listener to remove
+     * @return The list
      */
     public List unsubscribe(ListChangedListener listChangedListener) {
         this.listChangedListeners.remove(listChangedListener);
@@ -241,10 +245,9 @@ public class List {
 
     /**
      * Useful entry point for diffing previous list and new one to get entries added, removed and moved
-     * @param entries
      */
     private void updateList(Collection entries) {
-        Map oldStructure = this.beforeChange();
+        Map<String, ArrayList<Integer>> oldStructure = this.beforeChange();
         this.record.set( entries );
         this.afterChange( oldStructure );
     }
@@ -255,10 +258,8 @@ public class List {
      *
      * This will be called before any change to the list, regardsless if the change was triggered
      * by an incoming message from the server or by the client
-     *
-     * @return
      */
-    private Map beforeChange() {
+    private Map<String,ArrayList<Integer>> beforeChange() {
         if( this.listChangedListeners.isEmpty() ) {
             return null;
         }
@@ -268,15 +269,12 @@ public class List {
     /**
      * Compares the structure of the list after a change to its previous structure and notifies
      * any add / move / remove listener. Won't do anything if no listeners are attached.
-     *
-     * @returns
      */
     private void afterChange( Map<String,ArrayList<Integer>> oldStructure ) {
         if( oldStructure == null ) {
             return;
         }
         Map<String, ArrayList<Integer>> newStructure = this.getStructure();
-
 
         for( String entryName : oldStructure.keySet() ) {
             ArrayList<Integer> oldIndexes = oldStructure.get( entryName );
@@ -329,17 +327,15 @@ public class List {
      * 	'recordB': [ 1 ],
      * 	'recordC': [ 2 ]
      * }
-     *
-     * @return
      */
-    private Map getStructure() {
-        Map structure = new HashMap<String, ArrayList>();
+    private Map<String,ArrayList<Integer>> getStructure() {
+        Map<String, ArrayList<Integer>> structure = new HashMap<>();
         java.util.List<String> entries = this.getEntries();
 
         for( int i=0; i<entries.size();i++) {
-            ArrayList list = (ArrayList) structure.get( entries.get(i) );
+            ArrayList<Integer> list = structure.get( entries.get(i) );
             if( list == null ) {
-                list = new ArrayList<Integer>();
+                list = new ArrayList<>();
                 structure.put( entries.get( i ), list );
             }
             list.add( i );
@@ -363,7 +359,7 @@ public class List {
 
         private final List list;
         private final Record record;
-        private Map beforeChange;
+        private Map<String, ArrayList<Integer>> beforeChange;
 
         RecordListeners( List list, Record record ) {
             this.list = list;

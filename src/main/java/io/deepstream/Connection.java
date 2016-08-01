@@ -19,7 +19,7 @@ class Connection implements IConnection {
     private String originalUrl;
     private String url;
     private ConnectionState connectionState;
-    private ArrayList<ConnectionChangeListener> connectStateListeners;
+    private ArrayList<ConnectionStateListener> connectStateListeners;
 
     private boolean tooManyAuthAttempts;
     private boolean challengeDenied;
@@ -34,17 +34,27 @@ class Connection implements IConnection {
     private Map options;
 
     /**
+     * Creates an endpoint and passed it to {@link Connection#Connection(String, Map, DeepstreamClient, Endpoint)}
+     *
+     * @see Connection#Connection(String, Map, DeepstreamClient, Endpoint)
      *
      * @param url The endpoint url
-     * @param options
-     * @param client
-     * @throws URISyntaxException
+     * @param options The options used to initialise the deepstream client
+     * @param client The deepstream client
+     * @throws URISyntaxException An exception if an invalid url is passed in
      */
     Connection(final String url, final Map options, DeepstreamClient client ) throws URISyntaxException {
         this( url, options, client, null );
         this.endpoint = createEndpoint();
     }
 
+    /**
+     * Creates a connection, that is responsible for handling all the connection related logic related to state
+     * and messages
+     * @param url The endpoint url* @param options The options used to initialise the deepstream client
+     * @param client The deepstream client
+     * @param endpoint The endpoint, whether TCP, Engine.io, mock or anything else
+     */
     Connection(final String url, final Map options, DeepstreamClient client, Endpoint endpoint ) {
         this.client = client;
         this.connectStateListeners = new ArrayList<>();
@@ -63,9 +73,11 @@ class Connection implements IConnection {
     }
 
     /**
-     * @param authParameters
-     * @param loginCallback
-     * @throws DeepstreamLoginException
+     * Authenticate the user connection
+     * @param authParameters The authentication parameters to send to deepstream
+     * @param loginCallback The callback for a successful / unsuccessful login attempt
+     * @throws DeepstreamLoginException Thrown if the user no longer can login, due to multiple attempts or an invalid
+     * connection
      */
     void authenticate(JsonElement authParameters, LoginCallback loginCallback ) throws DeepstreamLoginException {
         if( this.tooManyAuthAttempts || this.challengeDenied ) {
@@ -103,12 +115,12 @@ class Connection implements IConnection {
         this.endpoint.send( authMessage );
     }
 
-    void addConnectionChangeListener( ConnectionChangeListener connectionChangeListener ) {
-        this.connectStateListeners.add( connectionChangeListener );
+    void addConnectionChangeListener( ConnectionStateListener connectionStateListener) {
+        this.connectStateListeners.add(connectionStateListener);
     }
 
-    void removeConnectionChangeListener( ConnectionChangeListener connectionChangeListener ) {
-        this.connectStateListeners.remove( connectionChangeListener );
+    void removeConnectionChangeListener( ConnectionStateListener connectionStateListener) {
+        this.connectStateListeners.remove(connectionStateListener);
     }
 
     ConnectionState getConnectionState() {
@@ -174,7 +186,7 @@ class Connection implements IConnection {
             this.setState( ConnectionState.CLOSED );
         }
         else {
-            if( this.originalUrl.equals( this.url ) == false ) {
+            if(!this.originalUrl.equals(this.url)) {
                 this.url = this.originalUrl;
                 this.createEndpoint();
                 return;
@@ -242,9 +254,8 @@ class Connection implements IConnection {
             this.sendAuthMessage();
         }
 
-        Iterator listeners = this.connectStateListeners.iterator();
-        while( listeners.hasNext() ) {
-            ( (ConnectionChangeListener)listeners.next() ).connectionStateChanged( connectionState );
+        for (ConnectionStateListener connectStateListener : this.connectStateListeners) {
+            connectStateListener.connectionStateChanged(connectionState);
         }
     }
 
