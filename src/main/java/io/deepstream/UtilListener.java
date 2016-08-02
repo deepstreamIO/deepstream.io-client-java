@@ -7,14 +7,15 @@ import java.util.Map;
 
 class UtilListener implements UtilResubscribeCallback {
 
+    private final Topic topic;
+    private final Map options;
+    private final UtilResubscribeNotifier resubscribeNotifier;
+
     private UtilAckTimeoutRegistry ackTimoutRegistry;
-    private Topic topic;
     private String pattern;
     private ListenListener listenerCallback;
-    private Map options;
     private DeepstreamClientAbstract client;
     private IConnection connection;
-    private UtilResubscribeNotifier resubscribeNotifier;
 
     public UtilListener(Topic topic, String pattern, ListenListener listenerCallback, Map options, DeepstreamClientAbstract client, IConnection connection ) {
         this.topic = topic;

@@ -6,6 +6,7 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 
 import java.util.Iterator;
+import java.util.Objects;
 
 class UtilJSONPath {
     private JsonElement coreElement;
@@ -15,7 +16,7 @@ class UtilJSONPath {
     }
 
     public JsonElement get(String path){
-        if( path == "" || path == null ){
+        if(Objects.equals(path, "") || path == null ){
             return this.coreElement;
         } else {
             return iterateThrough(this.coreElement, path, null);
@@ -23,7 +24,7 @@ class UtilJSONPath {
     }
 
     public void set( String path, JsonElement value ) {
-        if( path == "" ) {
+        if(Objects.equals(path, "")) {
             throw new RuntimeException( "Setting an entire object must be done via setValue( JsonElement value );" );
         } else if( path == null ) {
            this.coreElement = value;
@@ -43,8 +44,6 @@ class UtilJSONPath {
             token = st[ i ];
 
             parent = traverser;
-
-            System.out.println( token );
 
             try {
                 if (isArray(token)) {
@@ -143,7 +142,7 @@ class UtilJSONPath {
     }
 
     public class Array implements Iterable<UtilJSONPath> {
-        private JsonArray root;
+        private final JsonArray root;
         private JsonElement coreElement;
 
         public Array(JsonArray root) {
@@ -153,7 +152,7 @@ class UtilJSONPath {
         @Override
         public Iterator<UtilJSONPath> iterator() {
             return new Iterator<UtilJSONPath>(){
-                Iterator<JsonElement> it = root.iterator();
+                final Iterator<JsonElement> it = root.iterator();
                 @Override
                 public boolean hasNext() {
                     return it.hasNext();

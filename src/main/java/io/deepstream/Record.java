@@ -15,15 +15,16 @@ import java.util.List;
  * dataset returned by {@link RecordHandler#getRecord(String)}
  */
 public class Record {
-
-    public int usages;
-    public int version;
-
-    public boolean isReady;
-    public boolean isDestroyed;
-
     private static final String ALL_EVENT = "ALL_EVENT";
     private static final String DESTROY_PENDING = "DESTROY_PENDING";
+
+    private boolean isReady;
+    private boolean isDestroyed;
+    private int version;
+    private int usages;
+    private RecordMergeStrategy mergeStrategy;
+    private RecordRemoteUpdateHandler recordRemoteUpdateHandler;
+    private JsonElement data;
 
     private final UtilResubscribeNotifier utilResubscribeNotifier;
     private final UtilAckTimeoutRegistry ackTimeoutRegistry;
@@ -32,16 +33,12 @@ public class Record {
     private final Gson gson;
     private final UtilJSONPath path;
     private final UtilEmitter subscribers;
-
-    private ArrayList<RecordEventsListener> recordEventsListeners;
-    private ArrayList<RecordReadyListener> recordReadyListeners;
-    private ArrayList<RecordReadyListener> onceRecordReadyListeners;
-    private RecordMergeStrategy mergeStrategy;
-
-    private JsonElement data;
-    private String name;
-    private Map options;
-    private RecordRemoteUpdateListener recordRemoteUpdateListener;
+    private final ArrayList<RecordEventsListener> recordEventsListeners;
+    private final ArrayList<RecordReadyListener> recordReadyListeners;
+    private final ArrayList<Record.RecordDestroyPendingListener> recordDestroyPendingListeners;
+    private final ArrayList<RecordReadyListener> onceRecordReadyListeners;
+    private final String name;
+    private final Map options;
 
     /**
      * Constructor is not public since it is created via {@link RecordHandler#getRecord(String)}
@@ -69,6 +66,7 @@ public class Record {
         this.recordReadyListeners = new ArrayList<>();
         this.recordEventsListeners = new ArrayList<>();
         this.onceRecordReadyListeners = new ArrayList<>();
+        this.recordDestroyPendingListeners = new ArrayList<>();
 
         this.scheduleAcks();
         this.sendRead();
@@ -79,6 +77,31 @@ public class Record {
                 sendRead();
             }
         });
+    }
+
+    /**
+     * Return whether the record data has been loaded from the server
+     * @return true if record has been loaded
+     */
+    public boolean isReady() {
+        return this.isReady;
+    }
+
+    /**
+     * Return whether the record data has been destroyed. If true and you need to use the method create it again via
+     * {@link RecordHandler#getRecord(String)}
+     * @return true if record has been destroyed
+     */
+    public boolean isDestroyed() {
+        return this.isDestroyed;
+    }
+
+    /**
+     * Return the record version. This is solely used within a {@link RecordMergeStrategy}.
+     * @return -1 if not loaded, otherwise the local version number
+     */
+    public int version() {
+        return this.version;
     }
 
     /**
@@ -312,10 +335,18 @@ public class Record {
         throwExceptionIfDestroyed( "delete" );
         this.usages--;
         if( this.usages <= 0 ) {
-            // TODO: on ready async callback
-            int subscriptionTimeout = Integer.parseInt( (String) this.options.get( "subscriptionTimeout" ) );
-            this.ackTimeoutRegistry.add( Topic.RECORD, Actions.UNSUBSCRIBE, name, subscriptionTimeout );
-            this.connection.send( MessageBuilder.getMsg( Topic.RECORD, Actions.UNSUBSCRIBE, this.name ) );
+            this.whenReady(new RecordReadyListener() {
+                @Override
+                public void onRecordReady(String recordName, Record record) {
+                    int subscriptionTimeout = Integer.parseInt( (String) options.get( "subscriptionTimeout" ) );
+                    ackTimeoutRegistry.add( Topic.RECORD, Actions.UNSUBSCRIBE, name, subscriptionTimeout );
+                    connection.send( MessageBuilder.getMsg( Topic.RECORD, Actions.UNSUBSCRIBE, name ) );
+
+                    for(RecordDestroyPendingListener recordDestroyPendingHandler: recordDestroyPendingListeners) {
+                        recordDestroyPendingHandler.onDestroyPending( name );
+                    }
+                }
+            });
         }
         return this;
     }
@@ -332,10 +363,19 @@ public class Record {
     public Record delete() throws DeepstreamRecordDestroyedException {
         throwExceptionIfDestroyed( "delete" );
 
-        // TODO: on ready async callback
-        int subscriptionTimeout = Integer.parseInt( (String) this.options.get( "recordDeleteTimeout" ) );
-        this.ackTimeoutRegistry.add( Topic.RECORD, Actions.DELETE, name, Event.DELETE_TIMEOUT, subscriptionTimeout );
-        this.connection.send( MessageBuilder.getMsg( Topic.RECORD, Actions.DELETE, this.name ) );
+        this.whenReady(new RecordReadyListener() {
+            @Override
+            public void onRecordReady(String recordName, Record record) {
+                int subscriptionTimeout = Integer.parseInt( (String) options.get( "recordDeleteTimeout" ) );
+                ackTimeoutRegistry.add( Topic.RECORD, Actions.DELETE, name, Event.DELETE_TIMEOUT, subscriptionTimeout );
+                connection.send( MessageBuilder.getMsg( Topic.RECORD, Actions.DELETE, name ) );
+
+                for(RecordDestroyPendingListener recordDestroyPendingHandler: recordDestroyPendingListeners) {
+                    recordDestroyPendingHandler.onDestroyPending( name );
+                }
+            }
+        });
+
 
         return this;
     }
@@ -357,8 +397,8 @@ public class Record {
     }
 
     /**
-     * Inovoked when a message is recieved from {@link RecordHandler#handle(Message)}
-     * @param message The message recieved from the server
+     * Invoked when a message is received from {@link RecordHandler#handle(Message)}
+     * @param message The message received from the server
      */
     protected void onMessage(Message message) {
         if( message.action == Actions.ACK ) {
@@ -368,7 +408,7 @@ public class Record {
         } else if( message.action == Actions.READ || message.action == Actions.UPDATE || message.action == Actions.PATCH ) {
             applyUpdate( message );
         } else if( message.data[ 0 ].equals( Event.VERSION_EXISTS.toString() ) ) {
-            recoverRecord( Integer.parseInt( message.data[ 2 ] ), gson.fromJson( message.data[ 3 ], JsonElement.class ), message );
+            recoverRecord( Integer.parseInt( message.data[ 2 ] ), gson.fromJson( message.data[ 3 ], JsonElement.class ));
         } else if( message.data[ 0 ].equals( Event.MESSAGE_DENIED.toString() ) ) {
            clearTimeouts();
         }
@@ -376,10 +416,10 @@ public class Record {
 
     /**
      * This gives us a handle to before and after a record is updated remotely. This is currently used by {@link io.deepstream.List}
-     * @param recordRemoteUpdateListener The listener to notify before and after an update is applied
+     * @param recordRemoteUpdateHandler The listener to notify before and after an update is applied
      */
-    void setRecordRemoteUpdateListener( RecordRemoteUpdateListener recordRemoteUpdateListener ) {
-        this.recordRemoteUpdateListener = recordRemoteUpdateListener;
+    void setRecordRemoteUpdateHandler(RecordRemoteUpdateHandler recordRemoteUpdateHandler) {
+        this.recordRemoteUpdateHandler = recordRemoteUpdateHandler;
     }
 
     /**
@@ -404,13 +444,13 @@ public class Record {
                  */
                 this.connection.send( MessageBuilder.getMsg( Topic.RECORD, Actions.SNAPSHOT, this.name ) );
             } else {
-                recoverRecord( version, data, message );
+                recoverRecord( version, data);
             }
             return;
         }
 
-        if( this.recordRemoteUpdateListener != null ) {
-            this.recordRemoteUpdateListener.beforeRecordUpdate();
+        if( this.recordRemoteUpdateHandler != null ) {
+            this.recordRemoteUpdateHandler.beforeRecordUpdate();
         }
 
         Map<String, JsonElement> oldValues = beginChange();
@@ -426,20 +466,19 @@ public class Record {
 
         completeChange( oldValues );
 
-        if( this.recordRemoteUpdateListener != null ) {
-            this.recordRemoteUpdateListener.afterRecordUpdate();
+        if( this.recordRemoteUpdateHandler != null ) {
+            this.recordRemoteUpdateHandler.afterRecordUpdate();
         }
     }
 
     /**
-     * Called when a merge conflict is detected by a VERSION_EXISTS error or if an update recieved
+     * Called when a merge conflict is detected by a VERSION_EXISTS error or if an update received
      * is directly after the clients. If no merge strategy is configure it will emit a VERSION_EXISTS
      * error and the record will remain in an inconsistent state.
      * @param remoteVersion The remote version number
      * @param remoteData The remote object data
-     * @param message parsed and validated deepstream message
      */
-    private void recoverRecord(int remoteVersion, JsonElement remoteData, Message message) {
+    private void recoverRecord(int remoteVersion, JsonElement remoteData) {
         try {
             JsonElement mergedData = this.mergeStrategy.merge( this, remoteData, remoteVersion );
             this.version = remoteVersion;
@@ -487,7 +526,7 @@ public class Record {
         }
 
         for( String path : paths ) {
-            if( path.equals( ALL_EVENT ) ) {
+            if( !path.equals( ALL_EVENT ) ) {
                 oldValues.put( path, this.get( path ) );
             }
         }
@@ -640,7 +679,7 @@ public class Record {
     }
 
     /**
-     * Generate a deepcopy of the object to prevent user to modify record data directly
+     * Generate a deep copy of the object to prevent user to modify record data directly
      */
     private JsonElement deepCopy(JsonElement element) {
         try {
@@ -652,7 +691,7 @@ public class Record {
     }
 
     /**
-     * Generate a deepcopy of the object and cast it to a class of any type, used by {@link io.deepstream.List}
+     * Generate a deep copy of the object and cast it to a class of any type, used by {@link io.deepstream.List}
      */
     private <T> T deepCopy(JsonElement element, Class<T> type) {
         return gson.fromJson(gson.toJson(element, JsonElement.class), type);
@@ -692,8 +731,35 @@ public class Record {
         return this;
     }
 
-    interface RecordRemoteUpdateListener {
+    /**
+     * Add a destroy pending listener, used by the RecordHandler and potentially other internal stores
+     */
+    void addRecordDestroyPendingListener(RecordDestroyPendingListener recordDestroyPendingListener) {
+        this.recordDestroyPendingListeners.add( recordDestroyPendingListener );
+    }
+
+    void incrementUsage() {
+        this.usages++;
+    }
+
+    interface RecordRemoteUpdateHandler {
+        /**
+         * Called before a remote update is applied to the current data
+         */
         void beforeRecordUpdate();
+        /**
+         * Called after a remote update is applied to the current data
+         */
         void afterRecordUpdate();
     }
+
+    interface RecordDestroyPendingListener {
+        /**
+         * Called whenever the client is about to send the server a {@link Record#discard()} or {@link Record#delete()} event.<br/>
+         * This should not be required to be implemented
+         * @param recordName The name of the record being destroyed
+         */
+        void onDestroyPending(String recordName);
+    }
+
 }

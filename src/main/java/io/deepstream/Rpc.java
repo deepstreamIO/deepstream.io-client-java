@@ -9,39 +9,69 @@ import java.util.Map;
 
 class Rpc implements UtilTimeoutListener {
 
-    private String uid;
-    private UtilAckTimeoutRegistry ackTimeoutRegistry;
-    Map properties;
-    DeepstreamClientAbstract client;
-    RpcResponseCallback callback;
+    private final String uid;
+    private final UtilAckTimeoutRegistry ackTimeoutRegistry;
+    private final Map properties;
+    private final DeepstreamClientAbstract client;
+    private final RpcResponseCallback callback;
+    private final String rpcName;
 
-    public Rpc(Map properties, DeepstreamClientAbstract client, String uid, RpcResponseCallback callback ) {
-        this.properties = properties;
+    /**
+     * An RPC represents a single remote procedure Request made from the client to the server.
+     * It's main function is to encapsulate the logic around timeouts and to convert the
+     * incoming response data
+     *
+     * @param options The options the client was created with
+     * @param client The deepstream client
+     * @param rpcName The rpc name
+     * @param uid The unique RPC identifier
+     * @param callback The callback when an RPC has been completed
+     */
+    Rpc(Map options, DeepstreamClientAbstract client, String rpcName, String uid, RpcResponseCallback callback ) {
+        this.properties = options;
         this.client = client;
+        this.rpcName = rpcName;
         this.uid = uid;
         this.callback = callback;
         this.ackTimeoutRegistry = client.getAckTimeoutRegistry();
         this.setTimeouts();
     }
 
-    public void ack() {
+    /**
+     * Called once an ack message is received from the server.<br/>
+     */
+    void ack() {
         this.ackTimeoutRegistry.clear( Topic.RPC, Actions.REQUEST, this.uid );
     }
 
-    public void respond( String data ) {
+    /**
+     * Called once a response message is received from the server.
+     * Converts the typed data and completes the request.
+     * @param rpcName The rpc name
+     * @param data The data received from the server
+     */
+    void respond( String rpcName, String data ) {
         Object convertedData = MessageParser.convertTyped( data, this.client );
-        this.callback.onData( convertedData );
+        this.callback.onRpcSuccess(rpcName, convertedData);
         this.clearTimeouts();
     }
 
-    public void error(String err ) {
-        this.callback.onError( err );
+    /**
+     * Callback for error messages received from the server. Once
+     * an error is received the request is considered completed. Even
+     * if a response arrives later on it will be ignored / cause an
+     * UNSOLICITED_MESSAGE error
+     * @param rpcName The rpc name
+     * @param err The errorMessage received from the server
+     */
+    void error( String rpcName, String err ) {
+        this.callback.onRpcError(rpcName, err);
         this.clearTimeouts();
     }
 
     @Override
     public void onTimeout(Topic topic, Actions action, Event event, String name) {
-        this.error( event.toString() );
+        this.error( this.rpcName, event.toString() );
     }
 
     private void clearTimeouts() {

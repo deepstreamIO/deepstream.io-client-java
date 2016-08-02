@@ -5,7 +5,7 @@ package io.deepstream;
  */
 public interface AnonymousRecordNameChangedListener {
     /**
-     * Callback containing the new record name and the associated anonymousRecord
+     * Notified whenever the anonymous record changes
      * @param recordName The new recordName
      * @param anonymousRecord The anonymousRecord which name changed
      */

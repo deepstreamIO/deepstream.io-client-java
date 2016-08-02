@@ -26,9 +26,9 @@ public class RpcHandlerTest {
     RpcHandler rpcHandler;
     RpcResponseCallback callbackMock;
     int rpcCalls = 0;
-    RpcRequested addTwoCallback = new RpcRequested() {
+    RpcRequestedListener addTwoCallback = new RpcRequestedListener() {
         @Override
-        public void onRPCRequested(Object data, RpcResponse response) {
+        public void onRPCRequested(String rpcName, Object data, RpcResponse response) {
             rpcCalls++;
             double numA = ((JsonElement) data).getAsJsonObject().get("numA").getAsDouble();
             double numB = ((JsonElement) data).getAsJsonObject().get("numB").getAsDouble();
@@ -42,6 +42,7 @@ public class RpcHandlerTest {
     public void setUp() throws URISyntaxException {
         this.callbackMock = mock( RpcResponseCallback.class );
         this.connectionMock = new ConnectionMock();
+        this.connectionMock.state = ConnectionState.OPEN;
         this.errorCallbackMock = mock( DeepstreamRuntimeErrorHandler.class );
         this.deepstreamClientMock = new DeepstreamClientMock();
         this.deepstreamClientMock.setRuntimeErrorHandler( errorCallbackMock );
@@ -136,7 +137,7 @@ public class RpcHandlerTest {
                 Actions.RESPONSE,
                 new String[]{ "addTwo", "1", "N11" }
         ));
-        verify(callbackMock, times(1)).onData( (float) 11.0 );
+        verify(callbackMock, times(1)).onRpcSuccess( "addTwo", (float) 11.0);
     }
 
     @Test
@@ -154,7 +155,7 @@ public class RpcHandlerTest {
                 Actions.ERROR,
                 new String[]{ "NO_PROVIDER", "addTwo", "1" }
         ));
-        verify(callbackMock, times(1)).onError( "NO_PROVIDER" );
+        verify(callbackMock, times(1)).onRpcError( "addTwo", "NO_PROVIDER");
     }
 
     @Test
@@ -180,6 +181,6 @@ public class RpcHandlerTest {
         Assert.assertEquals( TestUtil.replaceSeperators("P|REQ|addTwo|1|O{\"numA\":3,\"numB\":8}+"), connectionMock.lastSentMessage);
 
         Thread.sleep(100);
-        verify(callbackMock, times(1)).onError( Event.RESPONSE_TIMEOUT.toString() );
+        verify(callbackMock, times(1)).onRpcError( "addTwo", Event.RESPONSE_TIMEOUT.toString());
     }
 }

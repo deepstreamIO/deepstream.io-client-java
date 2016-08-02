@@ -56,8 +56,8 @@ public class RecordTest {
         record = new Record( "recordA", new HashMap(), connectionMock, options, deepstreamClientMock );
         record.addRecordEventsListener(recordEventsListener);
         record.addRecordReadyListener( recordReadyListener );
-        Assert.assertFalse( record.isReady );
-        Assert.assertFalse( record.isDestroyed );
+        Assert.assertFalse( record.isReady() );
+        Assert.assertFalse( record.isDestroyed() );
     }
 
     @Test
@@ -71,7 +71,7 @@ public class RecordTest {
         recordSendsDownCorrectCreateMessage();
         record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|A|S|recordA" ), deepstreamClientMock ) );
         record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|recordA|0|{ \"name\": \"sam\" }" ), deepstreamClientMock ) );
-        Assert.assertTrue( record.isReady );
+        Assert.assertTrue( record.isReady() );
         verify( recordReadyListener, times(1) ).onRecordReady( "recordA", record );
     }
 
@@ -99,8 +99,8 @@ public class RecordTest {
         record.discard();
 
         Assert.assertEquals( connectionMock.lastSentMessage, TestUtil.replaceSeperators( "R|US|recordA+" ) );
-        Assert.assertTrue( record.isReady );
-        Assert.assertFalse( record.isDestroyed );
+        Assert.assertTrue( record.isReady() );
+        Assert.assertFalse( record.isDestroyed() );
     }
 
     @Test
@@ -108,8 +108,8 @@ public class RecordTest {
         recordDiscardsCorrectly();
         record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|A|US|recordA" ), deepstreamClientMock ) );
 
-        Assert.assertFalse( record.isReady );
-        Assert.assertTrue( record.isDestroyed );
+        Assert.assertFalse( record.isReady() );
+        Assert.assertTrue( record.isDestroyed() );
 
         verify(recordEventsListener, times(1) ).onRecordDiscarded( "recordA" );
     }
@@ -120,8 +120,8 @@ public class RecordTest {
         record.delete();
 
         Assert.assertEquals( connectionMock.lastSentMessage, TestUtil.replaceSeperators( "R|D|recordA+" ) );
-        Assert.assertTrue( record.isReady );
-        Assert.assertFalse( record.isDestroyed );
+        Assert.assertTrue( record.isReady() );
+        Assert.assertFalse( record.isDestroyed() );
     }
 
     @Test
@@ -129,8 +129,8 @@ public class RecordTest {
         recordDeletesCorrectly();
         record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|A|D|recordA" ), deepstreamClientMock ) );
 
-        Assert.assertFalse( record.isReady );
-        Assert.assertTrue( record.isDestroyed );
+        Assert.assertFalse( record.isReady() );
+        Assert.assertTrue( record.isDestroyed() );
 
         verify(recordEventsListener, times(1) ).onRecordDeleted( "recordA" );
     }

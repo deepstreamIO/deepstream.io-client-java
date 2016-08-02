@@ -3,14 +3,14 @@ package io.deepstream;
 import io.deepstream.constants.*;
 
 /**
- * Message is the internal representation of a message that is sent to/recieved from a deepstream
+ * Message is the internal representation of a message that is sent to received from a deepstream
  * server
  */
 class Message {
-    String raw;
-    Actions action;
-    Topic topic;
-    String[] data;
+    final String raw;
+    final String[] data;
+    final Actions action;
+    final Topic topic;
 
     /**
      * @param raw The raw data recieved

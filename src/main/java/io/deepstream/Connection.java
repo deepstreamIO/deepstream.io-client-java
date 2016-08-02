@@ -15,11 +15,10 @@ class Connection implements IConnection {
 
     private Endpoint endpoint;
 
-    private DeepstreamClient client;
-    private String originalUrl;
-    private String url;
-    private ConnectionState connectionState;
-    private ArrayList<ConnectionStateListener> connectStateListeners;
+    private final DeepstreamClient client;
+    private final String originalUrl;
+    private final ArrayList<ConnectionStateListener> connectStateListeners;
+    private final Map options;
 
     private boolean tooManyAuthAttempts;
     private boolean challengeDenied;
@@ -28,10 +27,10 @@ class Connection implements IConnection {
     private Timer reconnectTimeout;
     private int reconnectionAttempt;
     private StringBuilder messageBuffer;
-
+    private String url;
+    private ConnectionState connectionState;
     private LoginCallback loginCallback;
     private JsonElement authParameters;
-    private Map options;
 
     /**
      * Creates an endpoint and passed it to {@link Connection#Connection(String, Map, DeepstreamClient, Endpoint)}

@@ -14,7 +14,7 @@ public enum Types {
     UNDEFINED( "U" );
 
     private String type;
-    private Types( String type ) {
+    Types( String type ) {
         this.type = type;
     }
 
@@ -23,7 +23,7 @@ public enum Types {
         return this.type;
     }
 
-    private static final Map<String,Types> lookup  = new HashMap<String,Types>();
+    private static final Map<String,Types> lookup  = new HashMap<>();
     static {
         for( Types s : EnumSet.allOf( Types.class ) )
             lookup.put( s.toString(), s);

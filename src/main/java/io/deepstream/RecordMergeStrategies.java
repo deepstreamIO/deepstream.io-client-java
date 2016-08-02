@@ -6,12 +6,15 @@ import io.deepstream.constants.MergeStrategy;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Built in merge strategies
+ */
 class RecordMergeStrategies {
     static final RecordMergeStrategies INSTANCE = new RecordMergeStrategies();
     private final Map<MergeStrategy, RecordMergeStrategy> strategies;
 
     public RecordMergeStrategies() {
-        strategies = new HashMap();
+        strategies = new HashMap<>();
         strategies.put(MergeStrategy.REMOTE_WINS, new RecordMergeStrategy() {
             @Override
             public JsonElement merge(Record record, JsonElement remoteValue, int remoteVersion) {
@@ -26,6 +29,11 @@ class RecordMergeStrategies {
         });
     }
 
+    /**
+     * Returns a build in merge strategy stored by {@link MergeStrategy}
+     * @param mergeStrategy The merge strategy enum defined in {@link MergeStrategy}
+     * @return The {@link RecordMergeStrategy}
+     */
     public RecordMergeStrategy getMergeStrategy(MergeStrategy mergeStrategy) {
         return strategies.get(mergeStrategy);
     }

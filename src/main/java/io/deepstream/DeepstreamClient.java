@@ -16,10 +16,22 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
 
     private String uuid;
     private final Connection connection;
-    private final Properties config;
 
+    /**
+     * The getters for data-sync, such as {@link RecordHandler#getRecord(String)},
+     * {@link RecordHandler#getList(String)}, provider functionality such as {@link RecordHandler#listen(String, ListenListener)}
+     * and single requests like {@link RecordHandler#snapshot(String, RecordSnapshotCallback)}
+     */
     public final RecordHandler record;
+    /**
+     * The entry point for events, such as {@link EventHandler#subscribe(String, EventListener)},
+     * {@link EventHandler#emit(String)} and provider functionality such as {@link EventHandler#listen(String, ListenListener)}
+     */
     public final EventHandler event;
+    /**
+     * The entry point for rpcs, both requesting them via {@link RpcHandler#make(String, Object, RpcResponseCallback)} and
+     * providing them via {@link RpcHandler#provide(String, RpcRequestedListener)}
+     */
     public final RpcHandler rpc;
 
     /**
@@ -41,11 +53,11 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      * @throws IOException Thrown if the default properties file is not found
      */
     public DeepstreamClient( final String url, Properties options ) throws URISyntaxException, IOException {
-        this.config = getConfig( options );
-        this.connection = new Connection( url, this.config, this );
-        this.event = new EventHandler( config, this.connection, this );
-        this.rpc = new RpcHandler( config, this.connection, this );
-        this.record = new RecordHandler( config, this.connection, this );
+        Properties config = getConfig(options);
+        this.connection = new Connection( url, config, this );
+        this.event = new EventHandler(config, this.connection, this );
+        this.rpc = new RpcHandler(config, this.connection, this );
+        this.record = new RecordHandler(config, this.connection, this );
     }
 
     /**

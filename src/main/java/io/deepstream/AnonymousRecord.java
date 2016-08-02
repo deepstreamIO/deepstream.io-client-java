@@ -17,14 +17,19 @@ import java.util.ArrayList;
  * show the selected user's details
  */
 public class AnonymousRecord {
+
+    /**
+     * The record name the anonymous record is currently referring to
+     */
     public String name;
 
     private final RecordListeners recordListeners;
     private final ArrayList<Subscription> subscriptions;
     private final ArrayList<AnonymousRecordNameChangedListener> anonymousRecordNameChangedCallbacks;
     private final RecordHandler recordHandler;
+    private final ArrayList<AnonymousRecordReadyListener> recordReadyListeners;
+
     private Record record;
-    private ArrayList<AnonymousRecordReadyListener> recordReadyListeners;
 
     /**
      * This constructor is called by the {@link RecordHandler#getAnonymousRecord()}
@@ -266,7 +271,7 @@ public class AnonymousRecord {
         this.record = this.recordHandler.getRecord( recordName );
         this.subscribeRecord();
 
-        if( this.record.isReady ) {
+        if( this.record.isReady() ) {
             this.recordListeners.onRecordReady( this.name, this.record );
         }
 
@@ -293,7 +298,7 @@ public class AnonymousRecord {
      * Unsubscribe all callbacks from current record
      */
     private void unsubscribeRecord() {
-        if( this.record == null || this.record.isDestroyed) {
+        if( this.record == null || this.record.isDestroyed() ) {
             return;
         }
 

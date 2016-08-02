@@ -15,7 +15,6 @@ public class EventHandler {
     private final IConnection connection;
     private final DeepstreamClientAbstract client;
     private final UtilAckTimeoutRegistry ackTimeoutRegistry;
-    private final UtilResubscribeNotifier resubscribeNotifier;
     private final Map<String, UtilListener> listeners;
     private final List<String> subscriptions;
 
@@ -29,18 +28,18 @@ public class EventHandler {
         this.subscriptions = new ArrayList<>();
         this.ackTimeoutRegistry = client.getAckTimeoutRegistry();
 
-        this.resubscribeNotifier = new UtilResubscribeNotifier(this.client, new UtilResubscribeCallback() {
+        new UtilResubscribeNotifier(this.client, new UtilResubscribeCallback() {
             @Override
             public void resubscribe() {
-                for ( String eventName : subscriptions ) {
-                    connection.sendMsg( Topic.EVENT, Actions.SUBSCRIBE, new String[] { eventName } );
+                for (String eventName : subscriptions) {
+                    connection.sendMsg(Topic.EVENT, Actions.SUBSCRIBE, new String[]{eventName});
                 }
             }
         });
     }
 
     public void subscribe( String eventName, EventListener eventListener ) {
-        if( this.emitter.hasListeners( eventName ) == false ) {
+        if(!this.emitter.hasListeners(eventName)) {
             this.subscriptions.add( eventName );
             this.ackTimeoutRegistry.add( Topic.EVENT, Actions.SUBSCRIBE, eventName, this.subscriptionTimeout );
             this.connection.send( MessageBuilder.getMsg( Topic.EVENT, Actions.SUBSCRIBE, eventName ) );
@@ -51,7 +50,7 @@ public class EventHandler {
     public void unsubscribe( String eventName, EventListener eventListener ) {
         this.subscriptions.remove( eventName );
         this.emitter.off(eventName, eventListener);
-        if ( this.emitter.hasListeners(eventName) == false ) {
+        if (!this.emitter.hasListeners(eventName)) {
             this.ackTimeoutRegistry.add( Topic.EVENT,  Actions.UNSUBSCRIBE, eventName, this.subscriptionTimeout );
             this.connection.send(MessageBuilder.getMsg(Topic.EVENT, Actions.UNSUBSCRIBE, eventName));
         }

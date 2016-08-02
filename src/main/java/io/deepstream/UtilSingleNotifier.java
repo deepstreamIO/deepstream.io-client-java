@@ -13,11 +13,9 @@ class UtilSingleNotifier implements UtilResubscribeCallback {
     private final Topic topic;
     private final Actions action;
     private final int timeoutDuration;
-    private final DeepstreamClientAbstract client;
     private final IConnection connection;
     private final Map<String, ArrayList<UtilSingleNotifierCallback> > requests;
     private final UtilAckTimeoutRegistry ackTimeoutRegistry;
-    private final UtilResubscribeNotifier resubscribeNotifier;
 
     /**
      * Provides a scaffold for subscriptionless requests to io.deepstream.gherkin, such as the SNAPSHOT
@@ -32,13 +30,12 @@ class UtilSingleNotifier implements UtilResubscribeCallback {
      */
     public UtilSingleNotifier(DeepstreamClientAbstract client, IConnection connection, Topic topic, Actions action, int timeoutDuration ) {
         this.ackTimeoutRegistry = client.getAckTimeoutRegistry();
-        this.client = client;
         this.connection = connection;
         this.topic = topic;
         this.action = action;
         this.timeoutDuration = timeoutDuration;
 
-        resubscribeNotifier = new UtilResubscribeNotifier(client, this);
+        new UtilResubscribeNotifier(client, this);
         requests = new HashMap<>();
     }
 

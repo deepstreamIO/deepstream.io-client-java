@@ -30,7 +30,7 @@ abstract class DeepstreamClientAbstract {
      *
      * @param deepstreamRuntimeErrorHandler The listener to set
      */
-    public void setRuntimeErrorHandler( DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler )  {
+    void setRuntimeErrorHandler( DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler )  {
         this.deepstreamRuntimeErrorHandler = deepstreamRuntimeErrorHandler;
     }
 

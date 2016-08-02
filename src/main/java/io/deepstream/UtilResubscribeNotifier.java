@@ -33,7 +33,7 @@ class UtilResubscribeNotifier implements ConnectionStateListener {
     /**
      * onRPCRequested this whenever this functionality is no longer needed to remove links
      */
-    protected void destroy() {
+    void destroy() {
         this.client.removeConnectionChangeListener( this );
         this.client = null;
         this.resubscribe = null;

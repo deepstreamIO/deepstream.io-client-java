@@ -13,19 +13,25 @@ class EndpointTCP implements Endpoint {
     private final String MPS = Character.toString( '\u001f' );
     private final String MS = Character.toString( '\u001e' );
 
-    private boolean closed;
     private Socket socket;
-    private String host;
-    private Integer port;
-    private Connection connection;
+    private final String host;
+    private final Integer port;
+    private final Connection connection;
+
     private String messageBuffer;
+    private boolean closed;
 
     private OutputStreamWriter out;
     private InputStreamReader in;
 
     public EndpointTCP(String url, Map options, Connection connection) throws URISyntaxException {
-        this.host = url.substring( 0, url.indexOf( ':' ) );
-        this.port = Integer.parseInt( url.substring( url.indexOf( ':' ) + 1 )  );
+        try {
+            this.host = url.substring( 0, url.indexOf( ':' ) );
+            this.port = Integer.parseInt( url.substring( url.indexOf( ':' ) + 1 )  );
+        } catch( Exception e ) {
+            throw new URISyntaxException( url, "URL provided is not correct" );
+        }
+
         this.connection = connection;
 
         this.messageBuffer = "";

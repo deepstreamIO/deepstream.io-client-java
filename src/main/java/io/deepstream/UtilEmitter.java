@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentMap;
  */
 class UtilEmitter {
 
-    private ConcurrentMap<String, ConcurrentLinkedQueue<Object>> callbacks = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, ConcurrentLinkedQueue<Object>> callbacks = new ConcurrentHashMap<>();
 
     /**
      * @param enu eventName as an Enum

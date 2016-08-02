@@ -9,7 +9,7 @@ import io.deepstream.constants.Topic;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RecordHandler implements RecordEventsListener {
+public class RecordHandler implements RecordEventsListener, Record.RecordDestroyPendingListener {
 
     private final Map options;
     private final IConnection connection;
@@ -54,8 +54,9 @@ public class RecordHandler implements RecordEventsListener {
             record = new Record( name, new HashMap(), connection, options, client );
             records.put( name, record );
             record.addRecordEventsListener( this );
+            record.addRecordDestroyPendingListener( this );
         }
-        record.usages++;
+        record.incrementUsage();
         return record;
     }
 
@@ -142,7 +143,7 @@ public class RecordHandler implements RecordEventsListener {
      */
     public void snapshot(String name, final RecordSnapshotCallback recordSnapshotCallback ) {
         Record record = records.get( name );
-        if( record != null && record.isReady ) {
+        if( record != null && record.isReady() ) {
             recordSnapshotCallback.onRecordSnapshot( name, record.get() );
         } else {
             snapshotRegistry.request(name, new UtilSingleNotifierCallback() {
@@ -170,7 +171,7 @@ public class RecordHandler implements RecordEventsListener {
      */
     public void has(String name, final RecordHasCallback callback ) {
         Record record = records.get( name );
-        if( record != null && record.isReady ) {
+        if( record != null && record.isReady() ) {
             callback.onRecordFound( name );
         } else {
             hasRegistry.request(name, new UtilSingleNotifierCallback() {
@@ -274,9 +275,7 @@ public class RecordHandler implements RecordEventsListener {
 
         Actions action = Actions.getAction( message.data[ 0 ] );
 
-        if (action == Actions.DELETE) return true;
-        if (action == Actions.UNSUBSCRIBE) return true;
-        return false;
+        return action == Actions.DELETE || action == Actions.UNSUBSCRIBE;
     }
 
     private Boolean isUnhandledError(Message message) {
