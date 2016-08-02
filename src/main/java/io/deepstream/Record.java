@@ -2,6 +2,7 @@ package io.deepstream;
 
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import io.deepstream.constants.Actions;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
@@ -48,7 +49,7 @@ public class Record extends Emitter {
 
     public void set( Object obj ) {
         this.version++;
-        Pair<String, Object> pair = differ.getDiff(this.data, obj);
+        Pair<String, Object> pair = differ.getUpdateObject(new JsonObject(), new JsonObject());//this.data, obj);
 
         if( pair.getKey().equals("") ) {
             this.connection.sendMsg( Topic.RECORD, Actions.UPDATE, new String[] {

@@ -3,6 +3,7 @@ package io.deepstream;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import javafx.util.Pair;
 
 import java.util.Map;
@@ -41,7 +42,7 @@ class UtilObjectDiffer {
      * @param nodeB the new version of the object
      * @return a Pair<String, JsonElement> with the path of the changes and the actual changes
      */
-    public Pair<String, JsonElement> getUpdateObject(JsonElement nodeA, JsonElement nodeB) {
+    public Pair<String, Object> getUpdateObject(JsonElement nodeA, JsonElement nodeB) {
         return getDiff(nodeA, nodeB, new StringBuilder());
     }
 
@@ -53,7 +54,7 @@ class UtilObjectDiffer {
      * @param path the StringBuilder object that contains the current path
      * @return a Pair<String, JsonElement> with the path of the changes and the actual changes
      */
-    private Pair<String, JsonElement> getDiff(JsonElement nodeA, JsonElement nodeB, StringBuilder path) {
+    private Pair<String, Object> getDiff(JsonElement nodeA, Object nodeB, StringBuilder path) {
         String nodePath = null;
         JsonElement diffNode = null;
 
@@ -100,7 +101,23 @@ class UtilObjectDiffer {
         if( diffNode instanceof JsonObject ) {
             return getDiff( node1.get(nodePath), diffNode, path );
         }
-        return new Pair(path.toString(), diffNode);
+        return new Pair( path.toString(), getValue(diffNode) );
+    }
+
+    public Object getValue(JsonElement element) {
+        JsonPrimitive primitive = element.getAsJsonPrimitive();
+        if( primitive.isBoolean() ) {
+            return primitive.getAsBoolean();
+        } else if ( primitive.isNumber() ) {
+            Number number = primitive.getAsNumber();
+            double value = number.doubleValue();
+            if ( (int) value == value ) {
+                return number.intValue();
+            }
+            return value;
+        } else {
+            return primitive.getAsString();
+        }
     }
 
     private void buildPath(String currentNodeName, StringBuilder path) {
