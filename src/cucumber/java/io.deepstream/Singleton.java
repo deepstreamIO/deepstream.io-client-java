@@ -59,6 +59,9 @@ class Singleton {
         options.put( "recordDeleteTimeout", "100" );
         options.put( "rpcResponseTimeout", "200" );
         options.put( "reconnectIntervalIncrement", "1500" );
+        options.put("reconnectIntervalIncrement", "1500");
+        options.put("maxReconnectAttempts", "1500");
+        options.put("maxReconnectInterval", "1500");
         this.client = new DeepstreamClient( "localhost:" + serverPort, options );
 
         this.client.setRuntimeErrorHandler(new DeepstreamRuntimeErrorHandler() {
