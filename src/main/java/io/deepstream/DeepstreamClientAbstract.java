@@ -50,7 +50,6 @@ abstract class DeepstreamClientAbstract {
         if( deepstreamRuntimeErrorHandler != null ) {
             deepstreamRuntimeErrorHandler.onException( topic, event, msg );
         } else {
-            System.out.println( "Throwing a client exception: " + topic + " " +  event + " " +  msg );
             throw new DeepstreamException( topic, event, msg );
         }
 

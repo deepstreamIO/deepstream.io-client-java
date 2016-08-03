@@ -1,7 +1,13 @@
 package io.deepstream;
 
-import java.io.*;
-import java.net.*;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.ConnectException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.URISyntaxException;
 import java.util.Map;
 
 /**
@@ -12,12 +18,10 @@ class EndpointTCP implements Endpoint {
 
     private final String MPS = Character.toString( '\u001f' );
     private final String MS = Character.toString( '\u001e' );
-
-    private Socket socket;
     private final String host;
     private final Integer port;
     private final Connection connection;
-
+    private Socket socket;
     private String messageBuffer;
     private boolean closed;
 
@@ -105,7 +109,6 @@ class EndpointTCP implements Endpoint {
         // Incomplete message, write to buffer
         char lastChar = data.charAt( data.length() - 1 );
         if( !Character.toString( lastChar ).equals( MS ) ) {
-            System.out.println("Incomplete message received...");
             this.messageBuffer += data;
             return;
         }
@@ -124,7 +127,6 @@ class EndpointTCP implements Endpoint {
 
     public void send(String message) {
         try {
-            System.out.println( message );
             this.out.write( message, 0, message.length() );
             this.out.flush();
         } catch (IOException e) {
