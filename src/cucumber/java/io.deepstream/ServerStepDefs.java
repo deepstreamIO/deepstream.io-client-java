@@ -7,25 +7,23 @@ import org.junit.Assert;
 
 public class ServerStepDefs {
 
-    int GENERAL_TIMEOUT = Context.GENERAL_TIMEOUT;
     private final char MPS =  '\u001f';
     private final char MS = '\u001e';
-
-    private MockTcpServer server;
+    int GENERAL_TIMEOUT = Context.GENERAL_TIMEOUT;
     int serverPort;
-    private MockTcpServer server2;
     int server2Port;
-
     Context context;
     String clientUid;
+    private MockTcpServer server;
+    private MockTcpServer server2;
 
     public ServerStepDefs( Context context ) {
         this.context = context;
         this.clientUid = context.getUid();
         this.server = context.server;
         this.server2 = context.server2;
-        this.serverPort = context.serverPort;
-        this.server2Port = context.server2port;
+        this.serverPort = Context.serverPort;
+        this.server2Port = Context.server2port;
     }
 
     @Given("^the test server is ready$")
@@ -111,7 +109,7 @@ public class ServerStepDefs {
 
     @Given("^two seconds later$")
     public void two_seconds_later() throws InterruptedException {
-        Thread.sleep(1750);
+        Thread.sleep(2000);
     }
 
     @When("^the connection to the server is lost$")
