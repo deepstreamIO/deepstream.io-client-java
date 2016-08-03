@@ -1,5 +1,6 @@
 package io.deepstream;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.deepstream.constants.Actions;
 import io.deepstream.constants.ConnectionState;
@@ -13,7 +14,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.net.URISyntaxException;
-import java.util.Map;
 import java.util.Properties;
 
 import static org.mockito.Mockito.*;
@@ -28,25 +28,24 @@ public class RpcHandlerTest {
     int rpcCalls = 0;
     RpcRequested addTwoCallback = new RpcRequested() {
         @Override
-        public void Call(Object data, RpcResponse response) {
+        public void onRPCRequested(Object data, RpcResponse response) {
             rpcCalls++;
-            Map m = (Map) data;
-            double numA = (double) m.get( "numA" );
-            double numB = (double) m.get( "numB" );
+            double numA = ((JsonElement) data).getAsJsonObject().get("numA").getAsDouble();
+            double numB = ((JsonElement) data).getAsJsonObject().get("numB").getAsDouble();
             response.send( numA + numB );
         }
     };
-    ErrorCallback errorCallbackMock;
+    DeepstreamRuntimeErrorHandler errorCallbackMock;
 
 
     @Before
     public void setUp() throws URISyntaxException {
         this.callbackMock = mock( RpcResponseCallback.class );
         this.connectionMock = new ConnectionMock();
-        this.errorCallbackMock = mock( ErrorCallback.class );
-        this.deepstreamClientMock = new DeepstreamClientMock( this.errorCallbackMock );
+        this.errorCallbackMock = mock( DeepstreamRuntimeErrorHandler.class );
+        this.deepstreamClientMock = new DeepstreamClientMock();
+        this.deepstreamClientMock.setRuntimeErrorHandler( errorCallbackMock );
         this.deepstreamClientMock.setConnectionState( ConnectionState.OPEN );
-        UtilAckTimeoutRegistry.resetAckTimeoutRegistry( this.deepstreamClientMock );
 
         Properties options = new Properties();
         options.put( "subscriptionTimeout", "10" );
@@ -71,8 +70,8 @@ public class RpcHandlerTest {
     @Test
     public void errorsIfNoAckReceivedForProvide() throws InterruptedException {
         rpcHandler.provide( "addTwo", addTwoCallback );
-        Thread.sleep(30);
-        verify( errorCallbackMock, times(1) ).onError( Topic.RPC, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE addTwo" );
+        Thread.sleep(50);
+        verify( errorCallbackMock, times(1) ).onException( Topic.RPC, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE addTwo" );
     }
 
     @Test
@@ -167,8 +166,8 @@ public class RpcHandlerTest {
 
         Assert.assertEquals( TestUtil.replaceSeperators("P|REQ|addTwo|1|O{\"numA\":3,\"numB\":8}+"), connectionMock.lastSentMessage);
 
-        Thread.sleep(20);
-        verify(this.errorCallbackMock, times(1)).onError( Topic.RPC, Event.ACK_TIMEOUT, "No ACK message received in time for REQUEST 1" );
+        Thread.sleep(50);
+        verify(this.errorCallbackMock, times(1)).onException( Topic.RPC, Event.ACK_TIMEOUT, "No ACK message received in time for REQUEST 1" );
     }
 
     @Test
@@ -180,7 +179,7 @@ public class RpcHandlerTest {
 
         Assert.assertEquals( TestUtil.replaceSeperators("P|REQ|addTwo|1|O{\"numA\":3,\"numB\":8}+"), connectionMock.lastSentMessage);
 
-        Thread.sleep(40);
+        Thread.sleep(100);
         verify(callbackMock, times(1)).onError( Event.RESPONSE_TIMEOUT.toString() );
     }
 }

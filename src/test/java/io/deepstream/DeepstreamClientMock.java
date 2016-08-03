@@ -1,33 +1,45 @@
 package io.deepstream;
 
+import com.google.gson.JsonElement;
 import io.deepstream.constants.ConnectionState;
-import io.deepstream.constants.Event;
-import io.deepstream.constants.Topic;
 
 import java.util.ArrayList;
 
-public class DeepstreamClientMock implements IDeepstreamClient, ErrorCallback {
+public class DeepstreamClientMock extends DeepstreamClientAbstract {
 
-    private ArrayList<ConnectionChangeListener> connectionListeners;
+    private ArrayList<ConnectionStateListener> connectionListeners;
     private ConnectionState connectionState;
-    private ErrorCallback errorCallback;
 
-    public DeepstreamClientMock( ErrorCallback errorCallback ) {
-        this.connectionListeners = new ArrayList();
-        this.errorCallback = errorCallback;
+    public DeepstreamClientMock() {
+        this.connectionListeners = new ArrayList<>();
     }
 
-    public DeepstreamClientMock addConnectionChangeListener( ConnectionChangeListener connectionChangeListener ) {
-        connectionListeners.add( connectionChangeListener );
+    public DeepstreamClientMock addConnectionChangeListener( ConnectionStateListener connectionStateListener) {
+        connectionListeners.add(connectionStateListener);
         return this;
     }
 
-    public DeepstreamClientMock removeConnectionChangeListener(ConnectionChangeListener connectionChangeListener) {
+    public DeepstreamClientMock removeConnectionChangeListener(ConnectionStateListener connectionStateListener) {
         return null;
     }
 
     public ConnectionState getConnectionState() {
         return this.connectionState;
+    }
+
+    @Override
+    DeepstreamClientAbstract login(JsonElement data) throws DeepstreamLoginException {
+        return this;
+    }
+
+    @Override
+    DeepstreamClientAbstract login(JsonElement data, LoginCallback loginCallback) throws DeepstreamLoginException {
+        return this;
+    }
+
+    @Override
+    DeepstreamClientAbstract close() {
+        return this;
     }
 
     public String getUid() {
@@ -36,13 +48,8 @@ public class DeepstreamClientMock implements IDeepstreamClient, ErrorCallback {
 
     public void setConnectionState( ConnectionState state ) {
         this.connectionState = state;
-        for ( ConnectionChangeListener listener : this.connectionListeners ) {
+        for ( ConnectionStateListener listener : this.connectionListeners ) {
             listener.connectionStateChanged( state );
         }
-    }
-
-    @Override
-    public void onError(Topic topic, Event event, String message) {
-        this.errorCallback.onError( topic, event, message );
     }
 }

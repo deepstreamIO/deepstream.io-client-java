@@ -4,6 +4,10 @@ import java.io.*;
 import java.net.*;
 import java.util.Map;
 
+/**
+ * An implementation of {@link Endpoint} that allows use to interact with with deepstream via TCP. This provides much
+ * better speed, but does mean you'll have to be careful which firewalls lie inbetween.
+ */
 class EndpointTCP implements Endpoint {
 
     private final String MPS = Character.toString( '\u001f' );

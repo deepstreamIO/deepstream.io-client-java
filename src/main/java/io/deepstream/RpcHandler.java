@@ -7,24 +7,24 @@ import io.deepstream.constants.Topic;
 import java.util.HashMap;
 import java.util.Map;
 
-class RpcHandler implements UtilResubscribeCallback {
+public class RpcHandler implements UtilResubscribeCallback {
 
     private int timeoutDuration;
     private Map options;
     private IConnection connection;
-    private IDeepstreamClient client;
+    private DeepstreamClientAbstract client;
     private Map<String, RpcRequested> providers;
     private UtilAckTimeoutRegistry ackTimeoutRegistry;
     private UtilResubscribeNotifier resubscribeNotifier;
     private Map<String, Rpc> rpcs;
 
-    public RpcHandler( Map options, IConnection connection, IDeepstreamClient client ) {
+    RpcHandler( Map options, IConnection connection, DeepstreamClientAbstract client ) {
         this.options = options;
         this.connection = connection;
         this.client = client;
         this.providers = new HashMap<>();
         this.rpcs = new HashMap<>();
-        this.ackTimeoutRegistry = UtilAckTimeoutRegistry.getAckTimeoutRegistry( this.client );
+        this.ackTimeoutRegistry = client.getAckTimeoutRegistry();
         this.resubscribeNotifier = new UtilResubscribeNotifier( this.client, this );
 
         this.timeoutDuration = Integer.parseInt( (String) this.options.get( "subscriptionTimeout" ) );
@@ -129,7 +129,7 @@ class RpcHandler implements UtilResubscribeCallback {
         RpcRequested callback = this.providers.get( name );
         if( callback != null ) {
             response = new RpcResponse( this.connection, name, correlationId );
-            callback.Call( data, response );
+            callback.onRPCRequested( data, response );
         } else {
             this.connection.sendMsg( Topic.RPC, Actions.REJECTION, new String[] { name, correlationId } );
         }

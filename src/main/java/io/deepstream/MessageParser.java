@@ -1,6 +1,7 @@
 package io.deepstream;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import io.deepstream.constants.Actions;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
@@ -10,6 +11,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Parses ASCII control character seperated
+ * message strings into {@link Message}
+ */
 class MessageParser {
 
     static private final String MPS = Character.toString( '\u001f' );
@@ -21,34 +26,56 @@ class MessageParser {
      * and returns an array of parsed message objects
      * or null for invalid messages
      */
-    static List<Message> parse( String message, Connection connection ) {
-        List<Message> messages = new ArrayList();
+    static List<Message> parse( String message, DeepstreamClientAbstract client ) {
+        List<Message> messages = new ArrayList<>();
         String[] rawMessages = message.split( MS );
-        for( short i=0; i < rawMessages.length; i++ ) {
-            messages.add( parseMessage( rawMessages[ i ] ) );
+        Message parsedMessage;
+        for (String rawMessage : rawMessages) {
+            parsedMessage = parseMessage(rawMessage, client);
+            if (parsedMessage != null) {
+                messages.add(parsedMessage);
+            }
         }
         return messages;
     }
 
-    static private Message parseMessage( String message ) {
+    /**
+     * Parses an individual message (as oposed to a
+     * block of multiple messages as is processed by {@link MessageParser#parse(String, DeepstreamClientAbstract)})
+     * @param message The message parse
+     * @param client The deepstream client to notify if errors occur
+     * @return The {@link Message} object that represents the message string
+     */
+    static Message parseMessage( String message, DeepstreamClientAbstract client ) {
         String[] parts = message.split( MPS );
 
         if( parts.length < 2 ) {
-            throw new Error( Event.MESSAGE_PARSE_ERROR.name() + " Insufficient Parts" );
+            client.onError( null, Event.MESSAGE_PARSE_ERROR, "Insufficient message parts" );
+            return null;
         }
 
         if( Topic.getTopic( parts[ 0 ] ) == null ) {
-            throw new Error( Event.MESSAGE_PARSE_ERROR.name() + " Incorrect Type " + parts[ 0 ]  );
+            client.onError( null, Event.MESSAGE_PARSE_ERROR, "Received message for unknown topic " + parts[ 0 ] );
+            return null;
         }
 
         if( Actions.getAction( parts[ 1 ] ) == null ) {
-            throw new Error( Event.MESSAGE_PARSE_ERROR.name() + " Incorrect Action " + parts[ 1 ] );
+            client.onError( null, Event.MESSAGE_PARSE_ERROR, "Unknown action " + parts[ 1 ] );
+            return null;
         }
 
         return new Message( message, Topic.getTopic( parts[ 0 ] ), Actions.getAction( parts[ 1 ] ), Arrays.copyOfRange( parts, 2, parts.length ) );
     }
 
-    public static Object convertTyped( String value, IDeepstreamClient client ) {
+    /**
+     * Deserializes values created by {@link MessageBuilder#typed(Object)} to
+     * their original format
+     *
+     * @param value The value to deserialise
+     * @param client The deepstream client to notify if errors occur
+     * @return The object the value represented
+     */
+    static Object convertTyped( String value, DeepstreamClientAbstract client ) {
 
         char type = value.charAt(0);
 
@@ -68,7 +95,7 @@ class MessageParser {
             return false;
         }
         else if( Types.getType( type ) == Types.OBJECT ) {
-            return new Gson().fromJson( value.substring( 1 ), Object.class );
+            return parseObject( value.substring( 1 ) );
         }
         else if( Types.getType( type ) == Types.UNDEFINED ) {
             // Undefined isn't a thing in Java..
@@ -78,4 +105,7 @@ class MessageParser {
         return null;
     }
 
+    static Object parseObject(String value) {
+        return new Gson().fromJson( value, JsonElement.class );
+    }
 }

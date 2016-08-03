@@ -1,20 +1,25 @@
 package io.deepstream;
 
-import com.google.gson.JsonObject;
+import com.google.gson.JsonElement;
 import io.deepstream.constants.*;
 
 import java.net.URISyntaxException;
 import java.util.*;
+import java.util.List;
 
+/**
+ * Establishes a connection to a deepstream server, either
+ * using TCP or engine.io.
+ */
 class Connection implements IConnection {
 
-    Endpoint endpoint;
+    private Endpoint endpoint;
 
     private DeepstreamClient client;
     private String originalUrl;
     private String url;
     private ConnectionState connectionState;
-    private ArrayList<ConnectionChangeListener> connectStateListeners;
+    private ArrayList<ConnectionStateListener> connectStateListeners;
 
     private boolean tooManyAuthAttempts;
     private boolean challengeDenied;
@@ -25,14 +30,31 @@ class Connection implements IConnection {
     private StringBuilder messageBuffer;
 
     private LoginCallback loginCallback;
-    private JsonObject authParameters;
+    private JsonElement authParameters;
     private Map options;
 
-    public Connection(final String url, final Map options, DeepstreamClient client ) throws URISyntaxException {
+    /**
+     * Creates an endpoint and passed it to {@link Connection#Connection(String, Map, DeepstreamClient, Endpoint)}
+     *
+     * @see Connection#Connection(String, Map, DeepstreamClient, Endpoint)
+     *
+     * @param url The endpoint url
+     * @param options The options used to initialise the deepstream client
+     * @param client The deepstream client
+     * @throws URISyntaxException An exception if an invalid url is passed in
+     */
+    Connection(final String url, final Map options, DeepstreamClient client ) throws URISyntaxException {
         this( url, options, client, null );
         this.endpoint = createEndpoint();
     }
 
+    /**
+     * Creates a connection, that is responsible for handling all the connection related logic related to state
+     * and messages
+     * @param url The endpoint url* @param options The options used to initialise the deepstream client
+     * @param client The deepstream client
+     * @param endpoint The endpoint, whether TCP, Engine.io, mock or anything else
+     */
     Connection(final String url, final Map options, DeepstreamClient client, Endpoint endpoint ) {
         this.client = client;
         this.connectStateListeners = new ArrayList<>();
@@ -50,7 +72,14 @@ class Connection implements IConnection {
         this.endpoint = endpoint;
     }
 
-    public void authenticate(JsonObject authParameters, LoginCallback loginCallback ) throws DeepstreamLoginException {
+    /**
+     * Authenticate the user connection
+     * @param authParameters The authentication parameters to send to deepstream
+     * @param loginCallback The callback for a successful / unsuccessful login attempt
+     * @throws DeepstreamLoginException Thrown if the user no longer can login, due to multiple attempts or an invalid
+     * connection
+     */
+    void authenticate(JsonElement authParameters, LoginCallback loginCallback ) throws DeepstreamLoginException {
         if( this.tooManyAuthAttempts || this.challengeDenied ) {
             this.client.onError( Topic.ERROR, Event.IS_CLOSED, "The client\'s connection was closed" );
             return;
@@ -63,35 +92,38 @@ class Connection implements IConnection {
         }
     }
 
+    @Override
     public void send( String message ) {
         if( this.connectionState != ConnectionState.OPEN ) {
             this.messageBuffer.append( message );
-            System.out.println( "Buffering " + message );
         } else {
-            System.out.println( "Sending " + message );
             this.endpoint.send( message );
         }
     }
 
+    @Override
     public void sendMsg( Topic topic, Actions action, String[] data ) {
         this.send( MessageBuilder.getMsg( topic, action, data ) );
     }
 
+    /**
+     *
+     */
     private void sendAuthMessage() {
         setState( ConnectionState.AUTHENTICATING );
         String authMessage = MessageBuilder.getMsg( Topic.AUTH, Actions.REQUEST, this.authParameters.toString() );
         this.endpoint.send( authMessage );
     }
 
-    public void addConnectionChangeListener( ConnectionChangeListener connectionChangeListener ) {
-        this.connectStateListeners.add( connectionChangeListener );
+    void addConnectionChangeListener( ConnectionStateListener connectionStateListener) {
+        this.connectStateListeners.add(connectionStateListener);
     }
 
-    public void removeConnectionChangeListener( ConnectionChangeListener connectionChangeListener ) {
-        this.connectStateListeners.remove( connectionChangeListener );
+    void removeConnectionChangeListener( ConnectionStateListener connectionStateListener) {
+        this.connectStateListeners.remove(connectionStateListener);
     }
 
-    public ConnectionState getConnectionState() {
+    ConnectionState getConnectionState() {
         return this.connectionState;
     }
 
@@ -127,7 +159,7 @@ class Connection implements IConnection {
     }
 
     void onMessage(String rawMessage) {
-        List<Message> parsedMessages = MessageParser.parse( rawMessage, this );
+        List<Message> parsedMessages = MessageParser.parse( rawMessage, this.client );
         for (Message message : parsedMessages) {
             if (message.topic == Topic.CONNECTION) {
                 handleConnectionResponse(message);
@@ -137,8 +169,10 @@ class Connection implements IConnection {
                 this.client.event.handle(message);
             } else if (message.topic == Topic.RPC) {
                 this.client.rpc.handle(message);
+            } else if ( message.topic == Topic.RECORD ) {
+                this.client.record.handle(message);
             } else {
-                System.out.println("Normal message of type " + message.topic + " " + message.raw );
+                //TODO: Throw error
             }
         }
     }
@@ -152,7 +186,7 @@ class Connection implements IConnection {
             this.setState( ConnectionState.CLOSED );
         }
         else {
-            if( this.originalUrl.equals( this.url ) == false ) {
+            if(!this.originalUrl.equals(this.url)) {
                 this.url = this.originalUrl;
                 this.createEndpoint();
                 return;
@@ -220,9 +254,8 @@ class Connection implements IConnection {
             this.sendAuthMessage();
         }
 
-        Iterator listeners = this.connectStateListeners.iterator();
-        while( listeners.hasNext() ) {
-            ( (ConnectionChangeListener)listeners.next() ).connectionStateChanged( connectionState );
+        for (ConnectionStateListener connectStateListener : this.connectStateListeners) {
+            connectStateListener.connectionStateChanged(connectionState);
         }
     }
 

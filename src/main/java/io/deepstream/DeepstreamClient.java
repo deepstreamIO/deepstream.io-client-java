@@ -1,9 +1,7 @@
 package io.deepstream;
 
-import com.google.gson.JsonObject;
+import com.google.gson.JsonElement;
 import io.deepstream.constants.ConnectionState;
-import io.deepstream.constants.Event;
-import io.deepstream.constants.Topic;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -11,61 +9,147 @@ import java.net.URISyntaxException;
 import java.util.Properties;
 import java.util.UUID;
 
-public class DeepstreamClient implements IDeepstreamClient {
+/**
+ * deepstream.io java client
+ */
+public class DeepstreamClient extends DeepstreamClientAbstract {
 
     private String uuid;
-    private Connection connection;
-    private DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler;
-    private Properties config;
+    private final Connection connection;
+    private final Properties config;
 
-    public EventHandler event;
-    public RpcHandler rpc;
+    public final RecordHandler record;
+    public final EventHandler event;
+    public final RpcHandler rpc;
 
+    /**
+     * deepstream.io javascript client, defaults to using default properties
+     * {@link DeepstreamClient#DeepstreamClient(String, Properties)}
+     *
+     * @throws URISyntaxException Thrown if the url in incorrect
+     * @throws IOException Thrown if the default properties file is not found
+     */
+    public DeepstreamClient( final String url ) throws URISyntaxException, IOException {
+        this( url, new Properties() );
+    }
+
+    /**
+     * deepstream.io java client
+     * @param url URL to connect to. The protocol can be omited, e.g. <host>:<port>
+     * @param options A map of options that extend the ones specified in DefaultConfig.properties
+     * @throws URISyntaxException Thrown if the url in incorrect
+     * @throws IOException Thrown if the default properties file is not found
+     */
     public DeepstreamClient( final String url, Properties options ) throws URISyntaxException, IOException {
         this.config = getConfig( options );
         this.connection = new Connection( url, this.config, this );
         this.event = new EventHandler( config, this.connection, this );
         this.rpc = new RpcHandler( config, this.connection, this );
+        this.record = new RecordHandler( config, this.connection, this );
     }
 
-    public DeepstreamClient( final String url ) throws URISyntaxException, IOException {
-        this( url, new Properties() );
+    /**
+     * Adds a {@link DeepstreamRuntimeErrorHandler} that will catch all RuntimeErrors such as AckTimeouts and allow
+     * the user to gracefully handle them.
+     *
+     * @param deepstreamRuntimeErrorHandler The listener to set
+     */
+    public void setRuntimeErrorHandler( DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler )  {
+        super.setRuntimeErrorHandler( deepstreamRuntimeErrorHandler );
     }
 
-    public DeepstreamClient setRuntimeErrorHandler( DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler )  {
-        this.deepstreamRuntimeErrorHandler = deepstreamRuntimeErrorHandler;
+    /**
+     * @see DeepstreamClient#login(JsonElement, LoginCallback)
+     *
+     * Does not call the login callback, used mainly for anonymous logins where your guaranteed login
+     *
+     * @param authParams JSON.serializable authentication data
+     * @throws DeepstreamLoginException Thrown if the user can no longer login due to multiple attempts or other
+     * fatal reasons
+     * @return The deepstream client
+     */
+    public DeepstreamClient login( JsonElement authParams ) throws DeepstreamLoginException {
+        this.connection.authenticate( authParams, null );
         return this;
     }
 
-    public DeepstreamClient login( JsonObject data ) throws DeepstreamLoginException {
-        this.connection.authenticate( data, null );
+    /**
+     * Send authentication parameters to the client to fully open
+     * the connection.
+     *
+     * Please note: Authentication parameters are send over an already established
+     * connection, rather than appended to the server URL. This means the parameters
+     * will be encrypted when used with a WSS / HTTPS connection. If the deepstream server
+     * on the other side has message logging enabled it will however be written to the logs in
+     * plain text. If additional security is a requirement it might therefor make sense to hash
+     * the password on the client.
+     *
+     * If the connection is not yet established the authentication parameter will be
+     * stored and send once it becomes available
+     *
+     * authParams can be any JSON serializable data structure and its up for the
+     * permission handler on the server to make sense of them, although something
+     * like { username: 'someName', password: 'somePass' } will probably make the most sense.
+     *
+     * login can be called multiple times until either the connection is authenticated or
+     * forcefully closed by the server since its maxAuthAttempts threshold has been exceeded
+     *
+     * @param authParams JSON.serializable authentication data
+     * @param loginCallback Thrown if the user can no longer login due to multiple attempts or other
+     * fatal reasons
+     * @throws DeepstreamLoginException Thrown if the user can no longer login due to multiple attempts or other
+     * fatal reasons
+     * @return The deepstream client
+     */
+    public DeepstreamClient login( JsonElement authParams, LoginCallback loginCallback ) throws DeepstreamLoginException {
+        this.connection.authenticate( authParams, loginCallback );
         return this;
     }
 
-    public DeepstreamClient login( JsonObject data, LoginCallback loginCallback ) throws DeepstreamLoginException {
-        this.connection.authenticate( data, loginCallback );
-        return this;
-    }
-
+    /**
+     * Closes the connection to the server.
+     * @return The deepstream client
+     */
     public DeepstreamClient close() {
         this.connection.close();
         return this;
     }
 
-    public DeepstreamClient addConnectionChangeListener( ConnectionChangeListener connectionChangeListener ) {
-        this.connection.addConnectionChangeListener( connectionChangeListener );
+    /**
+     * Add a listener that can be notified via {@link ConnectionStateListener#connectionStateChanged(ConnectionState)}
+     * whenever the {@link ConnectionState} changes
+     * @param connectionStateListener The listener to add
+     * @return The deepstream client
+     */
+    public DeepstreamClient addConnectionChangeListener( ConnectionStateListener connectionStateListener) {
+        this.connection.addConnectionChangeListener(connectionStateListener);
         return this;
     }
 
-    public DeepstreamClient removeConnectionChangeListener( ConnectionChangeListener connectionChangeListener ) {
-        this.connection.removeConnectionChangeListener( connectionChangeListener );
+    /**
+     * Removes a {@link ConnectionStateListener} added via {@link DeepstreamClient#addConnectionChangeListener(ConnectionStateListener)}
+     * @param connectionStateListener The listener to remove
+     * @return The deepstream client
+     */
+    public DeepstreamClient removeConnectionChangeListener( ConnectionStateListener connectionStateListener) {
+        this.connection.removeConnectionChangeListener(connectionStateListener);
         return this;
     }
 
+    /**
+     * Returns the current state of the connection.
+     * @return The connection state
+     */
     public ConnectionState getConnectionState() {
         return this.connection.getConnectionState();
     }
 
+    /**
+     * Returns a random string. The first block of characters
+     * is a timestamp, in order to allow databases to optimize for semi-
+     * sequentuel numberings
+     * @return A unique id
+     */
     public String getUid() {
         if( uuid == null ) {
             uuid = UUID.randomUUID().toString();
@@ -74,28 +158,15 @@ public class DeepstreamClient implements IDeepstreamClient {
         return uuid;
     }
 
-    public void onError(Topic topic, Event event, String msg) throws DeepstreamException {
-        /*
-         * Help to diagnose the problem quicker by checking for
-         * some mon problems
-         */
-        if( event.equals( Event.ACK_TIMEOUT ) || event.equals( Event.RESPONSE_TIMEOUT ) ) {
-            if( getConnectionState().equals( ConnectionState.AWAITING_AUTHENTICATION ) ) {
-                String errMsg = "Your message timed out because you\'re not authenticated. Have you called login()?";
-                onError( Topic.ERROR, Event.NOT_AUTHENTICATED, errMsg );
-                return;
-            }
-        }
-
-        if( deepstreamRuntimeErrorHandler != null ) {
-            deepstreamRuntimeErrorHandler.onException( topic, event, msg );
-        } else {
-            System.out.println( "Throwing a client exception: " + topic + " " +  event + " " +  msg );
-            throw new DeepstreamException( topic, event, msg );
-        }
-
-    }
-
+    /**
+     * TODO: Load from a default map instead of config file
+     *
+     * Creates a new options map by extending default
+     * options with the passed in options
+     * @param properties The properties to merge into the default
+     * @throws IOException Thrown if properties file not found
+     * @return Loaded properties
+     */
     private Properties getConfig( Properties properties ) throws IOException {
         Properties config = new Properties();
         FileInputStream in = new FileInputStream( "DefaultConfig.properties" );

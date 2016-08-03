@@ -6,7 +6,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 
-public class EventStepDefs {DeepstreamClient client;
+public class EventStepDefs {
+    DeepstreamClient client;
     int serverPort;
     int server2Port;
     int GENERAL_TIMEOUT = Context.GENERAL_TIMEOUT;
@@ -17,7 +18,8 @@ public class EventStepDefs {DeepstreamClient client;
         this.server2Port = context.server2port;
     }
 
-    Emitter.Listener callback = mock( Emitter.Listener.class );
+    ListenListener listenCallback = mock( ListenListener.class );
+    EventListener callback = mock( EventListener.class );
 
     @Then("^the client subscribes to an event named \"(.*?)\"$")
     public void the_client_subscribes_to_event( String eventName ) throws InterruptedException {
@@ -39,12 +41,12 @@ public class EventStepDefs {DeepstreamClient client;
 
     @Then("^the client received the event \"(.*?)\" with data \"(.*?)\"$")
     public void client_receives_event( String eventName, String data ) throws InterruptedException {
-        verify( callback ).call( data );
+        verify( callback ).onEvent( eventName, data );
     }
 
     @Then("^the client listens to events matching \"(.*?)\"$")
     public void client_listens_to_events_matching( String regex ) throws InterruptedException {
-        client.event.listen( regex, callback );
+        client.event.listen( regex, listenCallback );
         Thread.sleep(GENERAL_TIMEOUT);
     }
 
@@ -56,11 +58,11 @@ public class EventStepDefs {DeepstreamClient client;
 
     @Then("^the client will be notified of new event match \"(.*?)\"$")
     public void client_notified_of_event_match( String eventName ) throws InterruptedException {
-        verify( callback ).call( eventName, true );
+        verify( listenCallback ).onSubscriptionForPatternAdded( eventName );
     }
 
     @Then("^the client will be notified of event match removal \"([^\"]*)\"$")
     public void the_client_will_be_notified_of_event_match_removal(String eventName) throws Throwable {
-        verify( callback ).call( eventName, false );
+        verify( listenCallback ).onSubscriptionForPatternRemoved( eventName );
     }
 }

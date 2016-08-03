@@ -1,5 +1,5 @@
 package io.deepstream;
 
-public interface UtilResubscribeCallback {
+interface UtilResubscribeCallback {
     void resubscribe();
 }

@@ -6,6 +6,10 @@ import io.deepstream.constants.Actions;
 import io.deepstream.constants.Topic;
 import io.deepstream.constants.Types;
 
+/**
+ * Creates a deepstream message string, based on the
+ * provided parameters
+ */
 class MessageBuilder {
 
     static private final String MPS = Character.toString( '\u001f' );
@@ -30,8 +34,8 @@ class MessageBuilder {
     /**
      * Converts a serializable value into its string-representation and adds
      * a flag that provides instructions on how to deserialize it.
-     * @param {Mixed} value
-     * @returns {String} string representation of the value
+     * @param value The value to serialised
+     * @return string representation of the value
      */
     public static String typed( Object value ) {
         if( value instanceof String ) {
@@ -41,7 +45,7 @@ class MessageBuilder {
             return Types.NUMBER.toString() + value.toString();
         }
         else if( value instanceof Boolean ) {
-            if( (Boolean)value == true ) {
+            if((Boolean) value) {
                 return Types.TRUE.toString();
             } else {
                 return Types.FALSE.toString();
@@ -59,11 +63,11 @@ class MessageBuilder {
     /**
      * Joins all the elements of the list together with the given sequence
      *
-     * @param list
-     * @param sequence
-     * @return
+     * @param list A list of messages
+     * @param seperator Separator to join the messages
+     * @return A string representation of messages joined together
      */
-    private static String join( String[] list, String sequence ) {
+    private static String join( String[] list, String seperator ) {
 
         StringBuilder sb = new StringBuilder();
         for ( int i = 0; i < list.length; i++ ) {
@@ -71,7 +75,7 @@ class MessageBuilder {
                 sb.append( list[ i ] );
             } else {
                 sb.append( list[ i ] );
-                sb.append( sequence );
+                sb.append( seperator );
             }
         }
         return sb.toString();

@@ -2,6 +2,5 @@ package io.deepstream;
 
 
 public interface RpcRequested {
-
-    void Call( Object data, RpcResponse response );
+    void onRPCRequested(Object data, RpcResponse response );
 }
