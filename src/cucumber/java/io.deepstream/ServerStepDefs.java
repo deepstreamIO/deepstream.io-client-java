@@ -111,7 +111,7 @@ public class ServerStepDefs {
 
     @Given("^two seconds later$")
     public void two_seconds_later() throws InterruptedException {
-        Thread.sleep(2000);
+        Thread.sleep(1750);
     }
 
     @When("^the connection to the server is lost$")
@@ -128,7 +128,7 @@ public class ServerStepDefs {
     @When("^the connection to the server is reestablished$")
     public void connection_is_reestablished$() throws InterruptedException {
         server = context.getNewServer1();
-        Thread.sleep(1000);
+        Thread.sleep(2000);
     }
 
     @When("^the server did not recieve any messages$")

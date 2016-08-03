@@ -6,7 +6,7 @@ import java.net.URISyntaxException;
 
 public class Context {
 
-    static int GENERAL_TIMEOUT = 10;
+    static int GENERAL_TIMEOUT = 30;
     static int serverPort = 7777;
     static int server2port = 8888;
 
