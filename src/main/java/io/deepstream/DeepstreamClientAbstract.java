@@ -30,7 +30,7 @@ abstract class DeepstreamClientAbstract {
      *
      * @param deepstreamRuntimeErrorHandler The listener to set
      */
-    public void setRuntimeErrorHandler( DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler )  {
+    void setRuntimeErrorHandler( DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler )  {
         this.deepstreamRuntimeErrorHandler = deepstreamRuntimeErrorHandler;
     }
 
@@ -50,7 +50,6 @@ abstract class DeepstreamClientAbstract {
         if( deepstreamRuntimeErrorHandler != null ) {
             deepstreamRuntimeErrorHandler.onException( topic, event, msg );
         } else {
-            System.out.println( "Throwing a client exception: " + topic + " " +  event + " " +  msg );
             throw new DeepstreamException( topic, event, msg );
         }
 

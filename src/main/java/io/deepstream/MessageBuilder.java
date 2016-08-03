@@ -24,7 +24,7 @@ class MessageBuilder {
     }
 
     public static String getMsg( Topic topic, Actions action, String[] data ) {
-        return topic.toString() + MPS + action.toString() + MPS + join( data, MPS ) + MS;
+        return topic.toString() + MPS + action.toString() + MPS + join( data) + MS;
     }
 
     public static String getMsg( Topic topic, Actions action ) {
@@ -64,10 +64,9 @@ class MessageBuilder {
      * Joins all the elements of the list together with the given sequence
      *
      * @param list A list of messages
-     * @param seperator Separator to join the messages
      * @return A string representation of messages joined together
      */
-    private static String join( String[] list, String seperator ) {
+    private static String join(String[] list) {
 
         StringBuilder sb = new StringBuilder();
         for ( int i = 0; i < list.length; i++ ) {
@@ -75,7 +74,7 @@ class MessageBuilder {
                 sb.append( list[ i ] );
             } else {
                 sb.append( list[ i ] );
-                sb.append( seperator );
+                sb.append(MessageBuilder.MPS);
             }
         }
         return sb.toString();

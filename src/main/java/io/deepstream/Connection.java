@@ -13,14 +13,11 @@ import java.util.List;
  */
 class Connection implements IConnection {
 
+    private final DeepstreamClient client;
+    private final String originalUrl;
+    private final ArrayList<ConnectionStateListener> connectStateListeners;
+    private final Map options;
     private Endpoint endpoint;
-
-    private DeepstreamClient client;
-    private String originalUrl;
-    private String url;
-    private ConnectionState connectionState;
-    private ArrayList<ConnectionStateListener> connectStateListeners;
-
     private boolean tooManyAuthAttempts;
     private boolean challengeDenied;
     private boolean deliberateClose;
@@ -28,10 +25,10 @@ class Connection implements IConnection {
     private Timer reconnectTimeout;
     private int reconnectionAttempt;
     private StringBuilder messageBuffer;
-
+    private String url;
+    private ConnectionState connectionState;
     private LoginCallback loginCallback;
     private JsonElement authParameters;
-    private Map options;
 
     /**
      * Creates an endpoint and passed it to {@link Connection#Connection(String, Map, DeepstreamClient, Endpoint)}
@@ -278,6 +275,7 @@ class Connection implements IConnection {
 
         int maxReconnectAttempts = Integer.parseInt( (String) options.get( "maxReconnectAttempts" ) );
         int reconnectIntervalIncrement = Integer.parseInt( (String) options.get( "reconnectIntervalIncrement" ) );
+        int maxReconnectInterval = Integer.parseInt((String) options.get("maxReconnectInterval"));
 
         if( this.reconnectionAttempt < maxReconnectAttempts ) {
             this.setState( ConnectionState.RECONNECTING );
@@ -286,7 +284,10 @@ class Connection implements IConnection {
                 public void run() {
                     tryOpen();
                 }
-            }, reconnectIntervalIncrement * this.reconnectionAttempt );
+            }, Math.min(
+                    reconnectIntervalIncrement * this.reconnectionAttempt,
+                    maxReconnectInterval
+            ));
             this.reconnectionAttempt++;
 
         } else {

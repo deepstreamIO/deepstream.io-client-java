@@ -20,7 +20,6 @@ public class List {
 
     private final RecordListeners recordListeners;
     private final Record record;
-    private final RecordHandler recordHandler;
     private final ArrayList<ListReadyListener> listReadyListeners;
     private final ArrayList<ListChangedListener> listChangedListeners;
     
@@ -31,8 +30,7 @@ public class List {
      * @param options Options client was created with
      */
     List(RecordHandler recordHandler, String name, Map options) {
-        this.recordHandler = recordHandler;
-        this.record = this.recordHandler.getRecord( name );
+        this.record = recordHandler.getRecord( name );
 
         this.recordListeners = new List.RecordListeners( this, this.record );
         this.listReadyListeners = new ArrayList<>();
@@ -106,7 +104,7 @@ public class List {
      * @return The list
      */
     public List setEntries( java.util.List<String> entries ) {
-        if( !this.record.isReady ) {
+        if( !this.record.isReady() ) {
             //TODO: Buffer ( to disable events from being emitted )
         }
         else {
@@ -348,14 +346,14 @@ public class List {
      * Mirror properties on record onto list
      */
     private void refreshInheritedState() {
-        this.isReady = this.record.isReady;
-        this.isDestroyed = this.record.isDestroyed;
+        this.isReady = this.record.isReady();
+        this.isDestroyed = this.record.isDestroyed();
     }
 
     /**
      * A class to contain all the interface implementations to not pollute the public API
      */
-    private class RecordListeners implements RecordReadyListener, RecordChangedCallback, RecordEventsListener, Record.RecordRemoteUpdateListener {
+    private class RecordListeners implements RecordReadyListener, RecordChangedCallback, RecordEventsListener, Record.RecordRemoteUpdateHandler {
 
         private final List list;
         private final Record record;
@@ -366,16 +364,11 @@ public class List {
             this.record = record;
             this.record.addRecordEventsListener( this );
             this.record.addRecordReadyListener( this );
-            this.record.setRecordRemoteUpdateListener( this );
+            this.record.setRecordRemoteUpdateHandler( this );
         }
 
         @Override
         public void onError(String recordName, Event errorType, String errorMessage) {
-        }
-
-        @Override
-        public void onDestroyPending(String recordName) {
-            this.list.refreshInheritedState();
         }
 
         @Override

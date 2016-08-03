@@ -6,9 +6,10 @@ import io.deepstream.constants.Topic;
 
 public class RpcResponse {
 
-    private IConnection connection;
-    private String name;
-    private String correlationId;
+    private final IConnection connection;
+    private final String name;
+    private final String correlationId;
+
     private boolean isAcknowledged;
     private boolean isComplete;
 

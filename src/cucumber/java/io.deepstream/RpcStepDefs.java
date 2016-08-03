@@ -17,7 +17,7 @@ public class RpcStepDefs {
         this.server2Port = context.server2port;
     }
 
-    RpcRequestedMock toUpperCaseMock = new RpcRequestedMock();
+    RpcRequestedListenerMock toUpperCaseMock = new RpcRequestedListenerMock();
     ResponseCallback responseCallback = new ResponseCallback();
 
     RpcResponse rpcResponse;
@@ -71,9 +71,9 @@ public class RpcStepDefs {
         Thread.sleep(GENERAL_TIMEOUT * 2);
     }
 
-    class RpcRequestedMock implements RpcRequested {
+    class RpcRequestedListenerMock implements RpcRequestedListener {
         @Override
-        public void onRPCRequested(Object data, RpcResponse response) {
+        public void onRPCRequested(String rpcName, Object data, RpcResponse response) {
             request = (String) data;
             rpcResponse = response;
         }
@@ -82,13 +82,13 @@ public class RpcStepDefs {
     class ResponseCallback implements RpcResponseCallback {
 
         @Override
-        public void onData(Object data) {
+        public void onRpcSuccess(String rpcName, Object data) {
             response = (String) data;
         }
 
         @Override
-        public void onError(String err) {
-            response = err;
+        public void onRpcError(String rpcName, Object error) {
+            response = (String) error;
         }
     }
 }

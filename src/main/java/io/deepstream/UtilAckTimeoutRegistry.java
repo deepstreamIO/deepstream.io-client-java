@@ -10,11 +10,12 @@ import java.util.concurrent.*;
 
 class UtilAckTimeoutRegistry implements ConnectionStateListener, UtilTimeoutListener {
 
-    private Map<String, ScheduledFuture> register;
-    private ScheduledExecutorService executor;
-    private DeepstreamClientAbstract client;
+    private final Map<String, ScheduledFuture> register;
+    private final ScheduledExecutorService executor;
+    private final DeepstreamClientAbstract client;
+    private final LinkedBlockingQueue<AckTimeout> ackTimers;
+
     private ConnectionState state;
-    private LinkedBlockingQueue<AckTimeout> ackTimers;
 
     /**
      * The registry for all ack timeouts.
@@ -166,12 +167,12 @@ class UtilAckTimeoutRegistry implements ConnectionStateListener, UtilTimeoutList
     }
 
     private class AckTimeout implements Runnable {
-        private UtilTimeoutListener timeoutListener;
-        private Topic topic;
-        private Actions action;
-        private String name;
-        private Event event;
-        private int timeout;
+        private final UtilTimeoutListener timeoutListener;
+        private final Topic topic;
+        private final Actions action;
+        private final String name;
+        private final Event event;
+        private final int timeout;
 
         AckTimeout(Topic topic, Actions action, String name, Event event, UtilTimeoutListener timeoutListener, int timeout ) {
             this.topic = topic;

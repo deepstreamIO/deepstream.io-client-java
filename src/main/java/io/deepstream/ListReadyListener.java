@@ -8,7 +8,7 @@ package io.deepstream;
 public interface ListReadyListener {
     /**
      * Called when the underlying record is ready
-     * @param listName The name of the anonymousRecord which is now ready
+     * @param listName The name of the list which is now ready
      * @param list The list which is now ready / loaded from server
      */
     void onListReady(String listName, List list);

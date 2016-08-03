@@ -1,63 +1,110 @@
 package io.deepstream;
 
 import io.deepstream.constants.Actions;
+import io.deepstream.constants.ConnectionState;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class RpcHandler implements UtilResubscribeCallback {
+public class RpcHandler {
 
-    private int timeoutDuration;
-    private Map options;
-    private IConnection connection;
-    private DeepstreamClientAbstract client;
-    private Map<String, RpcRequested> providers;
-    private UtilAckTimeoutRegistry ackTimeoutRegistry;
-    private UtilResubscribeNotifier resubscribeNotifier;
-    private Map<String, Rpc> rpcs;
+    private final int timeoutDuration;
+    private final Map options;
+    private final IConnection connection;
+    private final DeepstreamClientAbstract client;
+    private final Map<String, RpcRequestedListener> providers;
+    private final UtilAckTimeoutRegistry ackTimeoutRegistry;
+    private final Map<String, Rpc> rpcs;
 
-    RpcHandler( Map options, IConnection connection, DeepstreamClientAbstract client ) {
+    /**
+     * The main class for remote procedure calls
+     *
+     * Provides the rpc interface and handles incoming messages
+     * on the rpc topic
+     *
+     * @param options The options the client was created with
+     * @param connection The connection to deepstream
+     * @param client The deepstream client
+     */
+    RpcHandler( Map options, final IConnection connection, DeepstreamClientAbstract client ) {
         this.options = options;
         this.connection = connection;
         this.client = client;
         this.providers = new HashMap<>();
         this.rpcs = new HashMap<>();
         this.ackTimeoutRegistry = client.getAckTimeoutRegistry();
-        this.resubscribeNotifier = new UtilResubscribeNotifier( this.client, this );
+        new UtilResubscribeNotifier(this.client, new UtilResubscribeCallback() {
+            @Override
+            public void resubscribe() {
+                for (String rpcName : providers.keySet()) {
+                    sendRPCSubscribe(rpcName);
+                }
+            }
+        });
 
         this.timeoutDuration = Integer.parseInt( (String) this.options.get( "subscriptionTimeout" ) );
     }
 
-    public void provide( String name, RpcRequested callback ) {
-        if( this.providers.containsKey( name ) ) {
-            throw new DeepstreamException( "RPC " + name + " already registered" );
+    /**
+     * Registers a {@link RpcRequestedListener} as a RPC provider. If another connected client calls
+     * {@link RpcHandler#make(String, Object, RpcResponseCallback)} the request will be routed to the supplied listener.
+     * <br/>
+     * Only one listener can be registered for a RPC at a time.
+     * <br/>
+     * Please note: Deepstream tries to deliver data in its original format. Data passed to
+     * {@link RpcHandler#make(String, Object, RpcResponseCallback)} as a String will arrive as a String, numbers or
+     *  implicitly JSON serialized objects will arrive in their respective format as well.
+     *
+     * @param rpcName The rpcName of the RPC to provide
+     * @param rpcRequestedListener The listener to invoke when requests are recieved
+     */
+    public void provide( String rpcName, RpcRequestedListener rpcRequestedListener ) {
+        if( this.providers.containsKey( rpcName ) ) {
+            throw new DeepstreamException( "RPC " + rpcName + " already registered" );
         }
 
-        this.ackTimeoutRegistry.add( Topic.RPC, Actions.SUBSCRIBE, name, this.timeoutDuration );
-        this.providers.put( name, callback );
-        this.connection.sendMsg( Topic.RPC, Actions.SUBSCRIBE, new String[] { name } );
+        this.providers.put( rpcName, rpcRequestedListener );
+        this.sendRPCSubscribe( rpcName );
     }
 
-    public void unprovide( String name ) {
-        if( this.providers.containsKey( name ) ) {
-            this.providers.remove( name );
-            this.ackTimeoutRegistry.add( Topic.RPC, Actions.UNSUBSCRIBE, name, this.timeoutDuration);
-            this.connection.sendMsg( Topic.RPC, Actions.UNSUBSCRIBE, new String[] { name } );
+    /**
+     * Unregister a {@link RpcRequestedListener} registered via Rpc{@link #provide(String, RpcRequestedListener)}
+     * @param rpcName The rpcName of the RPC to stop providing
+     */
+    public void unprovide( String rpcName ) {
+        if( this.providers.containsKey( rpcName ) ) {
+            this.providers.remove( rpcName );
+
+            this.ackTimeoutRegistry.add(Topic.RPC, Actions.UNSUBSCRIBE, rpcName, this.timeoutDuration);
+            this.connection.sendMsg(Topic.RPC, Actions.UNSUBSCRIBE, new String[]{rpcName});
         }
     }
 
-    public void make(String name, Object data, RpcResponseCallback callback ) {
+    /**
+     * Create a remote procedure call. This requires a rpc name for routing, a JSON serializable object for any associated
+     * arguments and a callback to notify you with the rpc result or potential error.
+     * @param rpcName The name of the rpc
+     * @param data Serializable data that will be passed to the provider
+     * @param callback  Will be invoked with {@link RpcResponseCallback#onRpcSuccess(String, Object)} or {@link RpcResponseCallback#onRpcError(String, Object)}
+     */
+    public void make(String rpcName, Object data, RpcResponseCallback callback ) {
         String uid = this.client.getUid();
-        this.rpcs.put( uid, new Rpc( this.options, this.client, uid, callback ) );
+        this.rpcs.put( uid, new Rpc( this.options, this.client, rpcName, uid, callback ) );
 
         String typedData = MessageBuilder.typed( data );
-        this.connection.sendMsg( Topic.RPC, Actions.REQUEST, new String[] { name, uid, typedData } );
+        this.connection.sendMsg( Topic.RPC, Actions.REQUEST, new String[] { rpcName, uid, typedData } );
     }
 
-    public void handle( Message message ) {
-        String rpcName, correlationId;
+    /**
+     * Main interface. Handles incoming messages
+     * from the message distributor
+     * @param message The message recieved from the server
+     */
+    void handle( Message message ) {
+        String rpcName;
+        String correlationId;
         Rpc rpc;
 
         // RPC Requests
@@ -87,7 +134,7 @@ public class RpcHandler implements UtilResubscribeCallback {
         /*
         * Retrieve the rpc object
         */
-        rpc = this.getRpc( correlationId, rpcName, message.raw );
+        rpc = this.getRpc( correlationId, message.raw );
         if( rpc == null ) {
             return;
         }
@@ -97,16 +144,20 @@ public class RpcHandler implements UtilResubscribeCallback {
             rpc.ack();
         }
         else if( message.action == Actions.RESPONSE ) {
-            rpc.respond( message.data[ 2 ] );
+            rpc.respond( rpcName, message.data[ 2 ] );
             this.rpcs.remove( correlationId );
         }
         else if( message.action == Actions.ERROR ) {
-            rpc.error( message.data[ 0 ] );
+            rpc.error( rpcName, message.data[ 0 ] );
             this.rpcs.remove( correlationId );
         }
     }
 
-    private Rpc getRpc(String correlationId, String rpcName, String raw) {
+    /**
+     * Retrieves a RPC instance for a correlationId or throws an error
+     * if it can't be found (which should never happen)
+     */
+    private Rpc getRpc(String correlationId, String raw) {
         Rpc rpc = this.rpcs.get( correlationId );
 
         if( rpc == null ) {
@@ -116,9 +167,15 @@ public class RpcHandler implements UtilResubscribeCallback {
         return rpc;
     }
 
+    /**
+     * Handles incoming rpc REQUEST messages. Instantiates a new response object
+     * and invokes the provider callback or rejects the request if no rpc provider
+     * is present (which shouldn't really happen, but might be the result of a race condition
+     * if this client sends a unprovide message whilst an incoming request is already in flight)
+     */
     private void respondToRpc( Message message ) {
-        String name = message.data[ 0 ],
-                correlationId = message.data[ 1 ];
+        String rpcName = message.data[ 0 ];
+        String correlationId = message.data[ 1 ];
         RpcResponse response;
         Object data = null;
 
@@ -126,18 +183,22 @@ public class RpcHandler implements UtilResubscribeCallback {
             data = MessageParser.convertTyped( message.data[ 2 ], this.client );
         }
 
-        RpcRequested callback = this.providers.get( name );
+        RpcRequestedListener callback = this.providers.get( rpcName );
         if( callback != null ) {
-            response = new RpcResponse( this.connection, name, correlationId );
-            callback.onRPCRequested( data, response );
+            response = new RpcResponse( this.connection, rpcName, correlationId );
+            callback.onRPCRequested(rpcName, data, response);
         } else {
-            this.connection.sendMsg( Topic.RPC, Actions.REJECTION, new String[] { name, correlationId } );
+            this.connection.sendMsg( Topic.RPC, Actions.REJECTION, new String[] { rpcName, correlationId } );
         }
     }
 
-    public void resubscribe() {
-        for ( String name : providers.keySet() ) {
-            connection.sendMsg( Topic.RPC, Actions.SUBSCRIBE, new String[] { name } );
+    /**
+     * Send an unsubscribe or subscribe event if the connection is open
+     */
+    private void sendRPCSubscribe(String rpcName) {
+        if( this.client.getConnectionState() == ConnectionState.OPEN ) {
+            this.ackTimeoutRegistry.add(Topic.RPC, Actions.SUBSCRIBE, rpcName, this.timeoutDuration);
+            this.connection.sendMsg(Topic.RPC, Actions.SUBSCRIBE, new String[]{rpcName});
         }
     }
 }

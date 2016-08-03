@@ -46,11 +46,7 @@ public class UtilAckTimeoutTest {
 
     @Test
     public void onTimeoutNotCalledWhenAckReceived() throws InterruptedException {
-        message.topic = Topic.EVENT;
-        message.action = Actions.ACK;
-        message.data[0] = Actions.SUBSCRIBE.toString();
-        message.data[1] = "Event1";
-
+        Message message = new Message( null, Topic.EVENT, Actions.ACK, new String[]{ Actions.SUBSCRIBE.toString(), "Event1" } );
         ackTimeoutRegistry.add( Topic.EVENT, Actions.SUBSCRIBE, "Event1", 20 );
         ackTimeoutRegistry.clear( message );
         Thread.sleep(50);
