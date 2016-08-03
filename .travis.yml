@@ -16,7 +16,7 @@ before_install:
   - ./scripts/installJava.sh
 
 script:
-  - ./gradlew cucumber
+  - ./gradlew -b build-prod.gradle
 
  after_script:
   - chmod +x scripts/publishJar.sh
