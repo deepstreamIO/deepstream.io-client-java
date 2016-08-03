@@ -13,13 +13,11 @@ import java.util.List;
  */
 class Connection implements IConnection {
 
-    private Endpoint endpoint;
-
     private final DeepstreamClient client;
     private final String originalUrl;
     private final ArrayList<ConnectionStateListener> connectStateListeners;
     private final Map options;
-
+    private Endpoint endpoint;
     private boolean tooManyAuthAttempts;
     private boolean challengeDenied;
     private boolean deliberateClose;
@@ -277,6 +275,7 @@ class Connection implements IConnection {
 
         int maxReconnectAttempts = Integer.parseInt( (String) options.get( "maxReconnectAttempts" ) );
         int reconnectIntervalIncrement = Integer.parseInt( (String) options.get( "reconnectIntervalIncrement" ) );
+        int maxReconnectInterval = Integer.parseInt((String) options.get("maxReconnectInterval"));
 
         if( this.reconnectionAttempt < maxReconnectAttempts ) {
             this.setState( ConnectionState.RECONNECTING );
@@ -285,7 +284,10 @@ class Connection implements IConnection {
                 public void run() {
                     tryOpen();
                 }
-            }, reconnectIntervalIncrement * this.reconnectionAttempt );
+            }, Math.min(
+                    reconnectIntervalIncrement * this.reconnectionAttempt,
+                    maxReconnectInterval
+            ));
             this.reconnectionAttempt++;
 
         } else {
