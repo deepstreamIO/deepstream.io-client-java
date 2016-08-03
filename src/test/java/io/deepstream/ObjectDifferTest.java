@@ -3,7 +3,6 @@ package io.deepstream;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import javafx.util.Pair;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -29,10 +28,10 @@ public class ObjectDifferTest {
         p.addProperty("age", 20);
         p.addProperty("name", "Alex");
 
-        Pair pair = comparer.getUpdateObject(p, p);
+        Tuple pair = comparer.getUpdateObject(p, p);
 
-        Assert.assertEquals("", pair.getKey());
-        Assert.assertEquals(null, pair.getValue());
+        Assert.assertEquals("", pair.path);
+        Assert.assertEquals(null, pair.value);
     }
 
     @org.junit.Test
@@ -45,10 +44,10 @@ public class ObjectDifferTest {
         q.addProperty("age", 20);
         q.addProperty("name", "Craig");
 
-        Pair pair = comparer.getUpdateObject(p, q);
+        Tuple pair = comparer.getUpdateObject(p, q);
 
-        Assert.assertEquals("name", pair.getKey());
-        Assert.assertEquals("Craig", pair.getValue().toString());
+        Assert.assertEquals("name", pair.path);
+        Assert.assertEquals("Craig", pair.value.toString());
     }
 
     @org.junit.Test
@@ -67,10 +66,10 @@ public class ObjectDifferTest {
         jsonArray1.add( "beer" );
         q.add("drinks", jsonArray1);
 
-        Pair pair = comparer.getUpdateObject(p, q);
+        Tuple pair = comparer.getUpdateObject(p, q);
 
-        Assert.assertEquals("drinks", pair.getKey());
-        Assert.assertEquals( "[\"coffee\",\"beer\"]", getJson(pair.getValue()) );
+        Assert.assertEquals("drinks", pair.path);
+        Assert.assertEquals( "[\"coffee\",\"beer\"]", getJson(pair.value) );
     }
 
     @org.junit.Test
@@ -89,10 +88,10 @@ public class ObjectDifferTest {
         jsonArray1.add( "beer" );
         q.add("drinks", jsonArray1);
 
-        Pair pair = comparer.getUpdateObject(p, q);
+        Tuple pair = comparer.getUpdateObject(p, q);
 
-        Assert.assertEquals("", pair.getKey());
-        Assert.assertEquals( "{\"name\":\"Craig\",\"drinks\":[\"coffee\",\"beer\"]}", getJson(pair.getValue()) );
+        Assert.assertEquals("", pair.path);
+        Assert.assertEquals( "{\"name\":\"Craig\",\"drinks\":[\"coffee\",\"beer\"]}", getJson(pair.value) );
     }
 
     @org.junit.Test
@@ -111,10 +110,10 @@ public class ObjectDifferTest {
         coffee1.addProperty("price", 5);
         q.add("favouriteCoffee", coffee1);
 
-        Pair pair = comparer.getUpdateObject(p, q);
+        Tuple pair = comparer.getUpdateObject(p, q);
 
-        Assert.assertEquals("favouriteCoffee.name", pair.getKey());
-        Assert.assertEquals("Flat White", pair.getValue().toString());
+        Assert.assertEquals("favouriteCoffee.name", pair.path);
+        Assert.assertEquals("Flat White", pair.value.toString());
     }
 
     @org.junit.Test
@@ -133,10 +132,10 @@ public class ObjectDifferTest {
         coffee1.addProperty("price", 6);
         q.add("favouriteCoffee", coffee1);
 
-        Pair pair = comparer.getUpdateObject(p, q);
+        Tuple pair = comparer.getUpdateObject(p, q);
 
-        Assert.assertEquals("favouriteCoffee", pair.getKey());
-        Assert.assertEquals( "{\"name\":\"Flat White\",\"price\":6}", getJson(pair.getValue()) );
+        Assert.assertEquals("favouriteCoffee", pair.path);
+        Assert.assertEquals( "{\"name\":\"Flat White\",\"price\":6}", getJson(pair.value) );
     }
 
     @org.junit.Test
@@ -155,10 +154,10 @@ public class ObjectDifferTest {
         drinks2.add("Milk");
         q.add("drinks", drinks2);
 
-        Pair pair = comparer.getUpdateObject(p, q);
+        Tuple pair = comparer.getUpdateObject(p, q);
 
-        Assert.assertEquals("drinks", pair.getKey());
-        Assert.assertEquals( "[\"Latte\",\"Milk\"]", getJson(pair.getValue()) );
+        Assert.assertEquals("drinks", pair.path);
+        Assert.assertEquals( "[\"Latte\",\"Milk\"]", getJson(pair.value) );
     }
 
     @org.junit.Test
@@ -171,9 +170,9 @@ public class ObjectDifferTest {
         q.addProperty("name", "Fred");
         q.addProperty("age", 20);
 
-        Pair pair = comparer.getUpdateObject(p, q);
-        Assert.assertEquals("", pair.getKey());
-        Assert.assertEquals( "{\"name\":\"Fred\",\"age\":20}", getJson(pair.getValue()));
+        Tuple pair = comparer.getUpdateObject(p, q);
+        Assert.assertEquals("", pair.path);
+        Assert.assertEquals( "{\"name\":\"Fred\",\"age\":20}", getJson(pair.value));
     }
 
     @org.junit.Test
@@ -185,9 +184,9 @@ public class ObjectDifferTest {
         q.addProperty("name", "Fred");
         q.addProperty("lastName", "Weasley");
 
-        Pair pair = comparer.getUpdateObject(p, q);
-        Assert.assertEquals("", pair.getKey());
-        Assert.assertEquals( "{\"name\":\"Fred\",\"lastName\":\"Weasley\"}", getJson(pair.getValue()));
+        Tuple pair = comparer.getUpdateObject(p, q);
+        Assert.assertEquals("", pair.path);
+        Assert.assertEquals( "{\"name\":\"Fred\",\"lastName\":\"Weasley\"}", getJson(pair.value));
     }
 
     @org.junit.Test
@@ -199,9 +198,9 @@ public class ObjectDifferTest {
         JsonObject q = new JsonObject();
         q.addProperty("name", "Fred");
 
-        Pair pair = comparer.getUpdateObject(p, q);
-        Assert.assertEquals("", pair.getKey());
-        Assert.assertEquals( "{\"name\":\"Fred\"}", getJson(pair.getValue()));
+        Tuple pair = comparer.getUpdateObject(p, q);
+        Assert.assertEquals("", pair.path);
+        Assert.assertEquals( "{\"name\":\"Fred\"}", getJson(pair.value));
     }
 
     private String getJson( Object obj ) {
