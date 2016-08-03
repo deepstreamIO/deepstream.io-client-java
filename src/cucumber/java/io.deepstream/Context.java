@@ -8,7 +8,7 @@ public class Context {
 
     private static final char MPS =  '\u001f';
     private static final char MS = '\u001e';
-    static int GENERAL_TIMEOUT = 50;
+    static int GENERAL_TIMEOUT = 75;
     static int serverPort = 7777;
     static int server2port = 8888;
     DeepstreamClient client;
