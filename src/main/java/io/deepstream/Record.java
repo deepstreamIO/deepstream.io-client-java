@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.deepstream.constants.*;
+import javafx.util.Pair;
 
 import java.util.*;
 import java.util.List;
@@ -23,6 +24,7 @@ public class Record {
     private final DeepstreamClientAbstract client;
     private final Gson gson;
     private final UtilJSONPath path;
+    private final UtilObjectDiffer objectDiffer;
     private final UtilEmitter subscribers;
     private final ArrayList<RecordEventsListener> recordEventsListeners;
     private final ArrayList<RecordReadyListener> recordReadyListeners;
@@ -55,6 +57,7 @@ public class Record {
         this.connection = connection;
         this.client = client;
         this.gson = new Gson();
+        this.objectDiffer = new UtilObjectDiffer();
         this.data = new JsonObject();
         this.path = new UtilJSONPath( this.data );
         this.subscribers = new UtilEmitter();
@@ -212,7 +215,8 @@ public class Record {
      * @see Record#set(String, Object)
      */
     public Record set( Object value ) throws DeepstreamRecordDestroyedException {
-        return this.set( null, value, false );
+        Pair<String, Object> pathAndData = this.objectDiffer.getUpdateObject(this.data, gson.toJsonTree(value));
+        return this.set( pathAndData.getKey(), pathAndData.getValue(), false );
     }
 
     /**

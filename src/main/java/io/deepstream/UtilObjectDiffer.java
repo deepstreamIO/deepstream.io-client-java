@@ -42,7 +42,7 @@ class UtilObjectDiffer {
      * @param nodeB the new version of the object
      * @return a Pair<String, JsonElement> with the path of the changes and the actual changes
      */
-    public Pair<String, Object> getUpdateObject(JsonElement nodeA, JsonElement nodeB) {
+    public Pair<String, Object> getUpdateObject(Object nodeA, Object nodeB) {
         return getDiff(nodeA, nodeB, new StringBuilder());
     }
 
@@ -54,7 +54,7 @@ class UtilObjectDiffer {
      * @param path the StringBuilder object that contains the current path
      * @return a Pair<String, JsonElement> with the path of the changes and the actual changes
      */
-    private Pair<String, Object> getDiff(JsonElement nodeA, Object nodeB, StringBuilder path) {
+    private Pair<String, Object> getDiff(Object nodeA, Object nodeB, StringBuilder path) {
         String nodePath = null;
         JsonElement diffNode = null;
 
@@ -104,7 +104,7 @@ class UtilObjectDiffer {
         return new Pair( path.toString(), getValue(diffNode) );
     }
 
-    public Object getValue(JsonElement element) {
+    private Object getValue(JsonElement element) {
         JsonPrimitive primitive = element.getAsJsonPrimitive();
         if( primitive.isBoolean() ) {
             return primitive.getAsBoolean();
