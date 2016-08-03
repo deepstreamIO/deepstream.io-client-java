@@ -10,15 +10,16 @@ import java.util.Properties;
 
 class Singleton {
 
+    private static Singleton singleton;
     private int serverPort = 7777;
     private int server2port = 8888;
-
     private String lastErrorMessage;
     private MockTcpServer server = new MockTcpServer( serverPort );
     private MockTcpServer server2 = new MockTcpServer( server2port );
     private DeepstreamClient client;
 
-    private static Singleton singleton;
+    private Singleton() {
+    }
 
     static Singleton getSingleton() {
         if( singleton != null ) {
@@ -27,9 +28,6 @@ class Singleton {
         System.out.println( "New Singleton" );
         singleton = new Singleton();
         return singleton;
-    }
-
-    public Singleton() {
     }
 
     MockTcpServer getServer1() {
@@ -61,6 +59,7 @@ class Singleton {
         options.put( "recordDeleteTimeout", "100" );
         options.put( "rpcResponseTimeout", "200" );
         options.put( "reconnectIntervalIncrement", "1500" );
+        options.put("maxReconnectAttempts", "1500");
         this.client = new DeepstreamClient( "localhost:" + serverPort, options );
 
         this.client.setRuntimeErrorHandler(new DeepstreamRuntimeErrorHandler() {

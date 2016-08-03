@@ -1,5 +1,4 @@
-#J2OBJCVersion=1.0.2
-J2OBJCVersion=0.9.8.2.1
+J2OBJCVersion=1.1
 
 # Paths and Stuff
 DIRECTORY=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd );
