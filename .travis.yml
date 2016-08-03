@@ -17,7 +17,3 @@ before_install:
 
 script:
   - ./gradlew -b build-prod.gradle
-
- after_script:
-  - chmod +x scripts/publishJar.sh
-  - ./scripts/publishJar.sh $BINTRAY_API_KEY ${TRAVIS_TAG}
