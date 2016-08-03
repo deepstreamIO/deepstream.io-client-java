@@ -27,3 +27,7 @@ if [ ! -d "$J2OBJC_ROOT/j2objc-$J2OBJCVersion" ]; then
 else
 	echo 'j2objc already downloaded';
 fi
+
+if [ $1 ]; then
+ rm -rf j2objc-$J2OBJCVersion.zip;
+fi
