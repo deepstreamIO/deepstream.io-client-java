@@ -98,7 +98,7 @@ class UtilObjectDiffer {
         // Only one attribute of node is different
         buildPath( nodePath, path );
 
-        if( diffNode instanceof JsonObject ) {
+        if( diffNode instanceof JsonObject || diffNode instanceof JsonArray ) {
             return getDiff( node1.get(nodePath), diffNode, path );
         }
         return new Pair( path.toString(), getValue(diffNode) );

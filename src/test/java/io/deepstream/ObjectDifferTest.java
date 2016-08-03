@@ -17,12 +17,10 @@ public class ObjectDifferTest {
 
     @Before
     public void setUp() throws URISyntaxException {
-
     }
 
     @After
     public void tearDown() {
-
     }
 
     @org.junit.Test
@@ -50,7 +48,7 @@ public class ObjectDifferTest {
         Pair pair = comparer.getUpdateObject(p, q);
 
         Assert.assertEquals("name", pair.getKey());
-        Assert.assertEquals("\"Craig\"", pair.getValue().toString());
+        Assert.assertEquals("Craig", pair.getValue().toString());
     }
 
     @org.junit.Test
@@ -116,7 +114,7 @@ public class ObjectDifferTest {
         Pair pair = comparer.getUpdateObject(p, q);
 
         Assert.assertEquals("favouriteCoffee.name", pair.getKey());
-        Assert.assertEquals("\"Flat White\"", pair.getValue().toString());
+        Assert.assertEquals("Flat White", pair.getValue().toString());
     }
 
     @org.junit.Test
