@@ -17,15 +17,6 @@ import java.util.List;
 public class Record {
     private static final String ALL_EVENT = "ALL_EVENT";
     private static final String DESTROY_PENDING = "DESTROY_PENDING";
-
-    private boolean isReady;
-    private boolean isDestroyed;
-    private int version;
-    private int usages;
-    private RecordMergeStrategy mergeStrategy;
-    private RecordRemoteUpdateHandler recordRemoteUpdateHandler;
-    private JsonElement data;
-
     private final UtilResubscribeNotifier utilResubscribeNotifier;
     private final UtilAckTimeoutRegistry ackTimeoutRegistry;
     private final IConnection connection;
@@ -39,6 +30,13 @@ public class Record {
     private final ArrayList<RecordReadyListener> onceRecordReadyListeners;
     private final String name;
     private final Map options;
+    private boolean isReady;
+    private boolean isDestroyed;
+    private int version;
+    private int usages;
+    private RecordMergeStrategy mergeStrategy;
+    private RecordRemoteUpdateHandler recordRemoteUpdateHandler;
+    private JsonElement data;
 
     /**
      * Constructor is not public since it is created via {@link RecordHandler#getRecord(String)}
@@ -458,7 +456,6 @@ public class Record {
         this.version = version;
         if( Actions.PATCH == message.action ) {
             path.set( message.data[ 2 ], data );
-            System.out.println( "Changed to: " + path.get( message.data[2] ));
         } else {
             this.data = data;
             this.path.setCoreElement( data );

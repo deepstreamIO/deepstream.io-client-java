@@ -15,27 +15,8 @@ class UtilJSONPath {
         this.coreElement = e;
     }
 
-    public JsonElement get(String path){
-        if(Objects.equals(path, "") || path == null ){
-            return this.coreElement;
-        } else {
-            return iterateThrough(this.coreElement, path, null);
-        }
-    }
-
-    public void set( String path, JsonElement value ) {
-        if(Objects.equals(path, "")) {
-            throw new RuntimeException( "Setting an entire object must be done via setValue( JsonElement value );" );
-        } else if( path == null ) {
-           this.coreElement = value;
-        } else {
-            iterateThrough(this.coreElement, path, value);
-        }
-    }
-
     private static JsonElement iterateThrough (JsonElement element, String path, JsonElement value) {
         String[] st = path.split( "\\." );
-        System.out.println( st.length );
         JsonElement parent = null;
         JsonElement traverser = element;
         String token = null;
@@ -133,12 +114,30 @@ class UtilJSONPath {
         }
     }
 
-    public void setCoreElement(JsonElement coreElement) {
-        this.coreElement = coreElement;
+    public JsonElement get(String path) {
+        if (Objects.equals(path, "") || path == null) {
+            return this.coreElement;
+        } else {
+            return iterateThrough(this.coreElement, path, null);
+        }
+    }
+
+    public void set(String path, JsonElement value) {
+        if (Objects.equals(path, "")) {
+            throw new RuntimeException("Setting an entire object must be done via setValue( JsonElement value );");
+        } else if (path == null) {
+            this.coreElement = value;
+        } else {
+            iterateThrough(this.coreElement, path, value);
+        }
     }
 
     public JsonElement getCoreElement() {
         return coreElement;
+    }
+
+    public void setCoreElement(JsonElement coreElement) {
+        this.coreElement = coreElement;
     }
 
     public class Array implements Iterable<UtilJSONPath> {
