@@ -4,6 +4,7 @@ package io.deepstream;
 import io.deepstream.constants.ConnectionState;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
 
 import java.util.Map;
 import java.util.Properties;
@@ -34,5 +35,9 @@ public class RecordHandlerTest {
     @After
     public void tearDown() {
 
+    }
+
+    @Test
+    public void getsRecord() throws DeepstreamRecordDestroyedException {
     }
 }
