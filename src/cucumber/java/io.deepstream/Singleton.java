@@ -54,8 +54,8 @@ class Singleton {
         System.out.println( "Creating new client" );
         Properties options = new Properties();
         options.put( "subscriptionTimeout", "100" );
-        options.put( "recordReadAckTimeout", "200" );
-        options.put( "recordReadTimeout", "260" );
+        options.put("recordReadAckTimeout", "100");
+        options.put("recordReadTimeout", "300");
         options.put( "recordDeleteTimeout", "100" );
         options.put( "rpcResponseTimeout", "200" );
         options.put( "reconnectIntervalIncrement", "1500" );
