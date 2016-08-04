@@ -4,24 +4,20 @@ os: osx
 osx_image: xcode7.1
 sudo: false
 
+cache:
+  directories:
+    - j2objcDist
+
 env:
   - LATEST_JAVA=true
   - LATEST_JAVA=false
 
-
 before_install:
   - chmod +x gradlew
-  - chmod +x setupJ2OBJC.sh
-  - chmod +x installJava.sh
-  - ./setupJ2OBJC.sh
-  - ./installJava.sh
-
-after_script:
-  - curl \
-      -T "build/libs/deepstream.io.*.jar" \
-      -H "X-Bintray-Publish:1" \
-      -u yasserf:$BINTRAY_API_KEY \
-      "https://api.bintray.com/content/deepstreamio/maven/deepstream.io-client-java/${TRAVIS_TAG}/deepstream.io-client-java_${TRAVIS_TAG}.jar"
+  - chmod +x scripts/setupJ2OBJC.sh
+  - chmod +x scripts/installJava.sh
+  - ./scripts/setupJ2OBJC.sh true
+  - ./scripts/installJava.sh
 
 script:
-  - ./gradlew cucumber
+  - ./gradlew -b build-prod.gradle
