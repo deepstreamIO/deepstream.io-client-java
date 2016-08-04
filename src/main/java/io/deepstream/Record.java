@@ -214,7 +214,7 @@ public class Record {
      * @see Record#set(String, Object)
      */
     public Record set( Object value ) throws DeepstreamRecordDestroyedException {
-        Tuple updateObject = this.objectDiffer.getUpdateObject(this.data, gson.toJsonTree(value));
+        Tuple updateObject = this.objectDiffer.getUpdateObject( this.data, gson.toJsonTree(value) );
         return this.set( updateObject.path, updateObject.value, false );
     }
 
