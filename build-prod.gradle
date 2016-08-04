@@ -1,7 +1,15 @@
 plugins {
+    id 'maven'
+    id 'maven-publish'
     id 'java'
     id "com.jfrog.bintray" version "1.7"
     id 'com.github.j2objccontrib.j2objcgradle' version '0.6.0-alpha'
+}
+
+task client(type: Jar)
+
+artifacts {
+    archives client
 }
 
 defaultTasks 'build'
@@ -10,11 +18,8 @@ defaultTasks 'build'
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
-group 'io.io.deepstream.gherkin'
-version '1.0-SNAPSHOT'
-
 repositories {
-    mavenCentral()
+    jcenter()
 }
 
 sourceSets {
@@ -41,11 +46,26 @@ j2objcConfig {
     finalConfigure()          // Must be last call to configuration
 }
 
+group 'io.deepstream'
+version '0.1'
+
+
+publishing {
+    publications {
+        MyPublication(MavenPublication) {
+            from components.java
+            groupId 'io.deepstream'
+            artifactId 'deepstream.io-client-java'
+            version '0.1'
+        }
+    }
+}
+
 bintray {
     user = System.getenv('BINTRAY_USER')
     key = System.getenv('BINTRAY_KEY')
 
-    configurations = ['deployables'] //When uploading configuration files
+    configurations = ['archives'] //When uploading configuration files
 
     dryRun = false //[Default: false] Whether to run this as dry-run, without deploying
     publish = true //[Default: false] Whether version should be auto published after an upload
@@ -55,7 +75,7 @@ bintray {
         repo = 'maven'
         name = 'deepstream.io-client-java'
         userOrg = 'deepstreamio'
-        desc = 'Java deepstream.io libraru'
+        desc = 'Java deepstream.io library'
         websiteUrl = 'https://deepstream.io/'
         issueTrackerUrl = 'https://github.com/deepstreamIO/deepstream.io-client-java/issues'
         vcsUrl = 'https://github.com/deepstreamIO/deepstream.io-client-java.git'

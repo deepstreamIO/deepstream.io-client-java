@@ -103,6 +103,14 @@ public class Record {
     }
 
     /**
+     * Return the record name
+     * @return The record name
+     */
+    public String name() {
+        return this.name;
+    }
+
+    /**
      * Add listener to be notified when the Record has been loaded from the server
      * @param recordReadyListener The listener to add
      * @return The record
