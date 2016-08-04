@@ -73,8 +73,31 @@ public class RecordClassSetTest {
     }
 
     @Test
+    public void sendsUpdateForNestedObject() {
+        Movie movie = new Movie("The Shining", 1980, new Person("Stanley K.", -1, null));
+        record.set(movie);
+
+        Movie updatedMovie = record.get(Movie.class);
+        updatedMovie.director.name = "Stanley Kubrick";
+        record.set(updatedMovie);
+
+        Assert.assertEquals(connectionMock.lastSentMessage, TestUtil.replaceSeperators("R|P|testRecord|2|director.name|SStanley Kubrick+"));
+    }
+
+    @Test
+    // setting a value to null will cause it to be removed from
+    // the JsonObject. Will therefore send whole object
+    // todo: look into sending delete when field is set to null
     public void deletesValueWhenSendingUndefined() throws DeepstreamRecordDestroyedException {
-        //TODO
+        sendsUpdateMessageForEntireRecord();
+
+        Person p = record.get(Person.class);
+        p.name = null;
+        record.set(p);
+
+        Assert.assertEquals(connectionMock.lastSentMessage, TestUtil.replaceSeperators("R|U|testRecord|2|{\"age\":30,\"likes\":[\"beer\",\"food\"]}+"));
+        Person updatedPerson = record.get(Person.class);
+        Assert.assertEquals(null, updatedPerson.name);
     }
 
     private class Person {
@@ -100,6 +123,19 @@ public class RecordClassSetTest {
             if( !Arrays.equals(this.likes, person.likes) ) return false;
 
             return true;
+        }
+    }
+
+
+    private class Movie {
+        String name;
+        int yearReleased;
+        Person director;
+
+        public Movie(String name, int yearReleased, Person director) {
+            this.name = name;
+            this.yearReleased = yearReleased;
+            this.director = director;
         }
     }
 }

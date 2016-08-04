@@ -41,7 +41,7 @@ class UtilObjectDiffer {
      * @param nodeB the new version of the object
      * @return a Tuple with the path of the changes and the actual changes
      */
-    public Tuple getUpdateObject(Object nodeA, Object nodeB) {
+    public Tuple getUpdateObject(JsonElement nodeA, JsonElement nodeB) {
         return getDiff(nodeA, nodeB, new StringBuilder());
     }
 
@@ -53,7 +53,7 @@ class UtilObjectDiffer {
      * @param path the StringBuilder object that contains the current path
      * @return a Pair<String, JsonElement> with the path of the changes and the actual changes
      */
-    private Tuple getDiff(Object nodeA, Object nodeB, StringBuilder path) {
+    private Tuple getDiff(JsonElement nodeA, JsonElement nodeB, StringBuilder path) {
         String nodePath = null;
         JsonElement diffNode = null;
 
@@ -100,6 +100,7 @@ class UtilObjectDiffer {
         if( diffNode instanceof JsonObject || diffNode instanceof JsonArray ) {
             return getDiff( node1.get(nodePath), diffNode, path );
         }
+
         return new Tuple( path.toString(), getValue(diffNode) );
     }
 
