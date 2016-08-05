@@ -21,7 +21,7 @@ public class RpcResponseTest {
     RpcHandler rpcHandler;
 
     @Before
-    public void setUp() throws URISyntaxException {
+    public void setUp() throws URISyntaxException, InvalidDeepstreamConfig {
         this.deepstreamClientMock = mock(DeepstreamClient.class);
         this.connectionMock = new ConnectionMock();
 
@@ -30,7 +30,7 @@ public class RpcResponseTest {
         options.put("rpcAckTimeout", "6000");
         options.put("rpcResponseTimeout", "10000");
 
-        this.rpcHandler = new RpcHandler(options, connectionMock, deepstreamClientMock);
+        this.rpcHandler = new RpcHandler( new DeepstreamConfig( options ), connectionMock, deepstreamClientMock);
     }
 
     @After

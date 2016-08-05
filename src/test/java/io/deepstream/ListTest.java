@@ -8,14 +8,12 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Properties;
 
 import static org.mockito.Mockito.*;
 
 public class ListTest {
 
-    Map options;
     DeepstreamClientMock deepstreamClientMock;
     ConnectionMock connectionMock;
     RecordHandler recordHandler;
@@ -27,7 +25,7 @@ public class ListTest {
     String listName = "someList";
 
     @Before
-    public void setUp() {
+    public void setUp() throws InvalidDeepstreamConfig {
 
         this.connectionMock = new ConnectionMock();
         this.errorCallbackMock = mock( DeepstreamRuntimeErrorHandler.class );
@@ -35,13 +33,13 @@ public class ListTest {
         this.deepstreamClientMock.setRuntimeErrorHandler( errorCallbackMock );
         this.deepstreamClientMock.setConnectionState( ConnectionState.OPEN );
 
-        options = new Properties();
+        Properties options = new Properties();
         options.put( "subscriptionTimeout", "10" );
         options.put( "recordDeleteTimeout", "10" );
         options.put( "recordReadAckTimeout", "10" );
         options.put( "recordReadTimeout", "20" );
 
-        recordHandler = new RecordHandler( options, connectionMock, deepstreamClientMock );
+        recordHandler = new RecordHandler( new DeepstreamConfig( options ), connectionMock, deepstreamClientMock );
         recordEventsListener = mock(RecordEventsListener.class);
         listReadyListener = mock(ListReadyListener.class);
         listChangedListener = mock( ListChangedListener.class);

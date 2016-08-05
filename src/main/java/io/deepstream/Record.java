@@ -29,7 +29,7 @@ public class Record {
     private final ArrayList<Record.RecordDestroyPendingListener> recordDestroyPendingListeners;
     private final ArrayList<RecordReadyListener> onceRecordReadyListeners;
     private final String name;
-    private final Map options;
+    private final DeepstreamConfig deepstreamConfig;
     private boolean isReady;
     private boolean isDestroyed;
     private int version;
@@ -41,15 +41,15 @@ public class Record {
     /**
      * Constructor is not public since it is created via {@link RecordHandler#getRecord(String)}
      * @param name The unique name of the record
-     * @param recordOptions A map of options, e.g. { persist: true }
+     * @param recordOptions A map of deepstreamConfig, e.g. { persist: true }
      * @param connection The instance of the server connection
-     * @param options Deepstream options
+     * @param deepstreamConfig Deepstream deepstreamConfig
      * @param client deepstream.io client
      */
-    Record(String name, Map recordOptions, IConnection connection, Map options, DeepstreamClientAbstract client) {
+    Record(String name, Map recordOptions, IConnection connection, DeepstreamConfig deepstreamConfig, DeepstreamClientAbstract client) {
         this.ackTimeoutRegistry = client.getAckTimeoutRegistry();
         this.name = name;
-        this.options = options;
+        this.deepstreamConfig = deepstreamConfig;
         this.usages = 0;
         this.version = -1;
         this.connection = connection;
@@ -344,8 +344,7 @@ public class Record {
             this.whenReady(new RecordReadyListener() {
                 @Override
                 public void onRecordReady(String recordName, Record record) {
-                    int subscriptionTimeout = Integer.parseInt( (String) options.get( "subscriptionTimeout" ) );
-                    ackTimeoutRegistry.add( Topic.RECORD, Actions.UNSUBSCRIBE, name, subscriptionTimeout );
+                    ackTimeoutRegistry.add(Topic.RECORD, Actions.UNSUBSCRIBE, name, deepstreamConfig.getSubscriptionTimeout());
                     connection.send( MessageBuilder.getMsg( Topic.RECORD, Actions.UNSUBSCRIBE, name ) );
 
                     for(RecordDestroyPendingListener recordDestroyPendingHandler: recordDestroyPendingListeners) {
@@ -372,8 +371,7 @@ public class Record {
         this.whenReady(new RecordReadyListener() {
             @Override
             public void onRecordReady(String recordName, Record record) {
-                int subscriptionTimeout = Integer.parseInt( (String) options.get( "recordDeleteTimeout" ) );
-                ackTimeoutRegistry.add( Topic.RECORD, Actions.DELETE, name, Event.DELETE_TIMEOUT, subscriptionTimeout );
+                ackTimeoutRegistry.add(Topic.RECORD, Actions.DELETE, name, Event.DELETE_TIMEOUT, deepstreamConfig.getSubscriptionTimeout());
                 connection.send( MessageBuilder.getMsg( Topic.RECORD, Actions.DELETE, name ) );
 
                 for(RecordDestroyPendingListener recordDestroyPendingHandler: recordDestroyPendingListeners) {
@@ -497,11 +495,8 @@ public class Record {
      * Start response timeouts
      */
     private void scheduleAcks() {
-        int readAckTimeout = Integer.parseInt( (String) this.options.get( "recordReadAckTimeout" ) );
-        this.ackTimeoutRegistry.add( Topic.RECORD, Actions.SUBSCRIBE, this.name, Event.ACK_TIMEOUT, readAckTimeout );
-
-        int readResponseTimeout = Integer.parseInt( (String) this.options.get( "recordReadTimeout" ) );
-        this.ackTimeoutRegistry.add( Topic.RECORD, Actions.READ, this.name, Event.RESPONSE_TIMEOUT, readResponseTimeout );
+        this.ackTimeoutRegistry.add(Topic.RECORD, Actions.SUBSCRIBE, this.name, Event.ACK_TIMEOUT, deepstreamConfig.getRecordReadAckTimeout());
+        this.ackTimeoutRegistry.add(Topic.RECORD, Actions.READ, this.name, Event.RESPONSE_TIMEOUT, deepstreamConfig.getRecordReadTimeout());
     }
 
     /**

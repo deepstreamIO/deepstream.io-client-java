@@ -4,7 +4,6 @@ import io.deepstream.constants.ConnectionState;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
 
-import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Properties;
 
@@ -44,7 +43,7 @@ class Singleton {
         return this.server;
     }
 
-    DeepstreamClient getNewClient() throws IOException, URISyntaxException, InterruptedException {
+    DeepstreamClient getNewClient() throws URISyntaxException, InterruptedException, InvalidDeepstreamConfig {
         if( this.client != null ) {
             System.out.println( "Closing old client " );
             this.client.close();

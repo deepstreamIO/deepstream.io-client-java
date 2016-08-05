@@ -4,14 +4,12 @@ import io.deepstream.constants.Actions;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
 
-import java.util.Map;
-
 
 class Rpc implements UtilTimeoutListener {
 
     private final String uid;
     private final UtilAckTimeoutRegistry ackTimeoutRegistry;
-    private final Map properties;
+    private final DeepstreamConfig deepstreamConfig;
     private final DeepstreamClientAbstract client;
     private final RpcResponseCallback callback;
     private final String rpcName;
@@ -21,14 +19,14 @@ class Rpc implements UtilTimeoutListener {
      * It's main function is to encapsulate the logic around timeouts and to convert the
      * incoming response data
      *
-     * @param options The options the client was created with
+     * @param deepstreamConfig The deepstreamConfig the client was created with
      * @param client The deepstream client
      * @param rpcName The rpc name
      * @param uid The unique RPC identifier
      * @param callback The callback when an RPC has been completed
      */
-    Rpc(Map options, DeepstreamClientAbstract client, String rpcName, String uid, RpcResponseCallback callback ) {
-        this.properties = options;
+    Rpc(DeepstreamConfig deepstreamConfig, DeepstreamClientAbstract client, String rpcName, String uid, RpcResponseCallback callback) {
+        this.deepstreamConfig = deepstreamConfig;
         this.client = client;
         this.rpcName = rpcName;
         this.uid = uid;
@@ -80,10 +78,7 @@ class Rpc implements UtilTimeoutListener {
     }
 
     private void setTimeouts() {
-        int ackTimeoutTime = Integer.parseInt( (String) properties.get( "rpcAckTimeout" ) );
-        this.ackTimeoutRegistry.add( Topic.RPC, Actions.REQUEST, this.uid, Event.ACK_TIMEOUT, ackTimeoutTime );
-
-        int responseTimeoutTime = Integer.parseInt( (String) properties.get( "rpcResponseTimeout" ) );
-        this.ackTimeoutRegistry.add( Topic.RPC, Actions.RESPONSE, this.uid, Event.RESPONSE_TIMEOUT, this, responseTimeoutTime );
+        this.ackTimeoutRegistry.add(Topic.RPC, Actions.REQUEST, this.uid, Event.ACK_TIMEOUT, deepstreamConfig.getRpcAckTimeout());
+        this.ackTimeoutRegistry.add(Topic.RPC, Actions.RESPONSE, this.uid, Event.RESPONSE_TIMEOUT, this, deepstreamConfig.getRpcResponseTimeout());
     }
 }

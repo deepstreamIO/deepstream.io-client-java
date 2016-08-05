@@ -11,7 +11,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.net.URISyntaxException;
-import java.util.Map;
 import java.util.Properties;
 
 import static org.mockito.Mockito.*;
@@ -25,7 +24,7 @@ public class EventHandlerTest {
     DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler;
 
     @Before
-    public void setUp() throws URISyntaxException {
+    public void setUp() throws URISyntaxException, InvalidDeepstreamConfig {
         callbackMock = mock( EventListener.class );
 
         this.connectionMock = new ConnectionMock();
@@ -34,10 +33,10 @@ public class EventHandlerTest {
         this.deepstreamClientMock.setRuntimeErrorHandler( this.deepstreamRuntimeErrorHandler );
         this.deepstreamClientMock.setConnectionState( ConnectionState.OPEN );
 
-        Map options = new Properties();
+        Properties options = new Properties();
         options.put( "subscriptionTimeout", "10" );
 
-        eventHandler = new EventHandler( options, connectionMock, deepstreamClientMock );
+        eventHandler = new EventHandler( new DeepstreamConfig( options ), connectionMock, deepstreamClientMock );
     }
 
     @After
@@ -50,7 +49,7 @@ public class EventHandlerTest {
         Assert.assertNull( connectionMock.lastSentMessage );
         eventHandler.emit( "myEvent", 8 );
         Assert.assertEquals( TestUtil.replaceSeperators("E|EVT|myEvent|N8+"), connectionMock.lastSentMessage );
-    };
+    }
 
     @Test
     public void subscribesToEvent() {
@@ -70,7 +69,7 @@ public class EventHandlerTest {
         eventHandler.subscribe( "myEvent", callbackMock );
         eventHandler.emit( "myEvent", 8 );
         Thread.sleep(30);
-        verify( callbackMock, times(1) ).onEvent( "myEvent", new Object[] { 8 } );
+        verify( callbackMock, times(1) ).onEvent( "myEvent", 8);
     }
 
     @Test

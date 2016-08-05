@@ -15,7 +15,6 @@ import org.junit.runners.JUnit4;
 import org.mockito.Matchers;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 
 import static org.mockito.Mockito.*;
@@ -30,20 +29,20 @@ public class RecordSubscriptionLocalTest {
     private RecordChangedCallback subscriptionCallback;
 
     @Before
-    public void setUp() throws DeepstreamRecordDestroyedException {
+    public void setUp() throws DeepstreamRecordDestroyedException, InvalidDeepstreamConfig {
         this.connectionMock = new ConnectionMock();
         this.errorCallbackMock = mock( DeepstreamRuntimeErrorHandler.class );
         this.deepstreamClientMock = new DeepstreamClientMock();
         this.deepstreamClientMock.setRuntimeErrorHandler( errorCallbackMock );
         this.deepstreamClientMock.setConnectionState( ConnectionState.OPEN );
 
-        Map options = new Properties();
+        Properties options = new Properties();
         options.put( "subscriptionTimeout", "10" );
         options.put( "recordDeleteTimeout", "10" );
         options.put( "recordReadAckTimeout", "10" );
         options.put( "recordReadTimeout", "20" );
 
-        this.record = new Record( "testRecord", new HashMap(), connectionMock, options, deepstreamClientMock );
+        this.record = new Record( "testRecord", new HashMap(), connectionMock, new DeepstreamConfig( options ), deepstreamClientMock );
         record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|A|S|testRecord" ), deepstreamClientMock ) );
         record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|testRecord|0|{}" ), deepstreamClientMock ) );
         Assert.assertEquals( new JsonObject(), record.get() );

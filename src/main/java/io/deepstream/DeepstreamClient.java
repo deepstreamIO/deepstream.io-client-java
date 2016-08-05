@@ -14,9 +14,6 @@ import java.util.UUID;
  */
 public class DeepstreamClient extends DeepstreamClientAbstract {
 
-    private String uuid;
-    private final Connection connection;
-
     /**
      * The getters for data-sync, such as {@link RecordHandler#getRecord(String)},
      * {@link RecordHandler#getList(String)}, provider functionality such as {@link RecordHandler#listen(String, ListenListener)}
@@ -33,31 +30,40 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      * providing them via {@link RpcHandler#provide(String, RpcRequestedListener)}
      */
     public final RpcHandler rpc;
+    private final Connection connection;
+    private String uuid;
 
     /**
      * deepstream.io javascript client, defaults to using default properties
      * {@link DeepstreamClient#DeepstreamClient(String, Properties)}
      *
      * @throws URISyntaxException Thrown if the url in incorrect
-     * @throws IOException Thrown if the default properties file is not found
      */
-    public DeepstreamClient( final String url ) throws URISyntaxException, IOException {
-        this( url, new Properties() );
+    public DeepstreamClient(final String url) throws URISyntaxException {
+        this(url, new DeepstreamConfig());
+    }
+
+    /**
+     * deepstream.io javascript client, defaults to using default properties
+     * {@link DeepstreamClient#DeepstreamClient(String, Properties)}
+     *
+     * @throws URISyntaxException Thrown if the url in incorrect
+     */
+    public DeepstreamClient(final String url, Properties options) throws URISyntaxException, InvalidDeepstreamConfig {
+        this(url, new DeepstreamConfig(options));
     }
 
     /**
      * deepstream.io java client
      * @param url URL to connect to. The protocol can be omited, e.g. <host>:<port>
-     * @param options A map of options that extend the ones specified in DefaultConfig.properties
+     * @param deepstreamConfig A map of options that extend the ones specified in DefaultConfig.properties
      * @throws URISyntaxException Thrown if the url in incorrect
-     * @throws IOException Thrown if the default properties file is not found
      */
-    public DeepstreamClient( final String url, Properties options ) throws URISyntaxException, IOException {
-        Properties config = getConfig(options);
-        this.connection = new Connection( url, config, this );
-        this.event = new EventHandler(config, this.connection, this );
-        this.rpc = new RpcHandler(config, this.connection, this );
-        this.record = new RecordHandler(config, this.connection, this );
+    private DeepstreamClient(final String url, DeepstreamConfig deepstreamConfig) throws URISyntaxException {
+        this.connection = new Connection(url, deepstreamConfig, this);
+        this.event = new EventHandler(deepstreamConfig, this.connection, this);
+        this.rpc = new RpcHandler(deepstreamConfig, this.connection, this);
+        this.record = new RecordHandler(deepstreamConfig, this.connection, this);
     }
 
     /**

@@ -1,7 +1,6 @@
 package io.deepstream;
 
 
-import java.io.IOException;
 import java.net.URISyntaxException;
 
 public class Context {
@@ -14,7 +13,7 @@ public class Context {
     DeepstreamClient client;
     MockTcpServer server, server2;
 
-    public Context() throws InterruptedException, IOException, URISyntaxException {
+    public Context() throws InterruptedException, URISyntaxException, InvalidDeepstreamConfig {
         this.server = Singleton.getSingleton().getServer1();
         this.server2 = Singleton.getSingleton().getServer2();
 

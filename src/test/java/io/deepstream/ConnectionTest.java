@@ -33,7 +33,7 @@ public class ConnectionTest {
         this.deepstreamClientMock = mock(DeepstreamClient.class);
 
         this.endpointMock = new EndpointMock(originalUrl, this.connection);
-        this.connection = new Connection(originalUrl, new HashMap(), this.deepstreamClientMock, this.endpointMock);
+        this.connection = new Connection(originalUrl, new DeepstreamConfig(), this.deepstreamClientMock, this.endpointMock);
         this.endpointMock.setConnection( this.connection );
 
         this.connectionStateListenerMock = mock(ConnectionStateListener.class);

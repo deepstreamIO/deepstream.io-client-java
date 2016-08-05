@@ -14,22 +14,20 @@ import java.util.Map;
  * of convinience methods for interacting with them.
  */
 public class List {
-    public boolean isReady;
-    public boolean isDestroyed;
     public final String name;
-
     private final RecordListeners recordListeners;
     private final Record record;
     private final ArrayList<ListReadyListener> listReadyListeners;
     private final ArrayList<ListChangedListener> listChangedListeners;
+    public boolean isReady;
+    public boolean isDestroyed;
     
     /**
-     * Constructor is not public since it is created via {@link RecordHandler#getList(String)} 
+     * Constructor is not public since it is created via {@link RecordHandler#getList(String)}
      * @param recordHandler The recordHandler to get the underlying record
      * @param name The list name
-     * @param options Options client was created with
      */
-    List(RecordHandler recordHandler, String name, Map options) {
+    List(RecordHandler recordHandler, String name) {
         this.record = recordHandler.getRecord( name );
 
         this.recordListeners = new List.RecordListeners( this, this.record );

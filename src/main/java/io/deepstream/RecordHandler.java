@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class RecordHandler implements RecordEventsListener, Record.RecordDestroyPendingListener {
 
-    private final Map options;
+    private final DeepstreamConfig deepstreamConfig;
     private final IConnection connection;
     private final DeepstreamClientAbstract client;
     private final Map<String, Record> records;
@@ -24,12 +24,12 @@ public class RecordHandler implements RecordEventsListener, Record.RecordDestroy
      * A collection of factories for records. This class
      * is exposed as client.record
      *
-     * @param options The options the client was created with
+     * @param deepstreamConfig The deepstreamConfig the client was created with
      * @param connection The connection
      * @param client The deepstream client
      */
-    RecordHandler( Map options, IConnection connection, DeepstreamClientAbstract client) {
-        this.options = options;
+    RecordHandler(DeepstreamConfig deepstreamConfig, IConnection connection, DeepstreamClientAbstract client) {
+        this.deepstreamConfig = deepstreamConfig;
         this.connection = connection;
         this.client = client;
 
@@ -37,9 +37,8 @@ public class RecordHandler implements RecordEventsListener, Record.RecordDestroy
         lists = new HashMap<>();
         listeners = new HashMap<>();
 
-        int recordReadTimeout = Integer.parseInt( (String) options.get( "recordReadTimeout" ) );
-        hasRegistry = new UtilSingleNotifier( client, connection, Topic.RECORD, Actions.SNAPSHOT, recordReadTimeout );
-        snapshotRegistry = new UtilSingleNotifier( client, connection, Topic.RECORD, Actions.SNAPSHOT, recordReadTimeout );
+        hasRegistry = new UtilSingleNotifier(client, connection, Topic.RECORD, Actions.SNAPSHOT, deepstreamConfig.getRecordReadTimeout());
+        snapshotRegistry = new UtilSingleNotifier(client, connection, Topic.RECORD, Actions.SNAPSHOT, deepstreamConfig.getRecordReadTimeout());
     }
 
     /**
@@ -51,7 +50,7 @@ public class RecordHandler implements RecordEventsListener, Record.RecordDestroy
     public Record getRecord( String name ) {
         Record record = records.get( name );
         if( record == null ) {
-            record = new Record( name, new HashMap(), connection, options, client );
+            record = new Record(name, new HashMap(), connection, deepstreamConfig, client);
             records.put( name, record );
             record.addRecordEventsListener( this );
             record.addRecordDestroyPendingListener( this );
@@ -70,7 +69,7 @@ public class RecordHandler implements RecordEventsListener, Record.RecordDestroy
     public List getList( String name ) {
         List list = lists.get( name );
         if( list == null ) {
-            list = new List( this, name, options );
+            list = new List(this, name);
         }
         return list;
     }
@@ -110,7 +109,7 @@ public class RecordHandler implements RecordEventsListener, Record.RecordDestroy
             // TODO: Do we really want to throw an error here?
             client.onError( Topic.RECORD, Event.LISTENER_EXISTS, pattern );
         } else {
-            listeners.put( pattern, new UtilListener( Topic.RECORD, pattern, listenCallback, options, client, connection ));
+            listeners.put(pattern, new UtilListener(Topic.RECORD, pattern, listenCallback, deepstreamConfig, client, connection));
         }
     }
 

@@ -9,9 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class RpcHandler {
-
-    private final int timeoutDuration;
-    private final Map options;
+    private final DeepstreamConfig deepstreamConfig;
     private final IConnection connection;
     private final DeepstreamClientAbstract client;
     private final Map<String, RpcRequestedListener> providers;
@@ -24,12 +22,12 @@ public class RpcHandler {
      * Provides the rpc interface and handles incoming messages
      * on the rpc topic
      *
-     * @param options The options the client was created with
+     * @param deepstreamConfig The deepstreamConfig the client was created with
      * @param connection The connection to deepstream
      * @param client The deepstream client
      */
-    RpcHandler( Map options, final IConnection connection, DeepstreamClientAbstract client ) {
-        this.options = options;
+    RpcHandler(DeepstreamConfig deepstreamConfig, final IConnection connection, DeepstreamClientAbstract client) {
+        this.deepstreamConfig = deepstreamConfig;
         this.connection = connection;
         this.client = client;
         this.providers = new HashMap<>();
@@ -43,8 +41,6 @@ public class RpcHandler {
                 }
             }
         });
-
-        this.timeoutDuration = Integer.parseInt( (String) this.options.get( "subscriptionTimeout" ) );
     }
 
     /**
@@ -77,7 +73,7 @@ public class RpcHandler {
         if( this.providers.containsKey( rpcName ) ) {
             this.providers.remove( rpcName );
 
-            this.ackTimeoutRegistry.add(Topic.RPC, Actions.UNSUBSCRIBE, rpcName, this.timeoutDuration);
+            this.ackTimeoutRegistry.add(Topic.RPC, Actions.UNSUBSCRIBE, rpcName, deepstreamConfig.getSubscriptionTimeout());
             this.connection.sendMsg(Topic.RPC, Actions.UNSUBSCRIBE, new String[]{rpcName});
         }
     }
@@ -91,7 +87,7 @@ public class RpcHandler {
      */
     public void make(String rpcName, Object data, RpcResponseCallback callback ) {
         String uid = this.client.getUid();
-        this.rpcs.put( uid, new Rpc( this.options, this.client, rpcName, uid, callback ) );
+        this.rpcs.put(uid, new Rpc(this.deepstreamConfig, this.client, rpcName, uid, callback));
 
         String typedData = MessageBuilder.typed( data );
         this.connection.sendMsg( Topic.RPC, Actions.REQUEST, new String[] { rpcName, uid, typedData } );
@@ -197,7 +193,7 @@ public class RpcHandler {
      */
     private void sendRPCSubscribe(String rpcName) {
         if( this.client.getConnectionState() == ConnectionState.OPEN ) {
-            this.ackTimeoutRegistry.add(Topic.RPC, Actions.SUBSCRIBE, rpcName, this.timeoutDuration);
+            this.ackTimeoutRegistry.add(Topic.RPC, Actions.SUBSCRIBE, rpcName, deepstreamConfig.getSubscriptionTimeout());
             this.connection.sendMsg(Topic.RPC, Actions.SUBSCRIBE, new String[]{rpcName});
         }
     }

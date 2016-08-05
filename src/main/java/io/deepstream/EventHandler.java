@@ -4,26 +4,28 @@ import io.deepstream.constants.Actions;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class EventHandler {
 
     private final int subscriptionTimeout;
     private final UtilEmitter emitter;
-    private final Map options;
+    private final DeepstreamConfig deepstreamConfig;
     private final IConnection connection;
     private final DeepstreamClientAbstract client;
     private final UtilAckTimeoutRegistry ackTimeoutRegistry;
     private final Map<String, UtilListener> listeners;
     private final List<String> subscriptions;
 
-    public EventHandler(Map options, final IConnection connection, DeepstreamClientAbstract client ) {
-        this.subscriptionTimeout = Integer.parseInt( (String) options.get( "subscriptionTimeout" ) );
+    public EventHandler(DeepstreamConfig deepstreamConfig, final IConnection connection, DeepstreamClientAbstract client) {
+        this.subscriptionTimeout = deepstreamConfig.getSubscriptionTimeout();
         this.emitter = new UtilEmitter();
         this.connection = connection;
         this.client = client;
-        this.options = options;
+        this.deepstreamConfig = deepstreamConfig;
         this.listeners = new HashMap<>();
         this.subscriptions = new ArrayList<>();
         this.ackTimeoutRegistry = client.getAckTimeoutRegistry();
@@ -71,7 +73,7 @@ public class EventHandler {
             this.client.onError( Topic.EVENT, Event.LISTENER_EXISTS, pattern );
         } else {
             this.listeners.put( pattern,
-                    new UtilListener(Topic.EVENT, pattern, callback, this.options, this.client, this.connection )
+                    new UtilListener(Topic.EVENT, pattern, callback, this.deepstreamConfig, this.client, this.connection)
             );
         }
     }
