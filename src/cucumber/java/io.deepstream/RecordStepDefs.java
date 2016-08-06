@@ -22,14 +22,17 @@ public class RecordStepDefs {
 
     ListenListener listenCallback = mock( ListenListener.class );
     RecordChangedCallback recordChangedCallback = mock( RecordChangedCallback.class );
-    RecordHasCallback recordHasCallback = mock( RecordHasCallback.class );
-    RecordSnapshotCallback recordSnapshotCallback = mock( RecordSnapshotCallback.class );
     Record record;
+
+    JsonElement snapshotData;
+    boolean hasRecord;
+    DeepstreamError hasRecordError;
+    DeepstreamError snapshotError;
 
     public RecordStepDefs( Context context ) {
         this.client = context.client;
-        this.serverPort = context.serverPort;
-        this.server2Port = context.server2port;
+        this.serverPort = Context.serverPort;
+        this.server2Port = Context.server2port;
     }
 
     @Given("^the client deletes the record named \"([^\"]*)\"$")
@@ -152,39 +155,39 @@ public class RecordStepDefs {
      * Has
      */
     @Given("^the client checks if the server has the record \"([^\"]*)\"$")
-    public void the_client_checks_if_the_server_has_the_record(String recordName) throws Throwable {
-        recordHasCallback = mock( RecordHasCallback.class );
-        client.record.has(recordName, recordHasCallback );
+    public void the_client_checks_if_the_server_has_the_record(final String recordName) throws InterruptedException {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    hasRecord = client.record.has(recordName);
+                } catch (DeepstreamError deepstreamError) {
+                    hasRecordError = deepstreamError;
+                }
+            }
+        });
+
         Thread.sleep(GENERAL_TIMEOUT);
     }
 
     @Then("^the client is not told if the record \"([^\"]*)\" exists$")
     public void the_client_is_not_told_if_the_record_exists(String recordName) throws Throwable {
-        verifyZeroInteractions( recordHasCallback );
+        // since it is sync this will never happen
     }
 
     @Then("^the client is told the record \"([^\"]*)\" doesn't exist$")
     public void the_client_is_told_the_record_doesn_t_exist(String recordName) throws Throwable {
-        verify( recordHasCallback, times( 0 ) ).onRecordHasError(anyString(), any(DeepstreamException.class));
-        verify( recordHasCallback, times( 0 ) ).onRecordFound(recordName);
-        verify( recordHasCallback, times( 1 ) ).onRecordNotFound(recordName);
-        reset( recordHasCallback );
+        Assert.assertFalse(hasRecord);
     }
 
     @Then("^the client is told the record \"([^\"]*)\" exists$")
     public void the_client_is_told_the_record_exists(String recordName) throws Throwable {
-        verify( recordHasCallback, times( 0 ) ).onRecordHasError(anyString(), any(DeepstreamException.class));
-        verify( recordHasCallback, times( 1 ) ).onRecordFound(recordName);
-        verify( recordHasCallback, times( 0 ) ).onRecordNotFound(anyString());
-        reset( recordHasCallback );
+        Assert.assertTrue(hasRecord);
     }
 
     @Then("^the client is told the record \"([^\"]*)\" encountered an error checking if record exists$")
     public void the_client_is_told_the_record_encountered_an_error_checking_if_record_exists(String recordName) throws Throwable {
-        verify( recordHasCallback, times( 1 ) ).onRecordHasError(anyString(), any(DeepstreamException.class));
-        verify( recordHasCallback, times( 0 ) ).onRecordFound(anyString());
-        verify( recordHasCallback, times( 0 ) ).onRecordNotFound(anyString());
-        reset( recordHasCallback );
+        Assert.assertNotNull(hasRecordError);
     }
 
     /**
@@ -192,28 +195,29 @@ public class RecordStepDefs {
      */
 
     @Given("^the client requests a snapshot for the record \"([^\"]*)\"$")
-    public void the_client_requests_a_snapshot_for_the_record(String recordName) throws Throwable {
-        client.record.snapshot( recordName, recordSnapshotCallback);
-        Thread.sleep(GENERAL_TIMEOUT);
-    }
+    public void the_client_requests_a_snapshot_for_the_record(final String recordName) throws Throwable {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    client.record.snapshot(recordName);
+                } catch (DeepstreamError deepstreamError) {
+                    snapshotError = deepstreamError;
+                }
+            }
+        });
 
-    @Then("^the client has no response for the snapshot of record \"([^\"]*)\"$")
-    public void the_client_has_no_response_for_the_snapshot_of_record(String arg1) throws Throwable {
-        verifyZeroInteractions( recordHasCallback );
+        Thread.sleep(GENERAL_TIMEOUT);
     }
 
     @Then("^the client is told the record \"([^\"]*)\" encountered an error retrieving snapshot$")
     public void the_client_is_told_the_record_encountered_an_error_retrieving_snapshot(String recordName) throws Throwable {
-        verify( recordSnapshotCallback, times( 1 ) ).onRecordSnapshotError(anyString(), any(DeepstreamException.class));
-        verify( recordSnapshotCallback, times( 0 ) ).onRecordSnapshot(anyString(), any(JsonElement.class));
-        reset( recordSnapshotCallback );
+        Assert.assertNotNull(snapshotError);
     }
 
     @Then("^the client is provided the snapshot for record \"([^\"]*)\" with data \"(.*)\"$$")
     public void the_client_is_provided_the_snapshot_name_for_record_with_data(String recordName, String data) throws Throwable {
-        verify( recordSnapshotCallback, times( 0 ) ).onRecordSnapshotError(anyString(), any(DeepstreamException.class));
-        verify( recordSnapshotCallback, times( 1 ) ).onRecordSnapshot(anyString(), any(JsonElement.class));
-        reset( recordSnapshotCallback );
+        Assert.assertEquals(gson.fromJson(data, JsonElement.class), snapshotData);
     }
 
     /**

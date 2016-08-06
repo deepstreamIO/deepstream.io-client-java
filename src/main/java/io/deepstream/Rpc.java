@@ -11,7 +11,7 @@ class Rpc implements UtilTimeoutListener {
     private final UtilAckTimeoutRegistry ackTimeoutRegistry;
     private final DeepstreamConfig deepstreamConfig;
     private final DeepstreamClientAbstract client;
-    private final RpcResponseCallback callback;
+    private final RpcHandler.RpcResponseCallback callback;
     private final String rpcName;
 
     /**
@@ -25,7 +25,7 @@ class Rpc implements UtilTimeoutListener {
      * @param uid The unique RPC identifier
      * @param callback The callback when an RPC has been completed
      */
-    Rpc(DeepstreamConfig deepstreamConfig, DeepstreamClientAbstract client, String rpcName, String uid, RpcResponseCallback callback) {
+    Rpc(DeepstreamConfig deepstreamConfig, DeepstreamClientAbstract client, String rpcName, String uid, RpcHandler.RpcResponseCallback callback) {
         this.deepstreamConfig = deepstreamConfig;
         this.client = client;
         this.rpcName = rpcName;

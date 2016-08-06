@@ -11,18 +11,18 @@ public class RpcStepDefs {
     int server2Port;
     int GENERAL_TIMEOUT = Context.GENERAL_TIMEOUT;
 
-    public RpcStepDefs( Context context ) {
-        this.client = context.client;
-        this.serverPort = context.serverPort;
-        this.server2Port = context.server2port;
-    }
-
     RpcRequestedListenerMock toUpperCaseMock = new RpcRequestedListenerMock();
-    ResponseCallback responseCallback = new ResponseCallback();
 
     RpcResponse rpcResponse;
+    RpcRequest rpcRequest;
     String response;
     String request;
+
+    public RpcStepDefs(Context context) {
+        this.client = context.client;
+        this.serverPort = Context.serverPort;
+        this.server2Port = Context.server2port;
+    }
 
     @Then("^the client provides a RPC called \"(.*?)\"$")
     public void the_client_provides_a_RPC_called( String rpcName ) throws InterruptedException {
@@ -37,15 +37,21 @@ public class RpcStepDefs {
     }
 
     @Then("^the client requests RPC \"(.*?)\" with data \"(.*?)\"$")
-    public void client_makes_an_rpc( String rpcName, String data ) throws InterruptedException {
-        client.rpc.make( rpcName, data, responseCallback );
-        Thread.sleep(GENERAL_TIMEOUT);
+    public void client_makes_an_rpc(final String rpcName, final String data) throws InterruptedException {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                rpcResponse = client.rpc.make(rpcName, data);
+            }
+        }).start();
+
+        Thread.sleep(20);
     }
 
     @When("^the client recieves an error RPC callback for \"([^\"]*)\" with the message \"([^\"]*)\"$")
     @Then("^the client recieves a successful RPC callback for \"(.*?)\" with data \"(.*?)\"$")
     public void client_receives_rpc( String rpcName, String data ) throws InterruptedException {
-        Assert.assertEquals( data, response );
+        Assert.assertEquals(data, rpcResponse.getData());
     }
 
     @Then("^the client recieves a request for a RPC called \"(.*?)\" with data \"(.*?)\"$")
@@ -55,40 +61,27 @@ public class RpcStepDefs {
 
     @When("^the client responds to the RPC \"([^\"]*)\" with data \"([^\"]*)\"$")
     public void the_client_responds_to_the_RPC_with_data(String rpcName, String rpcData) throws Throwable {
-        rpcResponse.send( rpcData );
+        rpcRequest.send(rpcData);
         Thread.sleep(GENERAL_TIMEOUT * 2);
     }
 
     @When("^the client responds to the RPC \"([^\"]*)\" with the error \"([^\"]*)\"$")
     public void the_client_responds_to_the_RPC_with_the_error(String rpcName, String rpcError) throws Throwable {
-        rpcResponse.error( rpcError );
+        rpcRequest.error(rpcError);
         Thread.sleep(GENERAL_TIMEOUT * 2);
     }
 
     @When("^the client rejects the RPC \"([^\"]*)\"$")
     public void the_client_rejects_the_RPC(String arg1) throws Throwable {
-        rpcResponse.reject();
+        rpcRequest.reject();
         Thread.sleep(GENERAL_TIMEOUT * 2);
     }
 
     class RpcRequestedListenerMock implements RpcRequestedListener {
         @Override
-        public void onRPCRequested(String rpcName, Object data, RpcResponse response) {
+        public void onRPCRequested(String rpcName, Object data, RpcRequest response) {
             request = (String) data;
-            rpcResponse = response;
-        }
-    }
-
-    class ResponseCallback implements RpcResponseCallback {
-
-        @Override
-        public void onRpcSuccess(String rpcName, Object data) {
-            response = (String) data;
-        }
-
-        @Override
-        public void onRpcError(String rpcName, Object error) {
-            response = (String) error;
+            rpcRequest = response;
         }
     }
 }

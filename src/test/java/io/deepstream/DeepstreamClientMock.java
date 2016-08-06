@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import io.deepstream.constants.ConnectionState;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class DeepstreamClientMock extends DeepstreamClientAbstract {
 
@@ -28,13 +29,13 @@ public class DeepstreamClientMock extends DeepstreamClientAbstract {
     }
 
     @Override
-    DeepstreamClientAbstract login(JsonElement data) throws DeepstreamLoginException {
-        return this;
+    LoginResult login() throws DeepstreamLoginException {
+        return new LoginResult( true, new HashMap());
     }
 
     @Override
-    DeepstreamClientAbstract login(JsonElement data, LoginCallback loginCallback) throws DeepstreamLoginException {
-        return this;
+    LoginResult login(JsonElement data) throws DeepstreamLoginException {
+        return new LoginResult( true, new HashMap());
     }
 
     @Override

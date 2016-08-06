@@ -1,11 +1,13 @@
 package io.deepstream;
 
 import com.google.gson.JsonObject;
-import io.deepstream.constants.*;
+import io.deepstream.constants.ConnectionState;
+import io.deepstream.constants.Event;
+import io.deepstream.constants.Topic;
 
 import java.util.Map;
 
-class Application implements ConnectionStateListener, LoginCallback {
+class Application implements ConnectionStateListener, DeepstreamClient.LoginCallback {
 
     Application() {
 
@@ -16,7 +18,6 @@ class Application implements ConnectionStateListener, LoginCallback {
             DeepstreamClient ds = new DeepstreamClient( "localhost:6021" );
             ds
                     .addConnectionChangeListener( this )
-                    .login( authData, this )
                     .setRuntimeErrorHandler(new DeepstreamRuntimeErrorHandler() {
                         @Override
                         public void onException(Topic topic, Event event, String errorMessage) {
@@ -24,20 +25,22 @@ class Application implements ConnectionStateListener, LoginCallback {
                         }
                     });
 
-            Thread.sleep(1000);
+            ds.login(authData);
+
             authData = new JsonObject();
             authData.addProperty( "username", "Yasser" );
 
             DeepstreamClient ds2 = new DeepstreamClient( "localhost:6021" );
             ds2
                     .addConnectionChangeListener( this )
-                    .login( authData, this )
                     .setRuntimeErrorHandler(new DeepstreamRuntimeErrorHandler() {
                         @Override
                         public void onException(Topic topic, Event event, String errorMessage) {
                             System.out.println( "Error occured " + topic + " " + event + " " + errorMessage);
                         }
                     });
+
+            ds2.login(authData);
         }
 
         catch( Exception e ) {

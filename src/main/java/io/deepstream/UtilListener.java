@@ -3,7 +3,7 @@ package io.deepstream;
 import io.deepstream.constants.Actions;
 import io.deepstream.constants.Topic;
 
-class UtilListener implements UtilResubscribeCallback {
+class UtilListener implements UtilResubscribeNotifier.UtilResubscribeListener {
 
     private final Topic topic;
     private final DeepstreamConfig deepstreamConfig;

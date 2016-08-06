@@ -69,7 +69,7 @@ public class Record {
         this.scheduleAcks();
         this.sendRead();
 
-        this.utilResubscribeNotifier = new UtilResubscribeNotifier(client, new UtilResubscribeCallback() {
+        this.utilResubscribeNotifier = new UtilResubscribeNotifier(client, new UtilResubscribeNotifier.UtilResubscribeListener() {
             @Override
             public void resubscribe() {
                 sendRead();
@@ -387,11 +387,10 @@ public class Record {
     /**
      * Add a recordReadyListener as a callback. This means it will be called once when the record is ready, either in sync
      * or async if the record is not already ready.
-     * TODO: Discuss whether we want this to be blocking. If that is the case, we would need to look at other APIs too.
      * @param recordReadyListener The recordReadyListener that will be triggered only **once**
      * @return The record
      */
-    public Record whenReady( RecordReadyListener recordReadyListener ) {
+    Record whenReady(RecordReadyListener recordReadyListener) {
         if( this.isReady ) {
             recordReadyListener.onRecordReady( this.name, this );
         } else {
@@ -705,12 +704,6 @@ public class Record {
         throwExceptionIfDestroyed( "set" );
 
         JsonElement element = gson.toJsonTree( value );
-
-        if( !this.isReady ) {
-            System.out.println( "Not ready, should queue!" );
-            return this;
-        }
-
         JsonElement object = this.path.get( path );
 
         if( !force ) {
@@ -762,4 +755,18 @@ public class Record {
         void onDestroyPending(String recordName);
     }
 
+    /**
+     * A listener that notifies the user whenever the record state is ready. Listeners can be added via
+     * {@link Record#addRecordReadyListener(RecordReadyListener)} and removed via
+     * {@link Record#removeRecordReadyListener(RecordReadyListener)}
+     */
+    interface RecordReadyListener {
+        /**
+         * Called when the record is loaded from the server
+         *
+         * @param recordName The name of the record which is now ready
+         * @param record     The record which is now ready / loaded from server
+         */
+        void onRecordReady(String recordName, Record record);
+    }
 }

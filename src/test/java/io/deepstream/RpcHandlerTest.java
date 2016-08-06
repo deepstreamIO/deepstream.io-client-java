@@ -24,11 +24,10 @@ public class RpcHandlerTest {
     DeepstreamClientMock deepstreamClientMock;
     ConnectionMock connectionMock;
     RpcHandler rpcHandler;
-    RpcResponseCallback callbackMock;
     int rpcCalls = 0;
     RpcRequestedListener addTwoCallback = new RpcRequestedListener() {
         @Override
-        public void onRPCRequested(String rpcName, Object data, RpcResponse response) {
+        public void onRPCRequested(String rpcName, Object data, RpcRequest response) {
             rpcCalls++;
             double numA = ((JsonElement) data).getAsJsonObject().get("numA").getAsDouble();
             double numB = ((JsonElement) data).getAsJsonObject().get("numB").getAsDouble();
@@ -40,7 +39,6 @@ public class RpcHandlerTest {
 
     @Before
     public void setUp() throws URISyntaxException, InvalidDeepstreamConfig {
-        this.callbackMock = mock( RpcResponseCallback.class );
         this.connectionMock = new ConnectionMock();
         this.connectionMock.state = ConnectionState.OPEN;
         this.errorCallbackMock = mock( DeepstreamRuntimeErrorHandler.class );
@@ -123,30 +121,48 @@ public class RpcHandlerTest {
     }
 
     @Test
-    public void makesSuccessfulRpcFor_addTwo() {
-        JsonObject data = new JsonObject();
+    public void makesSuccessfulRpcFor_addTwo() throws InterruptedException {
+        final JsonObject data = new JsonObject();
         data.addProperty("numA", 3);
         data.addProperty("numB", 8);
-        rpcHandler.make("addTwo", data, this.callbackMock);
 
-        Assert.assertEquals(TestUtil.replaceSeperators("P|REQ|addTwo|1|O{\"numA\":3,\"numB\":8}+"), connectionMock.lastSentMessage);
+        final RpcResponse[] rpcResponse = new RpcResponse[1];
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                rpcResponse[0] = rpcHandler.make("addTwo", data);
+            }
+        }).start();
 
+        Thread.sleep( 20 );
         rpcHandler.handle(new Message(
                 "raw",
                 Topic.RPC,
                 Actions.RESPONSE,
                 new String[]{ "addTwo", "1", "N11" }
         ));
-        verify(callbackMock, times(1)).onRpcSuccess( "addTwo", (float) 11.0);
+        Thread.sleep( 20 );
+
+        Assert.assertEquals(TestUtil.replaceSeperators("P|REQ|addTwo|1|O{\"numA\":3,\"numB\":8}+"), connectionMock.lastSentMessage);
+        Assert.assertTrue( rpcResponse[0].success() );
+        Assert.assertEquals( rpcResponse[0].getData(), (float) 11.0 );
     }
 
     @Test
-    public void makesRpcFor_addTwoButReceivesError() {
-        JsonObject data = new JsonObject();
+    public void makesRpcFor_addTwoButReceivesError() throws InterruptedException {
+        final JsonObject data = new JsonObject();
         data.addProperty("numA", 3);
         data.addProperty("numB", 8);
-        rpcHandler.make("addTwo", data, this.callbackMock);
 
+        final RpcResponse[] rpcResponse = new RpcResponse[1];
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                rpcResponse[0] = rpcHandler.make("addTwo", data);
+            }
+        }).start();
+
+        Thread.sleep( 20 );
         Assert.assertEquals(TestUtil.replaceSeperators("P|REQ|addTwo|1|O{\"numA\":3,\"numB\":8}+"), connectionMock.lastSentMessage);
 
         rpcHandler.handle(new Message(
@@ -155,32 +171,54 @@ public class RpcHandlerTest {
                 Actions.ERROR,
                 new String[]{ "NO_PROVIDER", "addTwo", "1" }
         ));
-        verify(callbackMock, times(1)).onRpcError( "addTwo", "NO_PROVIDER");
+
+        Thread.sleep( 20 );
+
+        Assert.assertEquals(TestUtil.replaceSeperators("P|REQ|addTwo|1|O{\"numA\":3,\"numB\":8}+"), connectionMock.lastSentMessage);
+        Assert.assertFalse( rpcResponse[0].success() );
+        Assert.assertEquals( rpcResponse[0].getData(), "NO_PROVIDER" );
     }
 
     @Test
     public void makesRpcFor_addTwoButDoesntReceiveAck() throws InterruptedException {
-        JsonObject data = new JsonObject();
+        final JsonObject data = new JsonObject();
         data.addProperty("numA", 3);
         data.addProperty("numB", 8);
-        rpcHandler.make("addTwo", data, this.callbackMock);
 
+        final RpcResponse[] rpcResponse = new RpcResponse[1];
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                rpcResponse[0] = rpcHandler.make("addTwo", data);
+            }
+        }).start();
+
+        Thread.sleep( 20 );
         Assert.assertEquals( TestUtil.replaceSeperators("P|REQ|addTwo|1|O{\"numA\":3,\"numB\":8}+"), connectionMock.lastSentMessage);
-
         Thread.sleep(50);
+
         verify(this.errorCallbackMock, times(1)).onException( Topic.RPC, Event.ACK_TIMEOUT, "No ACK message received in time for REQUEST 1" );
     }
 
     @Test
     public void makesRpcFor_addTwoButDoesntReceiveResponse() throws InterruptedException {
-        JsonObject data = new JsonObject();
+        final JsonObject data = new JsonObject();
         data.addProperty("numA", 3);
         data.addProperty("numB", 8);
-        rpcHandler.make("addTwo", data, this.callbackMock);
 
+        final RpcResponse[] rpcResponse = new RpcResponse[1];
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                rpcResponse[0] = rpcHandler.make("addTwo", data);
+            }
+        }).start();
+
+        Thread.sleep( 20 );
         Assert.assertEquals( TestUtil.replaceSeperators("P|REQ|addTwo|1|O{\"numA\":3,\"numB\":8}+"), connectionMock.lastSentMessage);
 
         Thread.sleep(100);
-        verify(callbackMock, times(1)).onRpcError( "addTwo", Event.RESPONSE_TIMEOUT.toString());
+        Assert.assertFalse( rpcResponse[0].success() );
+        Assert.assertEquals( rpcResponse[0].getData(),Event.RESPONSE_TIMEOUT.toString() );
     }
 }

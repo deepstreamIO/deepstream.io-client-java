@@ -44,6 +44,7 @@ public class ServerStepDefs {
 
     @Then("^the server sends the message (.*?)$")
     public void The_server_sends_the_message(String message) throws Throwable {
+        System.out.println("Sending message " + message);
         if( message.contains( "<UID>" ) ) {
             message = message.replace( "<UID>", clientUid );
         }
@@ -62,7 +63,7 @@ public class ServerStepDefs {
         String lastMsg = context.recieveMessage( server.getLastMessage() );
         message = context.recieveMessage( message );
         System.out.println( "Server Received: " + message + " " + lastMsg );
-        if(  lastMsg.equals( message ) == false ) {
+        if (!lastMsg.equals(message)) {
             Assert.assertTrue( "Expected \n\t'" + lastMsg + "' to match \n\t'" + message + "'", lastMsg.matches( message ) );
         }
     }
@@ -104,7 +105,7 @@ public class ServerStepDefs {
 
     @When("^some time passes$")
     public void Time_passes() throws InterruptedException {
-        Thread.sleep(200);
+        Thread.sleep(500);
     }
 
     @Given("^two seconds later$")

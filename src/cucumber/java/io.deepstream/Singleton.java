@@ -56,7 +56,7 @@ class Singleton {
         options.put("recordReadAckTimeout", "150");
         options.put("recordReadTimeout", "350");
         options.put("recordDeleteTimeout", "150");
-        options.put( "rpcResponseTimeout", "200" );
+        options.put("rpcResponseTimeout", "500");
         options.put( "reconnectIntervalIncrement", "1500" );
         options.put("reconnectIntervalIncrement", "1500");
         options.put("maxReconnectAttempts", "1500");

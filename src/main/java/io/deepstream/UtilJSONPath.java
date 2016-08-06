@@ -46,10 +46,8 @@ class UtilJSONPath {
                             array.add(JsonNull.INSTANCE);
                         }
 
-                        if (i!=st.length) {
-                            JsonElement temp = new JsonObject();
-                            array.add(temp);
-                        }
+                        JsonElement temp = new JsonObject();
+                        array.add(temp);
 
                         traverser.getAsJsonObject().add(prefix, array);
                         traverser = array.get(index);

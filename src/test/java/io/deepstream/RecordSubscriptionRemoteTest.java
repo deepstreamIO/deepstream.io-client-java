@@ -52,7 +52,7 @@ public class RecordSubscriptionRemoteTest {
     @Test
     public void callsSubscriptionOnFirstReady() throws DeepstreamRecordDestroyedException {
 
-        record.addRecordReadyListener(new RecordReadyListener() {
+        record.addRecordReadyListener(new Record.RecordReadyListener() {
             @Override
             public void onRecordReady(String recordName, Record record) {
                 record.subscribe( subscriptionCallback );

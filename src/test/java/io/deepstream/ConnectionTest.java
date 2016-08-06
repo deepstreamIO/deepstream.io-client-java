@@ -26,7 +26,7 @@ public class ConnectionTest {
     EndpointMock endpointMock;
     Connection connection;
     ConnectionStateListener connectionStateListenerMock;
-    LoginCallback loginCallback;
+    DeepstreamClient.LoginCallback loginCallback;
 
     @Before
     public void setUp() throws URISyntaxException {
@@ -37,7 +37,7 @@ public class ConnectionTest {
         this.endpointMock.setConnection( this.connection );
 
         this.connectionStateListenerMock = mock(ConnectionStateListener.class);
-        this.loginCallback = mock( LoginCallback.class );
+        this.loginCallback = mock( DeepstreamClient.LoginCallback.class );
 
         this.connection.addConnectionChangeListener( this.connectionStateListenerMock);
     }

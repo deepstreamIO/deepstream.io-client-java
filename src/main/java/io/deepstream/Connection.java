@@ -27,7 +27,7 @@ class Connection implements IConnection {
     private StringBuilder messageBuffer;
     private String url;
     private ConnectionState connectionState;
-    private LoginCallback loginCallback;
+    private DeepstreamClient.LoginCallback loginCallback;
     private JsonElement authParameters;
 
     /**
@@ -76,7 +76,7 @@ class Connection implements IConnection {
      * @throws DeepstreamLoginException Thrown if the user no longer can login, due to multiple attempts or an invalid
      * connection
      */
-    void authenticate(JsonElement authParameters, LoginCallback loginCallback ) throws DeepstreamLoginException {
+    void authenticate(JsonElement authParameters, DeepstreamClient.LoginCallback loginCallback) throws DeepstreamLoginException {
         if( this.tooManyAuthAttempts || this.challengeDenied ) {
             this.client.onError( Topic.ERROR, Event.IS_CLOSED, "The client\'s connection was closed" );
             return;

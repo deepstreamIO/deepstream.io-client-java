@@ -12,8 +12,10 @@ abstract class DeepstreamClientAbstract {
     abstract DeepstreamClientAbstract addConnectionChangeListener(ConnectionStateListener connectionStateListener);
     abstract DeepstreamClientAbstract removeConnectionChangeListener(ConnectionStateListener connectionStateListener);
     abstract ConnectionState getConnectionState();
-    abstract DeepstreamClientAbstract login(JsonElement data )throws DeepstreamLoginException ;
-    abstract DeepstreamClientAbstract login(JsonElement data, LoginCallback loginCallback ) throws DeepstreamLoginException ;
+
+    abstract LoginResult login() throws DeepstreamLoginException;
+
+    abstract LoginResult login(JsonElement data) throws DeepstreamLoginException;
     abstract DeepstreamClientAbstract close();
     abstract String getUid();
 

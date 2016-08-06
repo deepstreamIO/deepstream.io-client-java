@@ -15,13 +15,13 @@ import static org.mockito.Mockito.*;
 public class UtilResubscriptionTest {
 
     DeepstreamClientMock deepstreamClientMock;
-    UtilResubscribeCallback resubscribeCallbackMock;
+    UtilResubscribeNotifier.UtilResubscribeListener resubscribeCallbackMock;
     UtilResubscribeNotifier resubscribeNotifier;
     DeepstreamRuntimeErrorHandler errorCallbackMock;
 
     @Before
     public void setUp() throws URISyntaxException {
-        this.resubscribeCallbackMock = mock( UtilResubscribeCallback.class );
+        this.resubscribeCallbackMock = mock( UtilResubscribeNotifier.UtilResubscribeListener.class );
 
         this.errorCallbackMock = mock( DeepstreamRuntimeErrorHandler.class );
         this.deepstreamClientMock = new DeepstreamClientMock();

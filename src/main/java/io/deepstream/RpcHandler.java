@@ -7,6 +7,7 @@ import io.deepstream.constants.Topic;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 
 public class RpcHandler {
     private final DeepstreamConfig deepstreamConfig;
@@ -33,7 +34,7 @@ public class RpcHandler {
         this.providers = new HashMap<>();
         this.rpcs = new HashMap<>();
         this.ackTimeoutRegistry = client.getAckTimeoutRegistry();
-        new UtilResubscribeNotifier(this.client, new UtilResubscribeCallback() {
+        new UtilResubscribeNotifier(this.client, new UtilResubscribeNotifier.UtilResubscribeListener() {
             @Override
             public void resubscribe() {
                 for (String rpcName : providers.keySet()) {
@@ -45,16 +46,16 @@ public class RpcHandler {
 
     /**
      * Registers a {@link RpcRequestedListener} as a RPC provider. If another connected client calls
-     * {@link RpcHandler#make(String, Object, RpcResponseCallback)} the request will be routed to the supplied listener.
+     * {@link RpcHandler#make(String, Object)} the request will be routed to the supplied listener.
      * <br/>
      * Only one listener can be registered for a RPC at a time.
      * <br/>
      * Please note: Deepstream tries to deliver data in its original format. Data passed to
-     * {@link RpcHandler#make(String, Object, RpcResponseCallback)} as a String will arrive as a String, numbers or
+     * {@link RpcHandler#make(String, Object)} as a String will arrive as a String, numbers or
      *  implicitly JSON serialized objects will arrive in their respective format as well.
      *
      * @param rpcName The rpcName of the RPC to provide
-     * @param rpcRequestedListener The listener to invoke when requests are recieved
+     * @param rpcRequestedListener The listener to invoke when requests are received
      */
     public void provide( String rpcName, RpcRequestedListener rpcRequestedListener ) {
         if( this.providers.containsKey( rpcName ) ) {
@@ -83,14 +84,38 @@ public class RpcHandler {
      * arguments and a callback to notify you with the rpc result or potential error.
      * @param rpcName The name of the rpc
      * @param data Serializable data that will be passed to the provider
-     * @param callback  Will be invoked with {@link RpcResponseCallback#onRpcSuccess(String, Object)} or {@link RpcResponseCallback#onRpcError(String, Object)}
+     * @returns Find out if the rpc succeeded via {@link RpcResponse#success()} and associated data via {@link RpcResponse#getData()}
      */
-    public void make(String rpcName, Object data, RpcResponseCallback callback ) {
+    public RpcResponse make(String rpcName, Object data) {
+        final RpcResponse[] rpcResponse = new RpcResponse[1];
+        final CountDownLatch responseLatch = new CountDownLatch(1);
+
+
         String uid = this.client.getUid();
-        this.rpcs.put(uid, new Rpc(this.deepstreamConfig, this.client, rpcName, uid, callback));
+        this.rpcs.put(uid, new Rpc(this.deepstreamConfig, this.client, rpcName, uid, new RpcResponseCallback() {
+            @Override
+            public void onRpcSuccess(String rpcName, Object data) {
+                rpcResponse[0] = new RpcResponse(true, data);
+                responseLatch.countDown();
+            }
+
+            @Override
+            public void onRpcError(String rpcName, Object error) {
+                rpcResponse[0] = new RpcResponse(false, error);
+                responseLatch.countDown();
+            }
+        }));
 
         String typedData = MessageBuilder.typed( data );
         this.connection.sendMsg( Topic.RPC, Actions.REQUEST, new String[] { rpcName, uid, typedData } );
+
+        try {
+            responseLatch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        return rpcResponse[0];
     }
 
     /**
@@ -172,7 +197,7 @@ public class RpcHandler {
     private void respondToRpc( Message message ) {
         String rpcName = message.data[ 0 ];
         String correlationId = message.data[ 1 ];
-        RpcResponse response;
+        RpcRequest response;
         Object data = null;
 
         if( message.data[ 2 ] != null ) {
@@ -181,7 +206,7 @@ public class RpcHandler {
 
         RpcRequestedListener callback = this.providers.get( rpcName );
         if( callback != null ) {
-            response = new RpcResponse( this.connection, rpcName, correlationId );
+            response = new RpcRequest(this.connection, rpcName, correlationId);
             callback.onRPCRequested(rpcName, data, response);
         } else {
             this.connection.sendMsg( Topic.RPC, Actions.REJECTION, new String[] { rpcName, correlationId } );
@@ -196,5 +221,27 @@ public class RpcHandler {
             this.ackTimeoutRegistry.add(Topic.RPC, Actions.SUBSCRIBE, rpcName, deepstreamConfig.getSubscriptionTimeout());
             this.connection.sendMsg(Topic.RPC, Actions.SUBSCRIBE, new String[]{rpcName});
         }
+    }
+
+    /**
+     * The callback for an rpc that has been requested by the client
+     */
+    interface RpcResponseCallback {
+        /**
+         * Called when the rpc was completed successfully by another client that has provided the rpc via
+         * {@link RpcHandler#provide(String, RpcRequestedListener)}
+         *
+         * @param rpcName The rpc name
+         * @param data    The result data from the rpc
+         */
+        void onRpcSuccess(String rpcName, Object data);
+
+        /**
+         * Called when the rpc was completed unsuccessfully by another client that has provided the rpc via
+         * {@link RpcHandler#provide(String, RpcRequestedListener)}
+         *
+         * @param rpcName The rpc name
+         */
+        void onRpcError(String rpcName, Object error);
     }
 }

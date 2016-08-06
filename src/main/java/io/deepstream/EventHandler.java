@@ -20,7 +20,7 @@ public class EventHandler {
     private final Map<String, UtilListener> listeners;
     private final List<String> subscriptions;
 
-    public EventHandler(DeepstreamConfig deepstreamConfig, final IConnection connection, DeepstreamClientAbstract client) {
+    EventHandler(DeepstreamConfig deepstreamConfig, final IConnection connection, DeepstreamClientAbstract client) {
         this.subscriptionTimeout = deepstreamConfig.getSubscriptionTimeout();
         this.emitter = new UtilEmitter();
         this.connection = connection;
@@ -30,7 +30,7 @@ public class EventHandler {
         this.subscriptions = new ArrayList<>();
         this.ackTimeoutRegistry = client.getAckTimeoutRegistry();
 
-        new UtilResubscribeNotifier(this.client, new UtilResubscribeCallback() {
+        new UtilResubscribeNotifier(this.client, new UtilResubscribeNotifier.UtilResubscribeListener() {
             @Override
             public void resubscribe() {
                 for (String eventName : subscriptions) {
@@ -41,7 +41,7 @@ public class EventHandler {
     }
 
     public void subscribe( String eventName, EventListener eventListener ) {
-        if(!this.emitter.hasListeners(eventName)) {
+        if (this.emitter.hasListeners(eventName)) {
             this.subscriptions.add( eventName );
             this.ackTimeoutRegistry.add( Topic.EVENT, Actions.SUBSCRIBE, eventName, this.subscriptionTimeout );
             this.connection.send( MessageBuilder.getMsg( Topic.EVENT, Actions.SUBSCRIBE, eventName ) );
@@ -52,7 +52,7 @@ public class EventHandler {
     public void unsubscribe( String eventName, EventListener eventListener ) {
         this.subscriptions.remove( eventName );
         this.emitter.off(eventName, eventListener);
-        if (!this.emitter.hasListeners(eventName)) {
+        if (this.emitter.hasListeners(eventName)) {
             this.ackTimeoutRegistry.add( Topic.EVENT,  Actions.UNSUBSCRIBE, eventName, this.subscriptionTimeout );
             this.connection.send(MessageBuilder.getMsg(Topic.EVENT, Actions.UNSUBSCRIBE, eventName));
         }

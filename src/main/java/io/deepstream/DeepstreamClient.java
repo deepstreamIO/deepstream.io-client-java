@@ -2,12 +2,13 @@ package io.deepstream;
 
 import com.google.gson.JsonElement;
 import io.deepstream.constants.ConnectionState;
+import io.deepstream.constants.Event;
 
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * deepstream.io java client
@@ -17,7 +18,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
     /**
      * The getters for data-sync, such as {@link RecordHandler#getRecord(String)},
      * {@link RecordHandler#getList(String)}, provider functionality such as {@link RecordHandler#listen(String, ListenListener)}
-     * and single requests like {@link RecordHandler#snapshot(String, RecordSnapshotCallback)}
+     * and single requests like {@link RecordHandler#snapshot(String)}
      */
     public final RecordHandler record;
     /**
@@ -26,7 +27,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      */
     public final EventHandler event;
     /**
-     * The entry point for rpcs, both requesting them via {@link RpcHandler#make(String, Object, RpcResponseCallback)} and
+     * The entry point for rpcs, both requesting them via {@link RpcHandler#make(String, Object)} and
      * providing them via {@link RpcHandler#provide(String, RpcRequestedListener)}
      */
     public final RpcHandler rpc;
@@ -44,8 +45,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
     }
 
     /**
-     * deepstream.io javascript client, defaults to using default properties
-     * {@link DeepstreamClient#DeepstreamClient(String, Properties)}
+     * deepstream.io javascript client
      *
      * @throws URISyntaxException Thrown if the url in incorrect
      */
@@ -77,18 +77,16 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
     }
 
     /**
-     * @see DeepstreamClient#login(JsonElement, LoginCallback)
+     * @see DeepstreamClient#login(JsonElement)
      *
      * Does not call the login callback, used mainly for anonymous logins where your guaranteed login
      *
-     * @param authParams JSON.serializable authentication data
      * @throws DeepstreamLoginException Thrown if the user can no longer login due to multiple attempts or other
      * fatal reasons
-     * @return The deepstream client
+     * @return The login result
      */
-    public DeepstreamClient login( JsonElement authParams ) throws DeepstreamLoginException {
-        this.connection.authenticate( authParams, null );
-        return this;
+    public LoginResult login() throws DeepstreamLoginException {
+        return this.login(null);
     }
 
     /**
@@ -113,15 +111,35 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      * forcefully closed by the server since its maxAuthAttempts threshold has been exceeded
      *
      * @param authParams JSON.serializable authentication data
-     * @param loginCallback Thrown if the user can no longer login due to multiple attempts or other
-     * fatal reasons
      * @throws DeepstreamLoginException Thrown if the user can no longer login due to multiple attempts or other
      * fatal reasons
-     * @return The deepstream client
+     * @return The login result
      */
-    public DeepstreamClient login( JsonElement authParams, LoginCallback loginCallback ) throws DeepstreamLoginException {
-        this.connection.authenticate( authParams, loginCallback );
-        return this;
+    public LoginResult login(JsonElement authParams) throws DeepstreamLoginException {
+        final CountDownLatch loggedInLatch = new CountDownLatch(1);
+        final LoginResult[] loginResult = new LoginResult[1];
+
+        this.connection.authenticate(authParams, new LoginCallback() {
+            @Override
+            public void loginSuccess(Map userData) {
+                loginResult[0] = new LoginResult(true, userData);
+                loggedInLatch.countDown();
+            }
+
+            @Override
+            public void loginFailed(Event errorEvent, Object data) {
+                loginResult[0] = new LoginResult(false, errorEvent, data);
+                loggedInLatch.countDown();
+            }
+        });
+
+        try {
+            loggedInLatch.await();
+        } catch (InterruptedException e) {
+            throw new DeepstreamLoginException();
+        }
+
+        return loginResult[0];
     }
 
     /**
@@ -177,20 +195,24 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
     }
 
     /**
-     * TODO: Load from a default map instead of config file
-     *
-     * Creates a new options map by extending default
-     * options with the passed in options
-     * @param properties The properties to merge into the default
-     * @throws IOException Thrown if properties file not found
-     * @return Loaded properties
+     * A callback that notifies the user if the login process was completed successfully or not, and contains optional data
+     * received from the server associated to the user
      */
-    private Properties getConfig( Properties properties ) throws IOException {
-        Properties config = new Properties();
-        FileInputStream in = new FileInputStream( "DefaultConfig.properties" );
-        config.load( in );
-        config.putAll( properties );
-        in.close();
-        return config;
+    interface LoginCallback {
+
+        /**
+         * Called when {@link DeepstreamClient#login(JsonElement)} is successful
+         *
+         * @param userData Optional data that is specific to the user and returned on succesfuly authentication
+         */
+        void loginSuccess(Map userData);
+
+        /**
+         * Called when {@link DeepstreamClient#login(JsonElement)} is unsuccessful
+         *
+         * @param errorEvent error event
+         * @param data       Contains data associated to the failed login, such as the reason
+         */
+        void loginFailed(Event errorEvent, Object data);
     }
 }

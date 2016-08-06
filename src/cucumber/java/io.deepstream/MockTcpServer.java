@@ -12,14 +12,13 @@ import java.util.ArrayList;
 
 public class MockTcpServer {
 
+    public Boolean isOpen = false;
     ServerSocket serverSocket;
     ArrayList<Thread> threads;
     ArrayList<String> messages;
     Socket lastSocket;
     InputStreamReader in;
     OutputStreamWriter out;
-
-    public Boolean isOpen = false;
 
     MockTcpServer( int port ) {
         System.out.println( "Creating new server localhost:" + port );
@@ -79,7 +78,7 @@ public class MockTcpServer {
         Thread connectionThread = new Thread() {
             @Override
             public void run() {
-                while( socket.isClosed() == false ) {
+                while (!socket.isClosed()) {
                     try {
                         if( in.ready() ) {
                             char[] buffer = new char[ 1024 ];

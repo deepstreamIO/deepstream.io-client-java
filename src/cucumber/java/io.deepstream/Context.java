@@ -2,6 +2,7 @@ package io.deepstream;
 
 
 import java.net.URISyntaxException;
+import java.util.concurrent.CountDownLatch;
 
 public class Context {
 
@@ -12,6 +13,7 @@ public class Context {
     static int server2port = 8888;
     DeepstreamClient client;
     MockTcpServer server, server2;
+    CountDownLatch serverResponseLatch;
 
     public Context() throws InterruptedException, URISyntaxException, InvalidDeepstreamConfig {
         this.server = Singleton.getSingleton().getServer1();
@@ -51,4 +53,5 @@ public class Context {
         this.server = Singleton.getSingleton().getNewServer1();
         return this.server;
     }
+
 }

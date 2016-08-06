@@ -18,7 +18,6 @@ public class ListChangedTest {
     DeepstreamRuntimeErrorHandler errorCallbackMock;
     List list;
     RecordEventsListener recordEventsListener;
-    ListReadyListener listReadyListener;
     ListChangedListener listChangedListener;
     String listName = "someList";
 
@@ -39,12 +38,10 @@ public class ListChangedTest {
 
         recordHandler = new RecordHandler( new DeepstreamConfig( options ), connectionMock, deepstreamClientMock );
         recordEventsListener = mock(RecordEventsListener.class);
-        listReadyListener = mock(ListReadyListener.class);
         listChangedListener = mock( ListChangedListener.class);
 
         list = recordHandler.getList( listName );
         list.addRecordEventsListener(recordEventsListener);
-        list.addListReadyListener( listReadyListener );
 
         recordHandler.handle( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|someList|1|[\"a\",\"b\",\"c\",\"d\",\"e\"]" ), deepstreamClientMock ) );
 
