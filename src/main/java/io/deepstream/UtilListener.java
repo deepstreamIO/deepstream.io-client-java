@@ -3,12 +3,10 @@ package io.deepstream;
 import io.deepstream.constants.Actions;
 import io.deepstream.constants.Topic;
 
-import java.util.Map;
-
-class UtilListener implements UtilResubscribeCallback {
+class UtilListener implements UtilResubscribeNotifier.UtilResubscribeListener {
 
     private final Topic topic;
-    private final Map options;
+    private final DeepstreamConfig deepstreamConfig;
     private final UtilResubscribeNotifier resubscribeNotifier;
 
     private UtilAckTimeoutRegistry ackTimoutRegistry;
@@ -17,11 +15,11 @@ class UtilListener implements UtilResubscribeCallback {
     private DeepstreamClientAbstract client;
     private IConnection connection;
 
-    public UtilListener(Topic topic, String pattern, ListenListener listenerCallback, Map options, DeepstreamClientAbstract client, IConnection connection ) {
+    public UtilListener(Topic topic, String pattern, ListenListener listenerCallback, DeepstreamConfig deepstreamConfig, DeepstreamClientAbstract client, IConnection connection) {
         this.topic = topic;
         this.pattern = pattern;
         this.listenerCallback = listenerCallback;
-        this.options = options;
+        this.deepstreamConfig = deepstreamConfig;
         this.client = client;
         this.connection = connection;
         this.resubscribeNotifier = new UtilResubscribeNotifier( this.client, this );
@@ -59,7 +57,7 @@ class UtilListener implements UtilResubscribeCallback {
     }
 
     private void scheduleAckTimeout() {
-        int subscriptionTimeout = Integer.parseInt( (String) options.get( "subscriptionTimeout" ) );
+        int subscriptionTimeout = deepstreamConfig.getSubscriptionTimeout();
         this.ackTimoutRegistry.add( this.topic, Actions.LISTEN, this.pattern, subscriptionTimeout );
     }
 

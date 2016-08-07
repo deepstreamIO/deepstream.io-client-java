@@ -21,12 +21,15 @@ echo '# J2OBJC End' >> $DIRECTORY/../local.properties;
 # Download J2OBJC
 mkdir -p $J2OBJC_ROOT;
 pushd $J2OBJC_ROOT;
-if [ ! -d "$J2OBJC_ROOT/j2objc-$J2OBJCVersion" ]; then
+if [ ! -f "$J2OBJC_ROOT/j2objc-$J2OBJCVersion.zip" ]; then
 	curl -L https://github.com/google/j2objc/releases/download/$J2OBJCVersion/j2objc-$J2OBJCVersion.zip > j2objc-$J2OBJCVersion.zip
-	unzip -q j2objc-$J2OBJCVersion.zip; popd
 else
+    rm -rf $J2OBJC_ROOT/j2objc-$J2OBJCVersion
 	echo 'j2objc already downloaded';
 fi
+
+echo 'unzipping';
+unzip -q j2objc-$J2OBJCVersion.zip; popd
 
 if [ $1 ]; then
  rm -rf j2objc-$J2OBJCVersion.zip;

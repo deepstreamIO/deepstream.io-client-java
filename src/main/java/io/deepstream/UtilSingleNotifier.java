@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-class UtilSingleNotifier implements UtilResubscribeCallback {
+class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListener {
 
     private final Topic topic;
     private final Actions action;
@@ -75,7 +75,7 @@ class UtilSingleNotifier implements UtilResubscribeCallback {
      * @param error An error that may have occured during the request
      * @param data The result data from the request
      */
-    public void recieve( String name, DeepstreamException error, Object data ) {
+    public void recieve(String name, DeepstreamError error, Object data) {
         ArrayList<UtilSingleNotifierCallback> callbacks = requests.get( name );
         for (UtilSingleNotifierCallback callback : callbacks) {
             if( error != null ) {
@@ -97,5 +97,11 @@ class UtilSingleNotifier implements UtilResubscribeCallback {
 
     private void send( String name ) {
         connection.send( MessageBuilder.getMsg( topic, action, name ) );
+    }
+
+    interface UtilSingleNotifierCallback {
+        void onSingleNotifierError(String name, DeepstreamError error);
+
+        void onSingleNotifierResponse(String name, Object data);
     }
 }

@@ -16,7 +16,7 @@ class Connection implements IConnection {
     private final DeepstreamClient client;
     private final String originalUrl;
     private final ArrayList<ConnectionStateListener> connectStateListeners;
-    private final Map options;
+    private final DeepstreamConfig options;
     private Endpoint endpoint;
     private boolean tooManyAuthAttempts;
     private boolean challengeDenied;
@@ -27,20 +27,20 @@ class Connection implements IConnection {
     private StringBuilder messageBuffer;
     private String url;
     private ConnectionState connectionState;
-    private LoginCallback loginCallback;
+    private DeepstreamClient.LoginCallback loginCallback;
     private JsonElement authParameters;
 
     /**
-     * Creates an endpoint and passed it to {@link Connection#Connection(String, Map, DeepstreamClient, Endpoint)}
+     * Creates an endpoint and passed it to {@link Connection#Connection(String, DeepstreamConfig, DeepstreamClient, Endpoint)}
      *
-     * @see Connection#Connection(String, Map, DeepstreamClient, Endpoint)
+     * @see Connection#Connection(String, DeepstreamConfig, DeepstreamClient, Endpoint)
      *
      * @param url The endpoint url
      * @param options The options used to initialise the deepstream client
      * @param client The deepstream client
      * @throws URISyntaxException An exception if an invalid url is passed in
      */
-    Connection(final String url, final Map options, DeepstreamClient client ) throws URISyntaxException {
+    Connection(final String url, final DeepstreamConfig options, DeepstreamClient client) throws URISyntaxException {
         this( url, options, client, null );
         this.endpoint = createEndpoint();
     }
@@ -52,7 +52,7 @@ class Connection implements IConnection {
      * @param client The deepstream client
      * @param endpoint The endpoint, whether TCP, Engine.io, mock or anything else
      */
-    Connection(final String url, final Map options, DeepstreamClient client, Endpoint endpoint ) {
+    Connection(final String url, final DeepstreamConfig options, DeepstreamClient client, Endpoint endpoint) {
         this.client = client;
         this.connectStateListeners = new ArrayList<>();
         this.originalUrl = url;
@@ -76,7 +76,7 @@ class Connection implements IConnection {
      * @throws DeepstreamLoginException Thrown if the user no longer can login, due to multiple attempts or an invalid
      * connection
      */
-    void authenticate(JsonElement authParameters, LoginCallback loginCallback ) throws DeepstreamLoginException {
+    void authenticate(JsonElement authParameters, DeepstreamClient.LoginCallback loginCallback) throws DeepstreamLoginException {
         if( this.tooManyAuthAttempts || this.challengeDenied ) {
             this.client.onError( Topic.ERROR, Event.IS_CLOSED, "The client\'s connection was closed" );
             return;
@@ -259,10 +259,10 @@ class Connection implements IConnection {
     private Endpoint createEndpoint() throws URISyntaxException {
         Endpoint endpoint = null;
 
-        if( options.get( "endpoint" ).equals( EndpointType.TCP.name() ) ) {
+        if (options.getEndpointType().equals(EndpointType.TCP)) {
             endpoint = new EndpointTCP( url, options, this );
             this.endpoint = endpoint;
-        } else if( options.get( "endpoint" ).equals( EndpointType.ENGINEIO.name() ) ) {
+        } else if (options.getEndpointType().equals(EndpointType.ENGINEIO)) {
             System.out.println( "EngineIO doesn't transpile" );
         }
         return endpoint;
@@ -273,9 +273,9 @@ class Connection implements IConnection {
             return;
         }
 
-        int maxReconnectAttempts = Integer.parseInt( (String) options.get( "maxReconnectAttempts" ) );
-        int reconnectIntervalIncrement = Integer.parseInt( (String) options.get( "reconnectIntervalIncrement" ) );
-        int maxReconnectInterval = Integer.parseInt((String) options.get("maxReconnectInterval"));
+        int maxReconnectAttempts = options.getMaxReconnectAttempts();
+        int reconnectIntervalIncrement = options.getReconnectIntervalIncrement();
+        int maxReconnectInterval = options.getMaxReconnectInterval();
 
         if( this.reconnectionAttempt < maxReconnectAttempts ) {
             this.setState( ConnectionState.RECONNECTING );

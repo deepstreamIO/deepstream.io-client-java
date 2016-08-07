@@ -7,26 +7,22 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Properties;
 
 import static org.mockito.Mockito.*;
 
 public class ListChangedTest {
-
-    Map options;
     DeepstreamClientMock deepstreamClientMock;
     ConnectionMock connectionMock;
     RecordHandler recordHandler;
     DeepstreamRuntimeErrorHandler errorCallbackMock;
     List list;
     RecordEventsListener recordEventsListener;
-    ListReadyListener listReadyListener;
     ListChangedListener listChangedListener;
     String listName = "someList";
 
     @Before
-    public void setUp() {
+    public void setUp() throws InvalidDeepstreamConfig {
 
         this.connectionMock = new ConnectionMock();
         this.errorCallbackMock = mock( DeepstreamRuntimeErrorHandler.class );
@@ -34,20 +30,18 @@ public class ListChangedTest {
         this.deepstreamClientMock.setRuntimeErrorHandler( errorCallbackMock );
         this.deepstreamClientMock.setConnectionState( ConnectionState.OPEN );
 
-        options = new Properties();
+        Properties options = new Properties();
         options.put( "subscriptionTimeout", "10" );
         options.put( "recordDeleteTimeout", "10" );
         options.put( "recordReadAckTimeout", "10" );
         options.put( "recordReadTimeout", "20" );
 
-        recordHandler = new RecordHandler( options, connectionMock, deepstreamClientMock );
+        recordHandler = new RecordHandler( new DeepstreamConfig( options ), connectionMock, deepstreamClientMock );
         recordEventsListener = mock(RecordEventsListener.class);
-        listReadyListener = mock(ListReadyListener.class);
         listChangedListener = mock( ListChangedListener.class);
 
         list = recordHandler.getList( listName );
         list.addRecordEventsListener(recordEventsListener);
-        list.addListReadyListener( listReadyListener );
 
         recordHandler.handle( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|someList|1|[\"a\",\"b\",\"c\",\"d\",\"e\"]" ), deepstreamClientMock ) );
 

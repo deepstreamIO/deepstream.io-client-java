@@ -21,3 +21,4 @@ before_install:
 
 script:
   - ./gradlew -b build-prod.gradle
+  - rm -rf j2objcDist/j2object-1.1

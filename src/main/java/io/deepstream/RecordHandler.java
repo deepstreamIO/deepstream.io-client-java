@@ -8,10 +8,11 @@ import io.deepstream.constants.Topic;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 
 public class RecordHandler implements RecordEventsListener, Record.RecordDestroyPendingListener {
 
-    private final Map options;
+    private final DeepstreamConfig deepstreamConfig;
     private final IConnection connection;
     private final DeepstreamClientAbstract client;
     private final Map<String, Record> records;
@@ -24,12 +25,12 @@ public class RecordHandler implements RecordEventsListener, Record.RecordDestroy
      * A collection of factories for records. This class
      * is exposed as client.record
      *
-     * @param options The options the client was created with
+     * @param deepstreamConfig The deepstreamConfig the client was created with
      * @param connection The connection
      * @param client The deepstream client
      */
-    RecordHandler( Map options, IConnection connection, DeepstreamClientAbstract client) {
-        this.options = options;
+    RecordHandler(DeepstreamConfig deepstreamConfig, IConnection connection, DeepstreamClientAbstract client) {
+        this.deepstreamConfig = deepstreamConfig;
         this.connection = connection;
         this.client = client;
 
@@ -37,9 +38,8 @@ public class RecordHandler implements RecordEventsListener, Record.RecordDestroy
         lists = new HashMap<>();
         listeners = new HashMap<>();
 
-        int recordReadTimeout = Integer.parseInt( (String) options.get( "recordReadTimeout" ) );
-        hasRegistry = new UtilSingleNotifier( client, connection, Topic.RECORD, Actions.SNAPSHOT, recordReadTimeout );
-        snapshotRegistry = new UtilSingleNotifier( client, connection, Topic.RECORD, Actions.SNAPSHOT, recordReadTimeout );
+        hasRegistry = new UtilSingleNotifier(client, connection, Topic.RECORD, Actions.SNAPSHOT, deepstreamConfig.getRecordReadTimeout());
+        snapshotRegistry = new UtilSingleNotifier(client, connection, Topic.RECORD, Actions.SNAPSHOT, deepstreamConfig.getRecordReadTimeout());
     }
 
     /**
@@ -51,12 +51,23 @@ public class RecordHandler implements RecordEventsListener, Record.RecordDestroy
     public Record getRecord( String name ) {
         Record record = records.get( name );
         if( record == null ) {
-            record = new Record( name, new HashMap(), connection, options, client );
+            record = new Record(name, new HashMap(), connection, deepstreamConfig, client);
             records.put( name, record );
             record.addRecordEventsListener( this );
             record.addRecordDestroyPendingListener( this );
         }
         record.incrementUsage();
+
+        if (!record.isReady()) {
+            final CountDownLatch readyLatch = new CountDownLatch(1);
+            record.whenReady(new Record.RecordReadyListener() {
+                @Override
+                public void onRecordReady(String recordName, Record record) {
+                    readyLatch.countDown();
+                }
+            });
+        }
+
         return record;
     }
 
@@ -70,8 +81,19 @@ public class RecordHandler implements RecordEventsListener, Record.RecordDestroy
     public List getList( String name ) {
         List list = lists.get( name );
         if( list == null ) {
-            list = new List( this, name, options );
+            list = new List(this, name);
         }
+
+        if (!list.isReady()) {
+            final CountDownLatch readyLatch = new CountDownLatch(1);
+            list.getUnderlyingRecord().whenReady(new Record.RecordReadyListener() {
+                @Override
+                public void onRecordReady(String recordName, Record record) {
+                    readyLatch.countDown();
+                }
+            });
+        }
+
         return list;
     }
 
@@ -84,9 +106,6 @@ public class RecordHandler implements RecordEventsListener, Record.RecordDestroy
      * structured records. E.g. a list of users that can be choosen from a list<br/>
      *
      * The only API differences to a normal record is an additional {@link AnonymousRecord#setName(String)} method
-     *
-     * Also worth mentioning that {@link AnonymousRecordReadyListener#onRecordReady(String, AnonymousRecord)}
-     * can be called multiple times!
      *
      * @return AnonymousRecord
      */
@@ -110,7 +129,7 @@ public class RecordHandler implements RecordEventsListener, Record.RecordDestroy
             // TODO: Do we really want to throw an error here?
             client.onError( Topic.RECORD, Event.LISTENER_EXISTS, pattern );
         } else {
-            listeners.put( pattern, new UtilListener( Topic.RECORD, pattern, listenCallback, options, client, connection ));
+            listeners.put(pattern, new UtilListener(Topic.RECORD, pattern, listenCallback, deepstreamConfig, client, connection));
         }
     }
 
@@ -131,33 +150,49 @@ public class RecordHandler implements RecordEventsListener, Record.RecordDestroy
     }
 
     /**
-     * Retrieve the current record data without subscribing to changee<br/>
+     * Retrieve the current record data without subscribing to changes<br/>
      *
-     * If the record is loaded and ready the listener will be called sync, else
-     * once the record is ready.<br/>
-     *
-     * If the record does not exist an error will be passed to {@link RecordSnapshotCallback#onRecordSnapshotError(String, DeepstreamException)}
+     * If the record does not exist an error will be thrown
      *
      * @param name The name of the record which state to retrieve
-     * @param recordSnapshotCallback The callback of the successful/unsuccesful snapshot action
      */
-    public void snapshot(String name, final RecordSnapshotCallback recordSnapshotCallback ) {
-        Record record = records.get( name );
+    public JsonElement snapshot(String name) throws DeepstreamError {
+        final JsonElement[] data = new JsonElement[1];
+        final DeepstreamError[] deepstreamException = new DeepstreamError[1];
+
+        final Record record = records.get(name);
+
         if( record != null && record.isReady() ) {
-            recordSnapshotCallback.onRecordSnapshot( name, record.get() );
+            data[0] = record.get();
         } else {
-            snapshotRegistry.request(name, new UtilSingleNotifierCallback() {
+            final CountDownLatch snapshotLatch = new CountDownLatch(1);
+
+            snapshotRegistry.request(name, new UtilSingleNotifier.UtilSingleNotifierCallback() {
                 @Override
-                public void onSingleNotifierError(String name, DeepstreamException error) {
-                    recordSnapshotCallback.onRecordSnapshotError( name, error );
+                public void onSingleNotifierError(String name, DeepstreamError error) {
+                    deepstreamException[0] = error;
+                    snapshotLatch.countDown();
                 }
 
                 @Override
-                public void onSingleNotifierResponse(String name, Object data) {
-                    recordSnapshotCallback.onRecordSnapshot(name, (JsonElement) data);
+                public void onSingleNotifierResponse(String name, Object recordData) {
+                    data[0] = (JsonElement) recordData;
+                    snapshotLatch.countDown();
                 }
             });
+
+            try {
+                snapshotLatch.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
+
+        if (deepstreamException[0] != null) {
+            throw deepstreamException[0];
+        }
+
+        return data[0];
     }
 
     /**
@@ -167,29 +202,43 @@ public class RecordHandler implements RecordEventsListener, Record.RecordDestroy
      * once the record is ready.<br/>
      *
      * @param name The name of the record to check
-     * @param callback The callback to indicate if the record exists
      */
-    public void has(String name, final RecordHasCallback callback ) {
+    public boolean has(String name) throws DeepstreamError {
+        final DeepstreamError[] deepstreamException = new DeepstreamError[1];
+        final boolean[] hasRecord = new boolean[1];
+
         Record record = records.get( name );
         if( record != null && record.isReady() ) {
-            callback.onRecordFound( name );
+            hasRecord[0] = true;
         } else {
-            hasRegistry.request(name, new UtilSingleNotifierCallback() {
+            final CountDownLatch hasLatch = new CountDownLatch(1);
+
+            hasRegistry.request(name, new UtilSingleNotifier.UtilSingleNotifierCallback() {
                 @Override
-                public void onSingleNotifierError(String name, DeepstreamException error) {
-                    callback.onRecordHasError( name, error );
+                public void onSingleNotifierError(String name, DeepstreamError error) {
+                    deepstreamException[0] = error;
+                    hasLatch.countDown();
                 }
 
                 @Override
                 public void onSingleNotifierResponse(String name, Object data) {
-                    if( (boolean) data ) {
-                        callback.onRecordFound( name );
-                    } else {
-                        callback.onRecordNotFound( name );
-                    }
+                    hasRecord[0] = (boolean) data;
+                    hasLatch.countDown();
                 }
             });
+
+            try {
+                hasLatch.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
+
+        if (deepstreamException[0] != null) {
+            throw deepstreamException[0];
+        }
+
+        return hasRecord[0];
     }
 
 
@@ -221,12 +270,12 @@ public class RecordHandler implements RecordEventsListener, Record.RecordDestroy
             }
 
             if( message.data[ 0 ].equals( Actions.SNAPSHOT.toString() ) ) {
-                snapshotRegistry.recieve( recordName, new DeepstreamException( message.data[ 2 ] ), null );
+                snapshotRegistry.recieve(recordName, new DeepstreamError(message.data[2]), null);
                 return;
             }
 
             if( message.data[ 0 ].equals(Actions.HAS.toString() ))  {
-                hasRegistry.recieve( recordName, new DeepstreamException( message.data[ 2 ] ), null );
+                hasRegistry.recieve(recordName, new DeepstreamError(message.data[2]), null);
                 return;
             }
         } else {

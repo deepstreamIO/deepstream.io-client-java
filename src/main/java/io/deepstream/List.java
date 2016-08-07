@@ -14,31 +14,57 @@ import java.util.Map;
  * of convinience methods for interacting with them.
  */
 public class List {
-    public boolean isReady;
-    public boolean isDestroyed;
-    public final String name;
-
     private final RecordListeners recordListeners;
     private final Record record;
-    private final ArrayList<ListReadyListener> listReadyListeners;
     private final ArrayList<ListChangedListener> listChangedListeners;
     
     /**
-     * Constructor is not public since it is created via {@link RecordHandler#getList(String)} 
+     * Constructor is not public since it is created via {@link RecordHandler#getList(String)}
      * @param recordHandler The recordHandler to get the underlying record
      * @param name The list name
-     * @param options Options client was created with
      */
-    List(RecordHandler recordHandler, String name, Map options) {
+    List(RecordHandler recordHandler, String name) {
         this.record = recordHandler.getRecord( name );
 
         this.recordListeners = new List.RecordListeners( this, this.record );
-        this.listReadyListeners = new ArrayList<>();
         this.listChangedListeners = new ArrayList<>();
+    }
 
-        this.name = name;
+    /**
+     * Return whether the list data has been loaded from the server
+     *
+     * @return true if record has been loaded
+     */
+    public boolean isReady() {
+        return this.record.isReady();
+    }
 
-        this.refreshInheritedState();
+    /**
+     * Return whether the list has been destroyed. If true and you need to use the method create it again via
+     * {@link RecordHandler#getList(String)} (String)}
+     *
+     * @return true if list has been destroyed
+     */
+    public boolean isDestroyed() {
+        return this.record.isDestroyed();
+    }
+
+    /**
+     * Return the list version. This is solely used within a {@link RecordMergeStrategy}.
+     *
+     * @return -1 if not loaded, otherwise the local version number
+     */
+    public int version() {
+        return this.record.version();
+    }
+
+    /**
+     * Return the list name
+     *
+     * @return The list name
+     */
+    public String name() {
+        return this.record.name();
     }
 
     /**
@@ -58,27 +84,6 @@ public class List {
      */
     public List removeRecordEventsListener(RecordEventsListener recordEventsListener) {
         this.record.removeRecordEventsListener( recordEventsListener );
-        return this;
-    }
-
-
-    /**
-     * Add listener to be notified when the List has been loaded from the server
-     * @param listReadyListener The listener to add
-     * @return The list
-     */
-    public List addListReadyListener( ListReadyListener listReadyListener ) {
-        this.listReadyListeners.add( listReadyListener );
-        return this;
-    }
-
-    /**
-     * Remove listener added via {@link List#addListReadyListener(ListReadyListener)}
-     * @param listReadyListener The listener to remove
-     * @return The list
-     */
-    public List removeListReadyListener(ListReadyListener listReadyListener) {
-        this.listReadyListeners.remove( listReadyListener );
         return this;
     }
 
@@ -103,13 +108,8 @@ public class List {
      * @param entries The recordNames to update the list with
      * @return The list
      */
-    public List setEntries( java.util.List<String> entries ) {
-        if( !this.record.isReady() ) {
-            //TODO: Buffer ( to disable events from being emitted )
-        }
-        else {
-            this.updateList( entries );
-        }
+    public List setEntries(java.util.List<String> entries) {
+        this.updateList(entries);
         return this;
     }
 
@@ -119,11 +119,6 @@ public class List {
      * @return The list
      */
     public List removeEntry( String entry ) {
-        if( !this.isReady ) {
-            //TODO: Buffer ( to disable events from being emitted )
-            return this;
-        }
-
         Collection entries = this.getEntries();
         while( entries.contains( entry ) ) entries.remove( entry );
         this.updateList( entries );
@@ -138,11 +133,6 @@ public class List {
      * @return The list
      */
     public List removeEntry( String entry, int index ) {
-        if( !this.isReady ) {
-            //TODO: Buffer ( to disable events from being emitted )
-            return this;
-        }
-
         java.util.List entries = this.getEntries();
         if( entries.get( index ).equals( entry ) ) {
             entries.remove( index );
@@ -158,11 +148,6 @@ public class List {
      * @return The list
      */
     public List addEntry( String entry ) {
-        if( !this.isReady ) {
-            //TODO: Buffer ( to disable events from being emitted )
-            return this;
-        }
-
         java.util.List<String> entries = this.getEntries();
         entries.add( entry );
         this.updateList( entries );
@@ -176,11 +161,6 @@ public class List {
      * @return The list
      */
     public List addEntry( String entry, int index ) {
-        if( !this.isReady ) {
-            //TODO: Buffer ( to disable events from being emitted )
-            return this;
-        }
-
         java.util.List<String> entries = this.getEntries();
         entries.add( index, entry );
         this.updateList( entries );
@@ -218,8 +198,8 @@ public class List {
         }
 
         if( triggerNow ) {
-            for( ListChangedListener listChangeListener : this.listChangedListeners ) {
-                listChangeListener.onListChanged( this.name, this.getEntries() );
+            for (ListChangedListener listChangeListener : this.listChangedListeners) {
+                listChangeListener.onListChanged(this.name(), this.getEntries());
             }
         }
 
@@ -239,6 +219,15 @@ public class List {
         }
 
         return this;
+    }
+
+    /**
+     * Returns the underlying record, used with the ready handler to allow the API to be sync
+     *
+     * @return
+     */
+    Record getUnderlyingRecord() {
+        return this.record;
     }
 
     /**
@@ -280,8 +269,8 @@ public class List {
 
             for( Integer index : oldIndexes ) {
                 if( newIndexes == null ) {
-                    for( ListChangedListener listChangedListener : this.listChangedListeners ) {
-                        listChangedListener.onEntryRemoved( this.name, entryName, index );
+                    for (ListChangedListener listChangedListener : this.listChangedListeners) {
+                        listChangedListener.onEntryRemoved(this.name(), entryName, index);
                     }
                 }
             }
@@ -293,8 +282,8 @@ public class List {
 
             if( oldIndexes == null ) {
                 for( Integer index : newIndexes ) {
-                    for( ListChangedListener listChangedListener : this.listChangedListeners ) {
-                        listChangedListener.onEntryAdded( this.name, entryName, index );
+                    for (ListChangedListener listChangedListener : this.listChangedListeners) {
+                        listChangedListener.onEntryAdded(this.name(), entryName, index);
                     }
                 }
             } else {
@@ -302,12 +291,12 @@ public class List {
                     Integer index = newIndexes.get( i );
                     if( oldIndexes.size() < i || !oldIndexes.get( i ).equals( newIndexes.get( i ) ) ) {
                         if( oldIndexes.size() < i ) {
-                            for( ListChangedListener listChangedListener : this.listChangedListeners ) {
-                                listChangedListener.onEntryAdded( this.name, entryName, index );
+                            for (ListChangedListener listChangedListener : this.listChangedListeners) {
+                                listChangedListener.onEntryAdded(this.name(), entryName, index);
                             }
                         } else {
-                            for( ListChangedListener listChangedListener : this.listChangedListeners ) {
-                                listChangedListener.onEntryMoved( this.name, entryName, index );
+                            for (ListChangedListener listChangedListener : this.listChangedListeners) {
+                                listChangedListener.onEntryMoved(this.name(), entryName, index);
                             }
                         }
                     }
@@ -343,17 +332,9 @@ public class List {
     }
 
     /**
-     * Mirror properties on record onto list
-     */
-    private void refreshInheritedState() {
-        this.isReady = this.record.isReady();
-        this.isDestroyed = this.record.isDestroyed();
-    }
-
-    /**
      * A class to contain all the interface implementations to not pollute the public API
      */
-    private class RecordListeners implements RecordReadyListener, RecordChangedCallback, RecordEventsListener, Record.RecordRemoteUpdateHandler {
+    private class RecordListeners implements RecordChangedCallback, RecordEventsListener, Record.RecordRemoteUpdateHandler {
 
         private final List list;
         private final Record record;
@@ -363,7 +344,6 @@ public class List {
             this.list = list;
             this.record = record;
             this.record.addRecordEventsListener( this );
-            this.record.addRecordReadyListener( this );
             this.record.setRecordRemoteUpdateHandler( this );
         }
 
@@ -373,26 +353,16 @@ public class List {
 
         @Override
         public void onRecordDeleted(String recordName) {
-            this.list.refreshInheritedState();
         }
 
         @Override
         public void onRecordDiscarded(String recordName) {
-            this.list.refreshInheritedState();
-        }
-
-        @Override
-        public void onRecordReady(String recordName, Record record) {
-            this.list.refreshInheritedState();
-            for( ListReadyListener listReadyListener : this.list.listReadyListeners ) {
-                listReadyListener.onListReady( this.list.name, this.list );
-            }
         }
 
         @Override
         public void onRecordChanged(String recordName, JsonElement data) {
-            for( ListChangedListener listChangeListener : this.list.listChangedListeners ) {
-                listChangeListener.onListChanged( this.list.name, this.list.getEntries() );
+            for (ListChangedListener listChangeListener : this.list.listChangedListeners) {
+                listChangeListener.onListChanged(this.list.name(), this.list.getEntries());
             }
         }
 

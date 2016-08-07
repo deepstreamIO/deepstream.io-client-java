@@ -19,6 +19,10 @@ class UtilEmitter {
 
     private final ConcurrentMap<String, ConcurrentLinkedQueue<Object>> callbacks = new ConcurrentHashMap<>();
 
+    private static boolean sameAs(Object fn, Object internal) {
+        return fn.equals(internal) || internal instanceof OnceListener && fn.equals(((OnceListener) internal).fn);
+    }
+
     /**
      * @param enu eventName as an Enum
      * @param fn The listener to invoke
@@ -103,10 +107,6 @@ class UtilEmitter {
         return this;
     }
 
-    private static boolean sameAs(Object fn, Object internal) {
-        return fn.equals(internal) || internal instanceof OnceListener && fn.equals(((OnceListener) internal).fn);
-    }
-
     /**
      * Returns a list of listeners for the specified event.
      *
@@ -127,7 +127,7 @@ class UtilEmitter {
      */
     public boolean hasListeners(String event) {
         ConcurrentLinkedQueue<Object> callbacks = this.callbacks.get(event);
-        return callbacks != null && !callbacks.isEmpty();
+        return callbacks == null || callbacks.isEmpty();
     }
 
     /**

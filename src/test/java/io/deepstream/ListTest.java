@@ -8,26 +8,23 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Properties;
 
 import static org.mockito.Mockito.*;
 
 public class ListTest {
 
-    Map options;
     DeepstreamClientMock deepstreamClientMock;
     ConnectionMock connectionMock;
     RecordHandler recordHandler;
     DeepstreamRuntimeErrorHandler errorCallbackMock;
     List list;
     RecordEventsListener recordEventsListener;
-    ListReadyListener listReadyListener;
     ListChangedListener listChangedListener;
     String listName = "someList";
 
     @Before
-    public void setUp() {
+    public void setUp() throws InvalidDeepstreamConfig {
 
         this.connectionMock = new ConnectionMock();
         this.errorCallbackMock = mock( DeepstreamRuntimeErrorHandler.class );
@@ -35,20 +32,18 @@ public class ListTest {
         this.deepstreamClientMock.setRuntimeErrorHandler( errorCallbackMock );
         this.deepstreamClientMock.setConnectionState( ConnectionState.OPEN );
 
-        options = new Properties();
+        Properties options = new Properties();
         options.put( "subscriptionTimeout", "10" );
         options.put( "recordDeleteTimeout", "10" );
         options.put( "recordReadAckTimeout", "10" );
         options.put( "recordReadTimeout", "20" );
 
-        recordHandler = new RecordHandler( options, connectionMock, deepstreamClientMock );
+        recordHandler = new RecordHandler( new DeepstreamConfig( options ), connectionMock, deepstreamClientMock );
         recordEventsListener = mock(RecordEventsListener.class);
-        listReadyListener = mock(ListReadyListener.class);
         listChangedListener = mock( ListChangedListener.class);
 
         list = recordHandler.getList( listName );
         list.addRecordEventsListener(recordEventsListener);
-        list.addListReadyListener( listReadyListener );
         list.subscribe( listChangedListener );
     }
 
@@ -59,8 +54,8 @@ public class ListTest {
     @Test
     public void listHasCorrectDefaultState() {
         Assert.assertEquals( list.getEntries(), new ArrayList());
-        Assert.assertFalse( list.isReady );
-        Assert.assertFalse( list.isDestroyed );
+        Assert.assertFalse( list.isReady() );
+        Assert.assertFalse( list.isDestroyed() );
         Assert.assertTrue( list.isEmpty() );
     }
 
@@ -68,15 +63,14 @@ public class ListTest {
     public void recievesAResponseFromTheServer() {
         recordHandler.handle( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|someList|1|[\"entryA\",\"entryB\"]" ), deepstreamClientMock ) );
 
-        ArrayList content = new ArrayList();
+        ArrayList<String> content = new ArrayList<>();
         content.add( "entryA" );
         content.add( "entryB" );
 
         Assert.assertEquals( list.getEntries(), content );
         verify( listChangedListener, times( 1 ) ).onListChanged( listName, content );
-        verify( listReadyListener, times( 1 ) ).onListReady( listName, list );
-        Assert.assertTrue( list.isReady );
-        Assert.assertFalse( list.isDestroyed );
+        Assert.assertTrue( list.isReady() );
+        Assert.assertFalse( list.isDestroyed() );
         Assert.assertFalse( list.isEmpty() );
     }
 
@@ -86,7 +80,7 @@ public class ListTest {
 
         reset( listChangedListener );
 
-        ArrayList content = new ArrayList();
+        ArrayList<String> content = new ArrayList<>();
         content.add( "entryA" );
         content.add( "entryB" );
         content.add( "entryC" );
@@ -105,7 +99,7 @@ public class ListTest {
 
         reset( listChangedListener );
 
-        ArrayList content = new ArrayList();
+        ArrayList<String> content = new ArrayList<>();
         content.add( "entryA" );
         content.add( "entryC" );
 
@@ -123,7 +117,7 @@ public class ListTest {
 
         reset( listChangedListener );
 
-        ArrayList content = new ArrayList();
+        ArrayList<String> content = new ArrayList<>();
         content.add( "entryA" );
         content.add( "entryD" );
         content.add( "entryC" );
@@ -142,7 +136,7 @@ public class ListTest {
 
         reset( listChangedListener );
 
-        ArrayList content = new ArrayList();
+        ArrayList<String> content = new ArrayList<>();
         content.add( "entryA" );
         content.add( "entryC" );
 
@@ -160,7 +154,7 @@ public class ListTest {
 
         reset( listChangedListener );
 
-        ArrayList content = new ArrayList();
+        ArrayList<String> content = new ArrayList<>();
         content.add( "u" );
         content.add( "v" );
 
@@ -178,7 +172,7 @@ public class ListTest {
 
         reset( listChangedListener );
 
-        ArrayList content = new ArrayList();
+        ArrayList<String> content = new ArrayList<>();
         content.add( "x" );
         content.add( "y" );
 
@@ -194,7 +188,7 @@ public class ListTest {
 
         reset( listChangedListener );
 
-        ArrayList content = new ArrayList();
+        ArrayList<String> content = new ArrayList<>();
         list.setEntries( content );
 
         Assert.assertEquals( connectionMock.lastSentMessage, TestUtil.replaceSeperators( "R|U|someList|8|[]+" ) );
@@ -210,7 +204,7 @@ public class ListTest {
 
         list.unsubscribe( listChangedListener );
 
-        ArrayList content = new ArrayList();
+        ArrayList<String> content = new ArrayList<>();
         list.setEntries( content );
 
         verify( listChangedListener, times( 0 ) ).onListChanged( listName, content );

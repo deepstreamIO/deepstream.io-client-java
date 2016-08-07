@@ -8,7 +8,6 @@ import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URISyntaxException;
-import java.util.Map;
 
 /**
  * An implementation of {@link Endpoint} that allows use to interact with with deepstream via TCP. This provides much
@@ -28,7 +27,7 @@ class EndpointTCP implements Endpoint {
     private OutputStreamWriter out;
     private InputStreamReader in;
 
-    public EndpointTCP(String url, Map options, Connection connection) throws URISyntaxException {
+    public EndpointTCP(String url, DeepstreamConfig deepstreamConfig, Connection connection) throws URISyntaxException {
         try {
             this.host = url.substring( 0, url.indexOf( ':' ) );
             this.port = Integer.parseInt( url.substring( url.indexOf( ':' ) + 1 )  );

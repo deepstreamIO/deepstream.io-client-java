@@ -11,24 +11,22 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 
 import static org.mockito.Mockito.*;
 
 public class RecordTest {
-
-    Map options;
     DeepstreamClientMock deepstreamClientMock;
     ConnectionMock connectionMock;
     RecordHandler recordHandler;
     DeepstreamRuntimeErrorHandler errorCallbackMock;
     Record record;
     RecordEventsListener recordEventsListener;
-    RecordReadyListener recordReadyListener;
+    Record.RecordReadyListener recordReadyListener;
+    DeepstreamConfig config;
 
     @Before
-    public void setUp() {
+    public void setUp() throws InvalidDeepstreamConfig {
 
         this.connectionMock = new ConnectionMock();
         this.errorCallbackMock = mock( DeepstreamRuntimeErrorHandler.class );
@@ -36,15 +34,16 @@ public class RecordTest {
         this.deepstreamClientMock.setRuntimeErrorHandler( errorCallbackMock );
         this.deepstreamClientMock.setConnectionState( ConnectionState.OPEN );
 
-        options = new Properties();
+        Properties options = new Properties();
         options.put( "subscriptionTimeout", "10" );
         options.put( "recordDeleteTimeout", "10" );
         options.put( "recordReadAckTimeout", "10" );
         options.put( "recordReadTimeout", "20" );
+        config = new DeepstreamConfig( options );
 
-        recordHandler = new RecordHandler( options, connectionMock, deepstreamClientMock );
+        recordHandler = new RecordHandler( config, connectionMock, deepstreamClientMock );
         recordEventsListener = mock(RecordEventsListener.class);
-        recordReadyListener = mock(RecordReadyListener.class);
+        recordReadyListener = mock(Record.RecordReadyListener.class);
     }
 
     @After
@@ -53,7 +52,7 @@ public class RecordTest {
 
     @Test
     public void recordHasCorrectDefaultState() {
-        record = new Record( "recordA", new HashMap(), connectionMock, options, deepstreamClientMock );
+        record = new Record( "recordA", new HashMap(), connectionMock, config, deepstreamClientMock );
         record.addRecordEventsListener(recordEventsListener);
         record.addRecordReadyListener( recordReadyListener );
         Assert.assertFalse( record.isReady() );

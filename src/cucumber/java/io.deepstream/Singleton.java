@@ -4,7 +4,6 @@ import io.deepstream.constants.ConnectionState;
 import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
 
-import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Properties;
 
@@ -44,7 +43,7 @@ class Singleton {
         return this.server;
     }
 
-    DeepstreamClient getNewClient() throws IOException, URISyntaxException, InterruptedException {
+    DeepstreamClient getNewClient() throws URISyntaxException, InterruptedException, InvalidDeepstreamConfig {
         if( this.client != null ) {
             System.out.println( "Closing old client " );
             this.client.close();
@@ -57,9 +56,12 @@ class Singleton {
         options.put("recordReadAckTimeout", "150");
         options.put("recordReadTimeout", "350");
         options.put("recordDeleteTimeout", "150");
-        options.put( "rpcResponseTimeout", "200" );
+        options.put("rpcResponseTimeout", "500");
         options.put( "reconnectIntervalIncrement", "1500" );
+        options.put("reconnectIntervalIncrement", "1500");
         options.put("maxReconnectAttempts", "1500");
+        options.put("maxReconnectInterval", "1500");
+
         this.client = new DeepstreamClient( "localhost:" + serverPort, options );
 
         this.client.setRuntimeErrorHandler(new DeepstreamRuntimeErrorHandler() {

@@ -3,6 +3,7 @@ package io.deepstream;
 import com.google.gson.JsonElement;
 
 import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * An AnonymousRecord is a record without a predefined name. It
@@ -18,17 +19,13 @@ import java.util.ArrayList;
  */
 public class AnonymousRecord {
 
+    private final ArrayList<Subscription> subscriptions;
+    private final ArrayList<AnonymousRecordNameChangedListener> anonymousRecordNameChangedCallbacks;
+    private final RecordHandler recordHandler;
     /**
      * The record name the anonymous record is currently referring to
      */
     public String name;
-
-    private final RecordListeners recordListeners;
-    private final ArrayList<Subscription> subscriptions;
-    private final ArrayList<AnonymousRecordNameChangedListener> anonymousRecordNameChangedCallbacks;
-    private final RecordHandler recordHandler;
-    private final ArrayList<AnonymousRecordReadyListener> recordReadyListeners;
-
     private Record record;
 
     /**
@@ -39,31 +36,6 @@ public class AnonymousRecord {
         this.recordHandler = recordHandler;
         this.subscriptions = new ArrayList<>();
         this.anonymousRecordNameChangedCallbacks = new ArrayList<>();
-        this.recordReadyListeners = new ArrayList<>();
-        this.recordListeners = new AnonymousRecord.RecordListeners( this );
-    }
-
-    /**
-     * Add a ready listener to the anonymousRecord. Whenever the record state is you'll get notified via
-     * {@link AnonymousRecordReadyListener#onRecordReady(String, AnonymousRecord)}. Note that since you can
-     * change the underlying record at will, this method can be called multiple times.
-     * @param recordReadyListener The listener to add
-     * @return The AnonymousRecord
-     */
-    public AnonymousRecord addRecordReadyListener( AnonymousRecordReadyListener recordReadyListener ) {
-        this.recordReadyListeners.add( recordReadyListener );
-        return this;
-    }
-
-    /**
-     * Remove a readyListener added via {@link AnonymousRecord#addRecordReadyListener(AnonymousRecordReadyListener)}
-     *
-     * @param recordEventsListener The listener to remove
-     * @return The AnonymousRecord
-     */
-    public AnonymousRecord removeRecordReadyListener(AnonymousRecordReadyListener recordEventsListener) {
-        this.recordReadyListeners.remove( recordEventsListener );
-        return this;
     }
 
     /**
@@ -271,8 +243,18 @@ public class AnonymousRecord {
         this.record = this.recordHandler.getRecord( recordName );
         this.subscribeRecord();
 
-        if( this.record.isReady() ) {
-            this.recordListeners.onRecordReady( this.name, this.record );
+        final CountDownLatch readyLatch = new CountDownLatch(1);
+        record.whenReady(new Record.RecordReadyListener() {
+            @Override
+            public void onRecordReady(String recordName, Record record) {
+                readyLatch.countDown();
+            }
+        });
+
+        try {
+            readyLatch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
         for( AnonymousRecordNameChangedListener anonymousRecordNameChangedCallback : this.anonymousRecordNameChangedCallbacks ) {
@@ -291,7 +273,6 @@ public class AnonymousRecord {
                 this.record.subscribe( subscription.path, subscription.recordChangedCallback, true );
             }
         }
-        this.record.addRecordReadyListener( this.recordListeners );
     }
 
     /**
@@ -309,7 +290,6 @@ public class AnonymousRecord {
 
         }
 
-        this.record.removeRecordReadyListener( this.recordListeners );
         this.record.discard();
     }
 
@@ -326,24 +306,6 @@ public class AnonymousRecord {
         }
         Subscription(RecordEventsListener recordEventsListener ) {
             this.recordEventsListener = recordEventsListener;
-        }
-    }
-
-    /**
-     * An inner class to avoid having interface methods on the public API
-     */
-    private class RecordListeners implements RecordReadyListener {
-        private final AnonymousRecord anonymousRecord;
-
-        RecordListeners(AnonymousRecord anonymousRecord) {
-            this.anonymousRecord = anonymousRecord;
-        }
-
-        @Override
-        public void onRecordReady(String recordName, Record record) {
-            for( AnonymousRecordReadyListener anonymousRecordReadyListener : this.anonymousRecord.recordReadyListeners) {
-                anonymousRecordReadyListener.onRecordReady(recordName, this.anonymousRecord );
-            }
         }
     }
 

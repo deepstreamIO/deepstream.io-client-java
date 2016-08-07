@@ -10,7 +10,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Map;
 import java.util.Properties;
 
 import static org.mockito.Mockito.*;
@@ -18,7 +17,6 @@ import static org.mockito.Mockito.*;
 public class AnonymousRecordTest {
 
     Gson gson = new Gson();
-    Map options;
     DeepstreamClientMock deepstreamClientMock;
     ConnectionMock connectionMock;
     RecordHandler recordHandler;
@@ -26,14 +24,13 @@ public class AnonymousRecordTest {
     AnonymousRecord anonymousRecord;
     RecordEventsListener recordEventsListener;
     AnonymousRecordNameChangedListener recordNameChangedListener;
-    AnonymousRecordReadyListener anonymousRecordReadyListener;
     RecordChangedCallback recordChangedCallback;
     String firstRecordName = "firstRecordName";
     String secondRecordName = "secondRecordName";
     String thirdRecordName = "thirdRecordName";
 
     @Before
-    public void setUp() {
+    public void setUp() throws InvalidDeepstreamConfig {
 
         this.connectionMock = new ConnectionMock();
         this.errorCallbackMock = mock( DeepstreamRuntimeErrorHandler.class );
@@ -41,16 +38,15 @@ public class AnonymousRecordTest {
         this.deepstreamClientMock.setRuntimeErrorHandler( errorCallbackMock );
         this.deepstreamClientMock.setConnectionState( ConnectionState.OPEN );
 
-        options = new Properties();
+        Properties options = new Properties();
         options.put( "subscriptionTimeout", "10" );
         options.put( "recordDeleteTimeout", "10" );
         options.put( "recordReadAckTimeout", "10" );
         options.put( "recordReadTimeout", "20" );
 
-        recordHandler = new RecordHandler( options, connectionMock, deepstreamClientMock );
+        recordHandler = new RecordHandler( new DeepstreamConfig( options ), connectionMock, deepstreamClientMock );
         recordChangedCallback = mock(RecordChangedCallback.class);
         recordEventsListener = mock(RecordEventsListener.class);
-        anonymousRecordReadyListener = mock( AnonymousRecordReadyListener.class );
         recordNameChangedListener = mock(AnonymousRecordNameChangedListener.class);
     }
 
@@ -62,7 +58,6 @@ public class AnonymousRecordTest {
     public void recordHasCorrectDefaultState() {
         anonymousRecord = new AnonymousRecord( this.recordHandler );
         anonymousRecord.addRecordEventsListener(recordEventsListener);
-        anonymousRecord.addRecordReadyListener(anonymousRecordReadyListener);
         anonymousRecord.addRecordNameChangedListener( recordNameChangedListener );
     }
 
@@ -77,7 +72,6 @@ public class AnonymousRecordTest {
         anonymousRecord.subscribe( recordChangedCallback );
         anonymousRecord.subscribe( "firstname", recordChangedCallback );
 
-        verify( anonymousRecordReadyListener, times( 0 )).onRecordReady( anyString(), any( AnonymousRecord.class ) );
         verify( recordEventsListener, times( 0 )).onRecordDeleted( anyString() );
         verify( recordEventsListener, times( 0 )).onRecordDiscarded( anyString() );
         verify( recordChangedCallback, times( 0) ).onRecordChanged( anyString(), any(JsonElement.class));
@@ -91,22 +85,32 @@ public class AnonymousRecordTest {
     public void requestsARecordWhenSetNameIsCalled() {
         worksBeforeSetNameIsCalled();
 
-        anonymousRecord.setName( firstRecordName );
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                anonymousRecord.setName( firstRecordName );
+            }
+        }).start();
 
-        verify( recordNameChangedListener, times( 1) ).recordNameChanged( firstRecordName, anonymousRecord);
+        try {
+            Thread.sleep(50);
+            recordHandler.handle( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|firstRecordName|1|{\"firstname\":\"Wolfram\"}" ), deepstreamClientMock ) );
+            Thread.sleep(50);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        verify( recordNameChangedListener, times( 1 ) ).recordNameChanged( firstRecordName, anonymousRecord);
         Assert.assertEquals( anonymousRecord.name, firstRecordName );
         Assert.assertEquals( connectionMock.lastSentMessage, TestUtil.replaceSeperators( "R|CR|firstRecordName+" ) );
+
+        verify( recordChangedCallback, times(1) ).onRecordChanged( firstRecordName, gson.fromJson( "{\"firstname\":\"Wolfram\"}", JsonElement.class ) );
+        verify( recordChangedCallback, times(1) ).onRecordChanged( firstRecordName, "firstname", new JsonPrimitive("Wolfram") );
     }
 
     @Test
     public void updatesSubscriptionsOnceTheRecordIsReady() {
         requestsARecordWhenSetNameIsCalled();
-
-        recordHandler.handle( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|firstRecordName|1|{\"firstname\":\"Wolfram\"}" ), deepstreamClientMock ) );
-
-        verify( anonymousRecordReadyListener, times(1)).onRecordReady( anyString(), any( AnonymousRecord.class ) );
-        verify( recordChangedCallback, times(1) ).onRecordChanged( firstRecordName, gson.fromJson( "{\"firstname\":\"Wolfram\"}", JsonElement.class ) );
-        verify( recordChangedCallback, times(1) ).onRecordChanged( firstRecordName, "firstname", new JsonPrimitive("Wolfram") );
     }
 
     @Test
@@ -116,7 +120,6 @@ public class AnonymousRecordTest {
         Record secondRecord = recordHandler.getRecord( secondRecordName );
         recordHandler.handle( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|secondRecordName|2|{\"firstname\":\"Egon\",\"lastname\":\"Kowalski\"}" ), deepstreamClientMock ) );
 
-        verify( anonymousRecordReadyListener, times(1)).onRecordReady( anyString(), any( AnonymousRecord.class ) );
         verify( recordChangedCallback, times(1) ).onRecordChanged( firstRecordName, gson.fromJson( "{\"firstname\":\"Wolfram\"}", JsonElement.class ) );
         verify( recordChangedCallback, times(1) ).onRecordChanged( firstRecordName, "firstname", new JsonPrimitive("Wolfram") );
     }
@@ -128,7 +131,6 @@ public class AnonymousRecordTest {
 
         anonymousRecord.setName( secondRecordName );
 
-        verify( anonymousRecordReadyListener, times(1)).onRecordReady( anyString(), any( AnonymousRecord.class ) );
         verify( recordChangedCallback, times( 1) ).onRecordChanged( secondRecordName, gson.fromJson( "{\"firstname\":\"Egon\",\"lastname\":\"Kowalski\"}", JsonElement.class ) );
         verify( recordChangedCallback, times(1) ).onRecordChanged(  secondRecordName, "firstname", new JsonPrimitive("Egon") );
 
@@ -161,26 +163,27 @@ public class AnonymousRecordTest {
         proxiesCallsThroughToTheUnderlyingRecord();
         resetMocks();
 
-        anonymousRecord.setName( thirdRecordName );
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                anonymousRecord.setName( thirdRecordName );
+            }
+        }).start();
+
+        try {
+            Thread.sleep(50);
+            recordHandler.handle( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|thirdRecordName|1|{\"firstname\":\"Wolfram\"}" ), deepstreamClientMock ) );
+            Thread.sleep(50);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         verify( recordNameChangedListener, times(1) ).recordNameChanged( thirdRecordName, anonymousRecord );
-        verify( anonymousRecordReadyListener, times(0) ).onRecordReady( anyString(), any( AnonymousRecord.class ) );
-    }
-
-    @Test
-    public void emitsAnAdditonalReadyEventOnceTheNewRecordBecomesAvailable() throws DeepstreamRecordDestroyedException {
-        notifiedNameChangedWhenSetNameIsCalled();
-        resetMocks();
-
-        recordHandler.handle( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|thirdRecordName|1|{\"firstname\":\"Egon\",\"lastname\":\"Kowalski\"}" ), deepstreamClientMock ) );
-
-        verify( anonymousRecordReadyListener, times( 1 ) ).onRecordReady( thirdRecordName, anonymousRecord );
     }
 
     private void resetMocks() {
         reset(recordEventsListener);
         reset(recordChangedCallback);
-        reset(anonymousRecordReadyListener);
     }
 
 }

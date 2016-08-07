@@ -13,7 +13,7 @@ import io.deepstream.constants.ConnectionState;
 class UtilResubscribeNotifier implements ConnectionStateListener {
 
     private DeepstreamClientAbstract client;
-    private UtilResubscribeCallback resubscribe;
+    private UtilResubscribeListener resubscribe;
     private boolean isReconnecting;
 
     /**
@@ -22,7 +22,7 @@ class UtilResubscribeNotifier implements ConnectionStateListener {
      * @param client the client to listen to connection state changes on
      * @param callback the resubscribe callback
      */
-    public UtilResubscribeNotifier(DeepstreamClientAbstract client, UtilResubscribeCallback callback ) {
+    public UtilResubscribeNotifier(DeepstreamClientAbstract client, UtilResubscribeListener callback) {
         this.client = client;
         this.resubscribe = callback;
         this.isReconnecting = false;
@@ -51,5 +51,9 @@ class UtilResubscribeNotifier implements ConnectionStateListener {
             this.isReconnecting = false;
             this.resubscribe.resubscribe();
         }
+    }
+
+    interface UtilResubscribeListener {
+        void resubscribe();
     }
 }
