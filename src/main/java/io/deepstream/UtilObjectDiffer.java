@@ -46,6 +46,18 @@ class UtilObjectDiffer {
     }
 
     /**
+     * Gets the difference of two objects given with the given path
+     *
+     * @param nodeA the old version of the object
+     * @param nodeB the new version of the object
+     * @param path current path of the changes
+     * @return a Tuple with the path of the changes and the actual changes
+     */
+    public Tuple getUpdateObject(JsonElement nodeA, JsonElement nodeB, String path) {
+        return getDiff( nodeA, nodeB, new StringBuilder(path) );
+    }
+
+    /**
      * Implementation that gets the actual diff object
      *
      * @param nodeA the old version of the object

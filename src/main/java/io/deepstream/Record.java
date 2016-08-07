@@ -244,6 +244,11 @@ public class Record {
      * @throws DeepstreamRecordDestroyedException Thrown if the record has been destroyed and can't perform more actions
      */
     public Record set(String path, Object value ) throws DeepstreamRecordDestroyedException {
+        if( deepstreamConfig.getObjectDeltas() ) {
+            JsonElement currentData = this.path.get( path );
+            Tuple updateObject = this.objectDiffer.getUpdateObject( currentData, gson.toJsonTree(value), path );
+            return this.set( updateObject.path, updateObject.value, false );
+        }
         return this.set( path, value, false );
     }
 
