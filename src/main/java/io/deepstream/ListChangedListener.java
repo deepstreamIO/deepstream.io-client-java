@@ -7,10 +7,10 @@ package io.deepstream;
 public interface ListChangedListener {
     /**
      * Notified whenever the entries in the list change
-     * @param listname The name of list
+     * @param listName The name of list
      * @param entries A list containing all the record names
      */
-    void onListChanged( String listname, java.util.List entries );
+    void onListChanged(String listName, java.util.List entries);
 
     /**
      * Notified whenever an entry is added

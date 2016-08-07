@@ -62,8 +62,10 @@ public class RpcHandler {
             throw new DeepstreamException( "RPC " + rpcName + " already registered" );
         }
 
-        this.providers.put( rpcName, rpcRequestedListener );
-        this.sendRPCSubscribe( rpcName );
+        synchronized (this) {
+            this.providers.put(rpcName, rpcRequestedListener);
+            this.sendRPCSubscribe(rpcName);
+        }
     }
 
     /**
@@ -91,23 +93,25 @@ public class RpcHandler {
         final CountDownLatch responseLatch = new CountDownLatch(1);
 
 
-        String uid = this.client.getUid();
-        this.rpcs.put(uid, new Rpc(this.deepstreamConfig, this.client, rpcName, uid, new RpcResponseCallback() {
-            @Override
-            public void onRpcSuccess(String rpcName, Object data) {
-                rpcResponse[0] = new RpcResponse(true, data);
-                responseLatch.countDown();
-            }
+        synchronized (this) {
+            String uid = this.client.getUid();
+            this.rpcs.put(uid, new Rpc(this.deepstreamConfig, this.client, rpcName, uid, new RpcResponseCallback() {
+                @Override
+                public void onRpcSuccess(String rpcName, Object data) {
+                    rpcResponse[0] = new RpcResponse(true, data);
+                    responseLatch.countDown();
+                }
 
-            @Override
-            public void onRpcError(String rpcName, Object error) {
-                rpcResponse[0] = new RpcResponse(false, error);
-                responseLatch.countDown();
-            }
-        }));
+                @Override
+                public void onRpcError(String rpcName, Object error) {
+                    rpcResponse[0] = new RpcResponse(false, error);
+                    responseLatch.countDown();
+                }
+            }));
 
-        String typedData = MessageBuilder.typed( data );
-        this.connection.sendMsg( Topic.RPC, Actions.REQUEST, new String[] { rpcName, uid, typedData } );
+            String typedData = MessageBuilder.typed(data);
+            this.connection.sendMsg(Topic.RPC, Actions.REQUEST, new String[]{rpcName, uid, typedData});
+        }
 
         try {
             responseLatch.await();

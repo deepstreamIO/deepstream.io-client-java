@@ -50,6 +50,7 @@ public class RecordTest {
             public void run() {
                 record = new Record( "recordA", new HashMap(), connectionMock, config, deepstreamClientMock );
                 record.addRecordEventsListener(recordEventsListener);
+                record.start();
             }
         });
         b.start();

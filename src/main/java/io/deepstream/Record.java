@@ -64,15 +64,20 @@ public class Record {
         this.onceRecordReadyListeners = new ArrayList<>();
         this.recordDestroyPendingListeners = new ArrayList<>();
 
-        this.scheduleAcks();
-        this.sendRead();
-
         this.utilResubscribeNotifier = new UtilResubscribeNotifier(client, new UtilResubscribeNotifier.UtilResubscribeListener() {
             @Override
             public void resubscribe() {
                 sendRead();
             }
         });
+    }
+
+    /**
+     * Send the subscriber request to the server
+     */
+    void start() {
+        this.scheduleAcks();
+        this.sendRead();
     }
 
     /**

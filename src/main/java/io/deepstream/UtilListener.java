@@ -3,6 +3,9 @@ package io.deepstream;
 import io.deepstream.constants.Actions;
 import io.deepstream.constants.Topic;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 class UtilListener implements UtilResubscribeNotifier.UtilResubscribeListener {
 
     private final Topic topic;
@@ -15,6 +18,8 @@ class UtilListener implements UtilResubscribeNotifier.UtilResubscribeListener {
     private DeepstreamClientAbstract client;
     private IConnection connection;
 
+    private ExecutorService executorService;
+
     public UtilListener(Topic topic, String pattern, ListenListener listenerCallback, DeepstreamConfig deepstreamConfig, DeepstreamClientAbstract client, IConnection connection) {
         this.topic = topic;
         this.pattern = pattern;
@@ -24,6 +29,13 @@ class UtilListener implements UtilResubscribeNotifier.UtilResubscribeListener {
         this.connection = connection;
         this.resubscribeNotifier = new UtilResubscribeNotifier( this.client, this );
         this.ackTimoutRegistry = client.getAckTimeoutRegistry();
+        this.executorService = Executors.newCachedThreadPool();
+    }
+
+    /**
+     * Send the listen request to the server
+     */
+    void start() {
         this.scheduleAckTimeout();
         this.sendListen();
     }
@@ -38,17 +50,21 @@ class UtilListener implements UtilResubscribeNotifier.UtilResubscribeListener {
         this.ackTimoutRegistry = null;
     }
 
-    public void onMessage( Message message ) {
+    public void onMessage(final Message message) {
         if( message.action.equals( Actions.ACK ) ) {
             this.ackTimoutRegistry.clear( message );
         } else {
-            boolean isFound = message.action.equals( Actions.SUBSCRIPTION_FOR_PATTERN_FOUND);
-            if( isFound ) {
-                this.listenerCallback.onSubscriptionForPatternAdded( message.data[ 1 ] );
-            } else {
-                this.listenerCallback.onSubscriptionForPatternRemoved( message.data[ 1 ] );
-            }
-
+            executorService.execute(new Runnable() {
+                @Override
+                public void run() {
+                    boolean isFound = message.action.equals(Actions.SUBSCRIPTION_FOR_PATTERN_FOUND);
+                    if (isFound) {
+                        listenerCallback.onSubscriptionForPatternAdded(message.data[1]);
+                    } else {
+                        listenerCallback.onSubscriptionForPatternRemoved(message.data[1]);
+                    }
+                }
+            });
         }
     }
 

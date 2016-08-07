@@ -5,10 +5,10 @@ import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListener {
+class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListener, UtilTimeoutListener {
 
     private final Topic topic;
     private final Actions action;
@@ -36,7 +36,7 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
         this.timeoutDuration = timeoutDuration;
 
         new UtilResubscribeNotifier(client, this);
-        requests = new HashMap<>();
+        requests = new ConcurrentHashMap<>();
     }
 
     /**
@@ -58,13 +58,15 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
     public void request( String name, UtilSingleNotifierCallback utilSingleNotifierCallback ) {
         ArrayList<UtilSingleNotifierCallback> callbacks = requests.get( name );
         if( callbacks == null ) {
-            callbacks = new ArrayList<>();
-            requests.put( name, callbacks );
-            send( name );
+            synchronized (this) {
+                callbacks = new ArrayList<>();
+                requests.put(name, callbacks);
+                send(name);
+            }
         }
 
         callbacks.add( utilSingleNotifierCallback );
-        ackTimeoutRegistry.add( topic, action, name, Event.RESPONSE_TIMEOUT, timeoutDuration );
+        ackTimeoutRegistry.add(topic, action, name, Event.RESPONSE_TIMEOUT, this, timeoutDuration);
     }
 
     /**
@@ -78,12 +80,12 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
     public void recieve(String name, DeepstreamError error, Object data) {
         ArrayList<UtilSingleNotifierCallback> callbacks = requests.get( name );
         for (UtilSingleNotifierCallback callback : callbacks) {
+            ackTimeoutRegistry.clear(topic, action, name);
             if( error != null ) {
                 callback.onSingleNotifierError( name, error );
             } else {
                 callback.onSingleNotifierResponse( name, data );
             }
-            ackTimeoutRegistry.clear( topic, action, name );
         }
         requests.remove( name );
     }
@@ -97,6 +99,11 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
 
     private void send( String name ) {
         connection.send( MessageBuilder.getMsg( topic, action, name ) );
+    }
+
+    @Override
+    public void onTimeout(Topic topic, Actions action, Event event, String name) {
+        this.recieve(name, new DeepstreamError(String.format("Response for % timed out", name)), null);
     }
 
     interface UtilSingleNotifierCallback {

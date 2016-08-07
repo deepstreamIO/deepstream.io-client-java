@@ -38,7 +38,7 @@ public class RecordHandler implements RecordEventsListener, Record.RecordDestroy
         lists = new HashMap<>();
         listeners = new HashMap<>();
 
-        hasRegistry = new UtilSingleNotifier(client, connection, Topic.RECORD, Actions.SNAPSHOT, deepstreamConfig.getRecordReadTimeout());
+        hasRegistry = new UtilSingleNotifier(client, connection, Topic.RECORD, Actions.HAS, deepstreamConfig.getRecordReadTimeout());
         snapshotRegistry = new UtilSingleNotifier(client, connection, Topic.RECORD, Actions.SNAPSHOT, deepstreamConfig.getRecordReadTimeout());
     }
 
@@ -56,6 +56,7 @@ public class RecordHandler implements RecordEventsListener, Record.RecordDestroy
                 records.put(name, record);
                 record.addRecordEventsListener(this);
                 record.addRecordDestroyPendingListener(this);
+                record.start();
             }
         }
         record.incrementUsage();
@@ -126,7 +127,11 @@ public class RecordHandler implements RecordEventsListener, Record.RecordDestroy
             // TODO: Do we really want to throw an error here?
             client.onError( Topic.RECORD, Event.LISTENER_EXISTS, pattern );
         } else {
-            listeners.put(pattern, new UtilListener(Topic.RECORD, pattern, listenCallback, deepstreamConfig, client, connection));
+            synchronized (this) {
+                UtilListener utilListener = new UtilListener(Topic.RECORD, pattern, listenCallback, deepstreamConfig, client, connection);
+                listeners.put(pattern, utilListener);
+                utilListener.start();
+            }
         }
     }
 
@@ -302,7 +307,7 @@ public class RecordHandler implements RecordEventsListener, Record.RecordDestroy
         }
 
         if( !processed ) {
-            client.onError( Topic.RECORD, Event.UNSOLICITED_MESSAGE, recordName );
+            client.onError(Topic.RECORD, Event.UNSOLICITED_MESSAGE, String.format("%s %s", message.action, recordName));
         }
     }
 

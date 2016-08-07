@@ -6,6 +6,8 @@ import io.deepstream.constants.*;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Establishes a connection to a deepstream server, either
@@ -29,6 +31,10 @@ class Connection implements IConnection {
     private ConnectionState connectionState;
     private DeepstreamClient.LoginCallback loginCallback;
     private JsonElement authParameters;
+
+    private ExecutorService rpcThread;
+    private ExecutorService recordThread;
+    private ExecutorService eventThread;
 
     /**
      * Creates an endpoint and passed it to {@link Connection#Connection(String, DeepstreamConfig, DeepstreamClient, Endpoint)}
@@ -67,6 +73,10 @@ class Connection implements IConnection {
         this.reconnectionAttempt = 0;
         this.options = options;
         this.endpoint = endpoint;
+
+        this.recordThread = Executors.newSingleThreadExecutor();
+        this.eventThread = Executors.newSingleThreadExecutor();
+        this.rpcThread = Executors.newSingleThreadExecutor();
     }
 
     /**
@@ -157,17 +167,32 @@ class Connection implements IConnection {
 
     void onMessage(String rawMessage) {
         List<Message> parsedMessages = MessageParser.parse( rawMessage, this.client );
-        for (Message message : parsedMessages) {
+        for (final Message message : parsedMessages) {
             if (message.topic == Topic.CONNECTION) {
                 handleConnectionResponse(message);
             } else if (message.topic == Topic.AUTH) {
                 handleAuthResponse(message);
             } else if (message.topic == Topic.EVENT) {
-                this.client.event.handle(message);
+                this.eventThread.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        client.event.handle(message);
+                    }
+                });
             } else if (message.topic == Topic.RPC) {
-                this.client.rpc.handle(message);
+                this.rpcThread.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        client.rpc.handle(message);
+                    }
+                });
             } else if ( message.topic == Topic.RECORD ) {
-                this.client.record.handle(message);
+                this.recordThread.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        client.record.handle(message);
+                    }
+                });
             } else {
                 //TODO: Throw error
             }

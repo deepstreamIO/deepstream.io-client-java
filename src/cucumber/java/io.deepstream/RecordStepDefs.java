@@ -171,14 +171,14 @@ public class RecordStepDefs {
                     hasRecordError = deepstreamError;
                 }
             }
-        });
+        }).start();
 
         Thread.sleep(GENERAL_TIMEOUT);
     }
 
     @Then("^the client is not told if the record \"([^\"]*)\" exists$")
     public void the_client_is_not_told_if_the_record_exists(String recordName) throws Throwable {
-        // since it is sync this will never happen
+        //since it is sync this will never happen
     }
 
     @Then("^the client is told the record \"([^\"]*)\" doesn't exist$")
@@ -206,14 +206,19 @@ public class RecordStepDefs {
             @Override
             public void run() {
                 try {
-                    client.record.snapshot(recordName);
+                    snapshotData = client.record.snapshot(recordName);
                 } catch (DeepstreamError deepstreamError) {
                     snapshotError = deepstreamError;
                 }
             }
-        });
+        }).start();
 
         Thread.sleep(GENERAL_TIMEOUT);
+    }
+
+    @Then("^the client has no response for the snapshot of record \"([^\"]*)\"$")
+    public void the_client_has_no_response_for_the_snapshot_of_record(String recordName) throws Throwable {
+        //since it is sync this will never happen
     }
 
     @Then("^the client is told the record \"([^\"]*)\" encountered an error retrieving snapshot$")

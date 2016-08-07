@@ -72,9 +72,11 @@ public class EventHandler {
         if( this.listeners.get( pattern ) != null ) {
             this.client.onError( Topic.EVENT, Event.LISTENER_EXISTS, pattern );
         } else {
-            this.listeners.put( pattern,
-                    new UtilListener(Topic.EVENT, pattern, callback, this.deepstreamConfig, this.client, this.connection)
-            );
+            synchronized (this) {
+                UtilListener eventListener = new UtilListener(Topic.EVENT, pattern, callback, this.deepstreamConfig, this.client, this.connection);
+                this.listeners.put(pattern, eventListener);
+                eventListener.start();
+            }
         }
     }
 

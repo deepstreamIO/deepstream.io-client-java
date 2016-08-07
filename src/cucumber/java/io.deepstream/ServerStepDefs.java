@@ -110,7 +110,7 @@ public class ServerStepDefs {
 
     @Given("^two seconds later$")
     public void two_seconds_later() throws InterruptedException {
-        Thread.sleep(5000);
+        Thread.sleep(2000);
     }
 
     @When("^the connection to the server is lost$")
