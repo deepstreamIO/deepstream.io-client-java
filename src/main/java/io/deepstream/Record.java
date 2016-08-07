@@ -25,7 +25,6 @@ public class Record {
     private final UtilJSONPath path;
     private final UtilEmitter subscribers;
     private final ArrayList<RecordEventsListener> recordEventsListeners;
-    private final ArrayList<RecordReadyListener> recordReadyListeners;
     private final ArrayList<Record.RecordDestroyPendingListener> recordDestroyPendingListeners;
     private final ArrayList<RecordReadyListener> onceRecordReadyListeners;
     private final String name;
@@ -61,7 +60,6 @@ public class Record {
         this.isReady = false;
         this.isDestroyed = false;
 
-        this.recordReadyListeners = new ArrayList<>();
         this.recordEventsListeners = new ArrayList<>();
         this.onceRecordReadyListeners = new ArrayList<>();
         this.recordDestroyPendingListeners = new ArrayList<>();
@@ -108,26 +106,6 @@ public class Record {
      */
     public String name() {
         return this.name;
-    }
-
-    /**
-     * Add listener to be notified when the Record has been loaded from the server
-     * @param recordReadyListener The listener to add
-     * @return The record
-     */
-    public Record addRecordReadyListener( RecordReadyListener recordReadyListener ) {
-        this.recordReadyListeners.add( recordReadyListener );
-        return this;
-    }
-
-    /**
-     * Remove listener added via {@link io.deepstream.Record#addRecordReadyListener(RecordReadyListener)}
-     * @param recordReadyListener The listener to remove
-     * @return The record
-     */
-    public Record removeRecordReadyListener(RecordReadyListener recordReadyListener) {
-        this.recordReadyListeners.remove( recordReadyListener );
-        return this;
     }
 
     /**
@@ -406,7 +384,7 @@ public class Record {
     protected void onMessage(Message message) {
         if( message.action == Actions.ACK ) {
             processAckMessage( message );
-        } else if( message.action == Actions.READ && this.version == -1 ) {
+        } else if (message.action == Actions.READ && this.version() == -1) {
             onRead( message );
         } else if( message.action == Actions.READ || message.action == Actions.UPDATE || message.action == Actions.PATCH ) {
             applyUpdate( message );
@@ -429,7 +407,7 @@ public class Record {
      * Apply the message received on the server on the record
      */
     private void applyUpdate(Message message) {
-        int version = Integer.parseInt( message.data[ 1 ] );
+        int newVersion = Integer.parseInt(message.data[1]);
 
         JsonElement data;
         if( message.action == Actions.PATCH ) {
@@ -439,7 +417,7 @@ public class Record {
         }
 
 
-        if( this.version != -1 && this.version + 1 != version ) {
+        if (this.version != -1 && this.version + 1 != newVersion) {
             if( message.action == Actions.PATCH ) {
                 /*
                   Request a snapshot so that a merge can be done with the read reply which contains
@@ -447,7 +425,7 @@ public class Record {
                  */
                 this.connection.send( MessageBuilder.getMsg( Topic.RECORD, Actions.SNAPSHOT, this.name ) );
             } else {
-                recoverRecord( version, data);
+                recoverRecord(newVersion, data);
             }
             return;
         }
@@ -458,7 +436,7 @@ public class Record {
 
         Map<String, JsonElement> oldValues = beginChange();
 
-        this.version = version;
+        this.version = newVersion;
         if( Actions.PATCH == message.action ) {
             path.set( message.data[ 2 ], data );
         } else {
@@ -627,10 +605,6 @@ public class Record {
             recordReadyListener.onRecordReady( this.name, this );
         }
         this.onceRecordReadyListeners.clear();
-
-        for(RecordReadyListener recordReadyListener: this.recordReadyListeners) {
-            recordReadyListener.onRecordReady( this.name, this );
-        }
     }
 
     /**
@@ -756,9 +730,7 @@ public class Record {
     }
 
     /**
-     * A listener that notifies the user whenever the record state is ready. Listeners can be added via
-     * {@link Record#addRecordReadyListener(RecordReadyListener)} and removed via
-     * {@link Record#removeRecordReadyListener(RecordReadyListener)}
+     * A listener that notifies the user whenever the record state is ready.
      */
     interface RecordReadyListener {
         /**

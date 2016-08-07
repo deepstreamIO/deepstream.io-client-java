@@ -22,10 +22,6 @@ public class AnonymousRecord {
     private final ArrayList<Subscription> subscriptions;
     private final ArrayList<AnonymousRecordNameChangedListener> anonymousRecordNameChangedCallbacks;
     private final RecordHandler recordHandler;
-    /**
-     * The record name the anonymous record is currently referring to
-     */
-    public String name;
     private Record record;
 
     /**
@@ -36,6 +32,19 @@ public class AnonymousRecord {
         this.recordHandler = recordHandler;
         this.subscriptions = new ArrayList<>();
         this.anonymousRecordNameChangedCallbacks = new ArrayList<>();
+    }
+
+    /**
+     * The record name the anonymous record is currently referring to
+     *
+     * @return the name of the record being represented
+     */
+    public String name() {
+        if (this.record != null) {
+            return this.record.name();
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -238,7 +247,6 @@ public class AnonymousRecord {
      * @return The AnonymousRecord
      */
     public AnonymousRecord setName( String recordName ) {
-        this.name = recordName;
         this.unsubscribeRecord();
         this.record = this.recordHandler.getRecord( recordName );
         this.subscribeRecord();

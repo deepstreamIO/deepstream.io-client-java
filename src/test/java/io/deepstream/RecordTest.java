@@ -26,7 +26,7 @@ public class RecordTest {
     DeepstreamConfig config;
 
     @Before
-    public void setUp() throws InvalidDeepstreamConfig {
+    public void setUp() throws InvalidDeepstreamConfig, InterruptedException {
 
         this.connectionMock = new ConnectionMock();
         this.errorCallbackMock = mock( DeepstreamRuntimeErrorHandler.class );
@@ -35,15 +35,28 @@ public class RecordTest {
         this.deepstreamClientMock.setConnectionState( ConnectionState.OPEN );
 
         Properties options = new Properties();
-        options.put( "subscriptionTimeout", "10" );
-        options.put( "recordDeleteTimeout", "10" );
-        options.put( "recordReadAckTimeout", "10" );
-        options.put( "recordReadTimeout", "20" );
+        options.put( "subscriptionTimeout", "50" );
+        options.put( "recordDeleteTimeout", "50" );
+        options.put( "recordReadAckTimeout", "50" );
+        options.put( "recordReadTimeout", "200" );
         config = new DeepstreamConfig( options );
 
         recordHandler = new RecordHandler( config, connectionMock, deepstreamClientMock );
         recordEventsListener = mock(RecordEventsListener.class);
         recordReadyListener = mock(Record.RecordReadyListener.class);
+
+        Thread b = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                record = new Record( "recordA", new HashMap(), connectionMock, config, deepstreamClientMock );
+                record.addRecordEventsListener(recordEventsListener);
+            }
+        });
+        b.start();
+
+        while( record == null ) {
+            Thread.sleep( 10 );
+        }
     }
 
     @After
@@ -51,35 +64,29 @@ public class RecordTest {
     }
 
     @Test
-    public void recordHasCorrectDefaultState() {
-        record = new Record( "recordA", new HashMap(), connectionMock, config, deepstreamClientMock );
-        record.addRecordEventsListener(recordEventsListener);
-        record.addRecordReadyListener( recordReadyListener );
-        Assert.assertFalse( record.isReady() );
-        Assert.assertFalse( record.isDestroyed() );
+    public void recordSendsAckAndRead() {
+        record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|A|S|recordA" ), deepstreamClientMock ) );
+        record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|recordA|0|{ \"name\": \"sam\" }" ), deepstreamClientMock ) );
     }
 
     @Test
-    public void recordSendsDownCorrectCreateMessage() {
-        recordHasCorrectDefaultState();
+    public void recordHasSendCreateReadMessage() {
+        recordSendsAckAndRead();
         Assert.assertEquals( connectionMock.lastSentMessage, TestUtil.replaceSeperators( "R|CR|recordA+" ) );
     }
 
     @Test
-    public void recordInitialisedCorrectly() {
-        recordSendsDownCorrectCreateMessage();
-        record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|A|S|recordA" ), deepstreamClientMock ) );
-        record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|recordA|0|{ \"name\": \"sam\" }" ), deepstreamClientMock ) );
-        Assert.assertTrue( record.isReady() );
-        verify( recordReadyListener, times(1) ).onRecordReady( "recordA", record );
+    public void recordHasCorrectDefaultState() {
+        recordSendsAckAndRead();
+        Assert.assertFalse( record.isDestroyed() );
     }
 
     @Test
     public void recordReturnsObjectCorrectly() {
+        recordSendsAckAndRead();
         JsonObject data = new JsonObject();
         data.addProperty( "name", "sam" );
 
-        recordInitialisedCorrectly();
         Assert.assertEquals( data, record.get() );
     }
 
@@ -94,7 +101,8 @@ public class RecordTest {
 
     @Test
     public void recordDiscardsCorrectly() throws DeepstreamRecordDestroyedException {
-        recordInitialisedCorrectly();
+        recordSendsAckAndRead();
+
         record.discard();
 
         Assert.assertEquals( connectionMock.lastSentMessage, TestUtil.replaceSeperators( "R|US|recordA+" ) );
@@ -104,7 +112,8 @@ public class RecordTest {
 
     @Test
     public void emitsDiscardEventOnDiscardAck() throws DeepstreamRecordDestroyedException {
-        recordDiscardsCorrectly();
+        recordSendsAckAndRead();
+
         record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|A|US|recordA" ), deepstreamClientMock ) );
 
         Assert.assertFalse( record.isReady() );
@@ -115,7 +124,8 @@ public class RecordTest {
 
     @Test
     public void recordDeletesCorrectly() throws DeepstreamRecordDestroyedException {
-        recordInitialisedCorrectly();
+        recordSendsAckAndRead();
+
         record.delete();
 
         Assert.assertEquals( connectionMock.lastSentMessage, TestUtil.replaceSeperators( "R|D|recordA+" ) );
@@ -136,44 +146,50 @@ public class RecordTest {
 
     @Test
     public void unsolicitatedDeleteAckMessages() throws DeepstreamRecordDestroyedException {
-        recordInitialisedCorrectly();
         record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|A|D|recordA" ), deepstreamClientMock ) );
         verify( errorCallbackMock, times( 1 ) ).onException(Topic.RECORD, Event.UNSOLICITED_MESSAGE, TestUtil.replaceSeperators( "R|A|D|recordA" ) );
     }
 
     @Test
     public void unsolicitatedDiscardAckMessages() throws DeepstreamRecordDestroyedException {
-        recordInitialisedCorrectly();
+        recordSendsAckAndRead();
+
         record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|A|US|recordA" ), deepstreamClientMock ) );
         verify( errorCallbackMock, times( 1 ) ).onException(Topic.RECORD, Event.UNSOLICITED_MESSAGE, TestUtil.replaceSeperators( "R|A|US|recordA" ) );
     }
 
     @Test
     public void subscribeTimeout() throws DeepstreamRecordDestroyedException, InterruptedException {
-        recordSendsDownCorrectCreateMessage();
         Thread.sleep( 50 );
         verify( errorCallbackMock, times( 1 ) ).onException(Topic.RECORD, Event.ACK_TIMEOUT, "No ACK message received in time for SUBSCRIBE recordA" );
     }
 
     @Test
     public void readTimeout() throws DeepstreamRecordDestroyedException, InterruptedException {
-        recordSendsDownCorrectCreateMessage();
-        record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|A|S|recordA" ), deepstreamClientMock ) );
-        Thread.sleep( 50 );
+        try {
+            Thread.sleep(200);
+            record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|A|S|recordA" ), deepstreamClientMock ) );
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        Thread.sleep( 100 );
         verify( errorCallbackMock, times( 1 ) ).onException(Topic.RECORD, Event.RESPONSE_TIMEOUT, "No message received in time for READ recordA" );
     }
 
     @Test
     public void discardTimeout() throws DeepstreamRecordDestroyedException, InterruptedException {
         recordDiscardsCorrectly();
-        Thread.sleep( 50 );
+
+        Thread.sleep( 100 );
         verify( errorCallbackMock, times( 1 ) ).onException(Topic.RECORD, Event.ACK_TIMEOUT, "No ACK message received in time for UNSUBSCRIBE recordA" );
     }
 
     @Test
     public void deleteTimout() throws DeepstreamRecordDestroyedException, InterruptedException {
         recordDeletesCorrectly();
-        Thread.sleep( 50 );
+
+        Thread.sleep( 100 );
         verify( errorCallbackMock, times( 1 ) ).onException(Topic.RECORD, Event.DELETE_TIMEOUT, "No message received in time for DELETE recordA" );
     }
 

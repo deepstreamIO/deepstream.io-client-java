@@ -40,12 +40,23 @@ public class ListChangedTest {
         recordEventsListener = mock(RecordEventsListener.class);
         listChangedListener = mock( ListChangedListener.class);
 
-        list = recordHandler.getList( listName );
-        list.addRecordEventsListener(recordEventsListener);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println( "Called" );
+                list = recordHandler.getList( listName );
+                list.addRecordEventsListener(recordEventsListener);
+                list.subscribe( listChangedListener );
+            }
+        }).start();
 
-        recordHandler.handle( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|someList|1|[\"a\",\"b\",\"c\",\"d\",\"e\"]" ), deepstreamClientMock ) );
-
-        list.subscribe( listChangedListener );
+        try {
+            Thread.sleep(50);
+            recordHandler.handle( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|someList|1|[\"a\",\"b\",\"c\",\"d\",\"e\"]" ), deepstreamClientMock ) );
+            Thread.sleep(200);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     @After

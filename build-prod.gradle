@@ -47,7 +47,7 @@ j2objcConfig {
 }
 
 group 'io.deepstream'
-version '0.3'
+version '0.5'
 
 
 publishing {
@@ -88,7 +88,7 @@ bintray {
 
         //Optional version descriptor
         version {
-            name = '0.3'
+            name = '0.5'
             //desc = 'Release Reason'
             released = new Date()
             //vcsTag = '1.3.0'

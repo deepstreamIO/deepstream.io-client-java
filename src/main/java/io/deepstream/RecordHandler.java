@@ -51,10 +51,12 @@ public class RecordHandler implements RecordEventsListener, Record.RecordDestroy
     public Record getRecord( String name ) {
         Record record = records.get( name );
         if( record == null ) {
-            record = new Record(name, new HashMap(), connection, deepstreamConfig, client);
-            records.put( name, record );
-            record.addRecordEventsListener( this );
-            record.addRecordDestroyPendingListener( this );
+            synchronized (this) {
+                record = new Record(name, new HashMap(), connection, deepstreamConfig, client);
+                records.put(name, record);
+                record.addRecordEventsListener(this);
+                record.addRecordDestroyPendingListener(this);
+            }
         }
         record.incrementUsage();
 
@@ -66,6 +68,11 @@ public class RecordHandler implements RecordEventsListener, Record.RecordDestroy
                     readyLatch.countDown();
                 }
             });
+            try {
+                readyLatch.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
         return record;
@@ -82,18 +89,8 @@ public class RecordHandler implements RecordEventsListener, Record.RecordDestroy
         List list = lists.get( name );
         if( list == null ) {
             list = new List(this, name);
+            lists.put(name, list);
         }
-
-        if (!list.isReady()) {
-            final CountDownLatch readyLatch = new CountDownLatch(1);
-            list.getUnderlyingRecord().whenReady(new Record.RecordReadyListener() {
-                @Override
-                public void onRecordReady(String recordName, Record record) {
-                    readyLatch.countDown();
-                }
-            });
-        }
-
         return list;
     }
 

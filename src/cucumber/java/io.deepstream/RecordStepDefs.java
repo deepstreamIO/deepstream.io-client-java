@@ -54,8 +54,14 @@ public class RecordStepDefs {
     }
 
     @When("^the client creates a record named \"([^\"]*)\"$")
-    public void the_client_creates_a_record_named(String recordName ) throws Throwable {
-        record = client.record.getRecord(recordName);
+    public void the_client_creates_a_record_named(final String recordName) throws Throwable {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                record = client.record.getRecord(recordName);
+            }
+        }).start();
+
         Thread.sleep(GENERAL_TIMEOUT);
     }
 

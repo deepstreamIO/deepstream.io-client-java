@@ -66,7 +66,7 @@ public class AnonymousRecordTest {
         recordHasCorrectDefaultState();
 
         Assert.assertEquals( anonymousRecord.get(), null );
-        Assert.assertEquals( anonymousRecord.name, null );
+        Assert.assertEquals( anonymousRecord.name(), null );
 
         anonymousRecord.addRecordEventsListener(recordEventsListener);
         anonymousRecord.subscribe( recordChangedCallback );
@@ -82,7 +82,7 @@ public class AnonymousRecordTest {
     }
 
     @Test
-    public void requestsARecordWhenSetNameIsCalled() {
+    public void requestsARecordWhenSetNameIsCalled() throws InterruptedException {
         worksBeforeSetNameIsCalled();
 
         new Thread(new Runnable() {
@@ -101,7 +101,7 @@ public class AnonymousRecordTest {
         }
 
         verify( recordNameChangedListener, times( 1 ) ).recordNameChanged( firstRecordName, anonymousRecord);
-        Assert.assertEquals( anonymousRecord.name, firstRecordName );
+        Assert.assertEquals( anonymousRecord.name(), firstRecordName );
         Assert.assertEquals( connectionMock.lastSentMessage, TestUtil.replaceSeperators( "R|CR|firstRecordName+" ) );
 
         verify( recordChangedCallback, times(1) ).onRecordChanged( firstRecordName, gson.fromJson( "{\"firstname\":\"Wolfram\"}", JsonElement.class ) );
@@ -109,23 +109,35 @@ public class AnonymousRecordTest {
     }
 
     @Test
-    public void updatesSubscriptionsOnceTheRecordIsReady() {
+    public void updatesSubscriptionsOnceTheRecordIsReady() throws InterruptedException {
         requestsARecordWhenSetNameIsCalled();
     }
 
     @Test
-    public void doesntDoAnythingWhenAnotherRecordChanges() throws DeepstreamRecordDestroyedException {
+    public void doesntDoAnythingWhenAnotherRecordChanges() throws DeepstreamRecordDestroyedException, InterruptedException {
         updatesSubscriptionsOnceTheRecordIsReady();
 
-        Record secondRecord = recordHandler.getRecord( secondRecordName );
-        recordHandler.handle( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|secondRecordName|2|{\"firstname\":\"Egon\",\"lastname\":\"Kowalski\"}" ), deepstreamClientMock ) );
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Record secondRecord = recordHandler.getRecord( secondRecordName );
+            }
+        }).start();
+
+        try {
+            Thread.sleep(50);
+            recordHandler.handle( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|secondRecordName|2|{\"firstname\":\"Egon\",\"lastname\":\"Kowalski\"}" ), deepstreamClientMock ) );
+            Thread.sleep(50);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         verify( recordChangedCallback, times(1) ).onRecordChanged( firstRecordName, gson.fromJson( "{\"firstname\":\"Wolfram\"}", JsonElement.class ) );
         verify( recordChangedCallback, times(1) ).onRecordChanged( firstRecordName, "firstname", new JsonPrimitive("Wolfram") );
     }
 
     @Test
-    public void movesSubscriptionsToOtherRecordWhenSetNameIsCalled() throws DeepstreamRecordDestroyedException {
+    public void movesSubscriptionsToOtherRecordWhenSetNameIsCalled() throws DeepstreamRecordDestroyedException, InterruptedException {
         doesntDoAnythingWhenAnotherRecordChanges();
         resetMocks();
 
@@ -140,7 +152,7 @@ public class AnonymousRecordTest {
     }
 
     @Test
-    public void proxiesCallsThroughToTheUnderlyingRecord() throws DeepstreamRecordDestroyedException {
+    public void proxiesCallsThroughToTheUnderlyingRecord() throws DeepstreamRecordDestroyedException, InterruptedException {
         movesSubscriptionsToOtherRecordWhenSetNameIsCalled();
         resetMocks();
 
@@ -157,9 +169,8 @@ public class AnonymousRecordTest {
         Assert.assertEquals( secondRecord.get( "lastname" ),  new JsonPrimitive("Schrader") );
     }
 
-    //TODO
     @Test
-    public void notifiedNameChangedWhenSetNameIsCalled() throws DeepstreamRecordDestroyedException {
+    public void notifiedNameChangedWhenSetNameIsCalled() throws DeepstreamRecordDestroyedException, InterruptedException {
         proxiesCallsThroughToTheUnderlyingRecord();
         resetMocks();
 

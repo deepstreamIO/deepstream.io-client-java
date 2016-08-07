@@ -6,9 +6,10 @@ import io.deepstream.constants.EndpointType;
 import java.util.Properties;
 
 class DeepstreamConfig {
-    private Properties properties;
+    final private Properties properties;
 
     DeepstreamConfig() {
+        properties = new Properties();
     }
 
     DeepstreamConfig( Properties properties ) throws InvalidDeepstreamConfig {
@@ -33,50 +34,60 @@ class DeepstreamConfig {
     }
 
     EndpointType getEndpointType() {
-        return EndpointType.getEndpointType( properties.getProperty( ConfigOptions.ENDPOINT_TYPE.toString(), EndpointType.TCP.toString() ) );
+        return EndpointType.getEndpointType(getOption(ConfigOptions.ENDPOINT_TYPE, EndpointType.TCP.toString()));
     }
 
     int getReconnectIntervalIncrement() {
-        return Integer.parseInt( properties.getProperty( ConfigOptions.RECONNECT_INTERVAL_INCREMENT.toString(), "4000" ) );
+        return Integer.parseInt(getOption(ConfigOptions.RECONNECT_INTERVAL_INCREMENT, "4000"));
     }
 
     int getMaxReconnectInterval() {
-        return Integer.parseInt( properties.getProperty( ConfigOptions.MAX_RECONNECT_INTERVAL.toString(), "1500" ) );
+        return Integer.parseInt(getOption(ConfigOptions.MAX_RECONNECT_INTERVAL, "1500"));
     }
 
     int getMaxReconnectAttempts() {
-        return Integer.parseInt( properties.getProperty( ConfigOptions.MAX_RECONNECT_ATTEMPTS.toString(), "5" ) );
+        return Integer.parseInt(getOption(ConfigOptions.MAX_RECONNECT_ATTEMPTS, "5"));
     }
 
     int getRpcAckTimeout() {
-        return Integer.parseInt( properties.getProperty( ConfigOptions.RPC_ACK_TIMEOUT.toString(), "6000" ) );
+        return Integer.parseInt(getOption(ConfigOptions.RPC_ACK_TIMEOUT, "6000"));
     }
 
     int getRpcResponseTimeout() {
-        return Integer.parseInt( properties.getProperty( ConfigOptions.RPC_RESPONSE_TIMEOUT.toString(), "10000" ) );
+        return Integer.parseInt(getOption(ConfigOptions.RPC_RESPONSE_TIMEOUT, "10000"));
     }
 
     int getSubscriptionTimeout() {
-        return Integer.parseInt( properties.getProperty( ConfigOptions.SUBSCRIPTION_TIMEOUT.toString(), "2000" ) );
+        return Integer.parseInt(getOption(ConfigOptions.SUBSCRIPTION_TIMEOUT, "2000"));
     }
 
     int getMaxMessagesPerPacket() {
-        return Integer.parseInt( properties.getProperty( ConfigOptions.MAX_MESSAGES_PER_PACKET.toString(), "100" ) );
+        return Integer.parseInt(getOption(ConfigOptions.MAX_MESSAGES_PER_PACKET, "100"));
     }
 
     int getTimeBetweenSendingQueuedPackages() {
-        return Integer.parseInt( properties.getProperty( ConfigOptions.MAX_MESSAGES_PER_PACKET.toString(), "16" ) );
+        return Integer.parseInt(getOption(ConfigOptions.TIME_BETWEEN_SENDING_QUEUED_PACKAGES, "16"));
     }
 
     int getRecordReadAckTimeout() {
-        return Integer.parseInt( properties.getProperty( ConfigOptions.RECORD_READ_ACK_TIMEOUT.toString(), "1000" ) );
+        return Integer.parseInt(getOption(ConfigOptions.RECORD_READ_ACK_TIMEOUT, "1000"));
     }
 
     int getRecordReadTimeout() {
-        return Integer.parseInt( properties.getProperty( ConfigOptions.RECORD_READ_TIMEOUT.toString(), "3000" ) );
+        return Integer.parseInt(getOption(ConfigOptions.RECORD_READ_TIMEOUT, "3000"));
     }
 
     int getRecordDeleteTimeout() {
-        return Integer.parseInt( properties.getProperty( ConfigOptions.RECORD_DELETE_TIMEOUT.toString(), "3000" ) );
+        return Integer.parseInt(getOption(ConfigOptions.RECORD_DELETE_TIMEOUT, "3000"));
+    }
+
+    private String getOption(ConfigOptions option, String defaultValue) {
+        if (properties.containsKey(option)) {
+            return properties.get(option).toString();
+        } else if (properties.containsKey(option.toString())) {
+            return properties.get(option.toString()).toString();
+        } else {
+            return defaultValue;
+        }
     }
 }
