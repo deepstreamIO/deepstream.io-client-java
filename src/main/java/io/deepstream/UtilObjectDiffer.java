@@ -73,8 +73,9 @@ class UtilObjectDiffer {
             return new Tuple(path.toString(), null);
         }
         // Just return the whole array
-        else if( nodeA instanceof JsonArray || nodeB instanceof JsonArray ) {
-            return new Tuple(path.toString(), nodeB);
+        else if( nodeA.isJsonArray() || nodeB.isJsonArray() ||
+                nodeA.isJsonPrimitive() || nodeB.isJsonPrimitive() ) {
+            return new Tuple(path.toString(), getValue(nodeB));
         }
 
         JsonObject node1 = (JsonObject) nodeA;
