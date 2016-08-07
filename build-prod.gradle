@@ -56,7 +56,7 @@ publishing {
             from components.java
             groupId 'io.deepstream'
             artifactId 'deepstream.io-client-java'
-            version '0.3'
+            version '0.5'
         }
     }
 }

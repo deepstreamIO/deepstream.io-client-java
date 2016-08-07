@@ -39,9 +39,8 @@ public class Subscriber {
                 } else {
                     System.out.println("Login Success");
                     subscribeEvent(client);
-                    makeSnapshot(client);
+                    makeSnapshot(client, "record/snapshot");
                     hasRecord(client);
-                    subscribeRecord(client, "record/a");
                     subscribeRecord(client, "record/b");
                     subscribeAnonymousRecord(client);
                     subscribeList(client);
@@ -68,12 +67,12 @@ public class Subscriber {
             }).start();
         }
 
-        private void makeSnapshot(final DeepstreamClient client) {
+        private void makeSnapshot(final DeepstreamClient client, final String recordName) {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        JsonElement snapshotResult = client.record.snapshot("record/snapshot");
+                        JsonElement snapshotResult = client.record.snapshot(recordName);
                         System.err.println(String.format("Snapshot result: %s", snapshotResult));
                     } catch (DeepstreamError deepstreamError) {
                         System.err.println(String.format("Snapshot did not work because: %s", deepstreamError.getMessage()));
