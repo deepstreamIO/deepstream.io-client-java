@@ -23,6 +23,7 @@ public class Record {
     private final DeepstreamClientAbstract client;
     private final Gson gson;
     private final UtilJSONPath path;
+    private final UtilObjectDiffer objectDiffer;
     private final UtilEmitter subscribers;
     private final ArrayList<RecordEventsListener> recordEventsListeners;
     private final ArrayList<RecordReadyListener> recordReadyListeners;
@@ -55,6 +56,7 @@ public class Record {
         this.connection = connection;
         this.client = client;
         this.gson = new Gson();
+        this.objectDiffer = new UtilObjectDiffer();
         this.data = new JsonObject();
         this.path = new UtilJSONPath( this.data );
         this.subscribers = new UtilEmitter();
@@ -220,7 +222,11 @@ public class Record {
      * @see Record#set(String, Object)
      */
     public Record set( Object value ) throws DeepstreamRecordDestroyedException {
-        return this.set( null, value, false );
+        if( deepstreamConfig.getObjectDeltas() ) {
+            Tuple updateObject = this.objectDiffer.getUpdateObject( this.data, gson.toJsonTree(value) );
+            return this.set( updateObject.path, updateObject.value, false );
+        }
+        return this.set(null, value, false);
     }
 
     /**
@@ -238,6 +244,11 @@ public class Record {
      * @throws DeepstreamRecordDestroyedException Thrown if the record has been destroyed and can't perform more actions
      */
     public Record set(String path, Object value ) throws DeepstreamRecordDestroyedException {
+        if( deepstreamConfig.getObjectDeltas() ) {
+            JsonElement currentData = this.path.get( path );
+            Tuple updateObject = this.objectDiffer.getUpdateObject( currentData, gson.toJsonTree(value), path );
+            return this.set( updateObject.path, updateObject.value, false );
+        }
         return this.set( path, value, false );
     }
 
@@ -413,7 +424,7 @@ public class Record {
         } else if( message.data[ 0 ].equals( Event.VERSION_EXISTS.toString() ) ) {
             recoverRecord( Integer.parseInt( message.data[ 2 ] ), gson.fromJson( message.data[ 3 ], JsonElement.class ));
         } else if( message.data[ 0 ].equals( Event.MESSAGE_DENIED.toString() ) ) {
-           clearTimeouts();
+            clearTimeouts();
         }
     }
 

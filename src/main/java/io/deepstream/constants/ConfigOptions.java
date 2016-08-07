@@ -12,7 +12,8 @@ public enum ConfigOptions {
     TIME_BETWEEN_SENDING_QUEUED_PACKAGES("timeBetweenSendingQueuedPackages"),
     RECORD_READ_ACK_TIMEOUT("recordReadAckTimeout"),
     RECORD_READ_TIMEOUT("recordReadTimeout"),
-    RECORD_DELETE_TIMEOUT("recordDeleteTimeout");
+    RECORD_DELETE_TIMEOUT("recordDeleteTimeout"),
+    OBJECT_DELTAS("objectDeltas");
 
     private String configOption;
 

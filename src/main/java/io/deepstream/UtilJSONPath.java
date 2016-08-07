@@ -121,9 +121,7 @@ class UtilJSONPath {
     }
 
     public void set(String path, JsonElement value) {
-        if (Objects.equals(path, "")) {
-            throw new RuntimeException("Setting an entire object must be done via setValue( JsonElement value );");
-        } else if (path == null) {
+        if (Objects.equals(path, "") || path == null) {
             this.coreElement = value;
         } else {
             iterateThrough(this.coreElement, path, value);
