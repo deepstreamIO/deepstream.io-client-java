@@ -26,6 +26,7 @@ class DeepstreamConfig {
             this.getRecordReadAckTimeout();
             this.getRecordReadTimeout();
             this.getRecordDeleteTimeout();
+            this.getObjectDeltas();
         } catch( Exception e ) {
             throw new InvalidDeepstreamConfig();
         }
@@ -78,5 +79,9 @@ class DeepstreamConfig {
 
     int getRecordDeleteTimeout() {
         return Integer.parseInt( properties.getProperty( ConfigOptions.RECORD_DELETE_TIMEOUT.toString(), "3000" ) );
+    }
+
+    boolean getObjectDeltas() {
+        return Boolean.parseBoolean( properties.getProperty( ConfigOptions.OBJECT_DELTAS.toString(), "false" ) );
     }
 }
