@@ -10,6 +10,9 @@ import io.deepstream.constants.Event;
 import io.deepstream.constants.Topic;
 
 import java.util.Properties;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class Subscriber {
     public static void main(String[] args) throws InvalidDeepstreamConfig {
@@ -82,17 +85,18 @@ public class Subscriber {
         }
 
         private void makeRpc(final DeepstreamClient client) {
-            new Thread(new Runnable() {
+            ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+            executorService.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
-                    RpcResponse rpcResponse = client.rpc.make("add-numbers", new Integer[]{1, 2});
+                    RpcResponse rpcResponse = client.rpc.make("add-numbers", new Double[]{Math.floor(Math.random() * 10), Math.floor(Math.random() * 10)});
                     if (rpcResponse.success() == false) {
                         System.out.println(String.format("RPC failed with data: %s", rpcResponse.getData()));
                     } else {
                         System.out.println(String.format("RPC success with data: %s", rpcResponse.getData()));
                     }
                 }
-            }).start();
+            }, 1, 5, TimeUnit.SECONDS);
         }
 
         private void subscribeRuntimeErrors(DeepstreamClient client) {

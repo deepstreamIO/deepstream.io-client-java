@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
-public class RecordHandler implements RecordEventsListener, Record.RecordDestroyPendingListener {
+public class RecordHandler {
 
     private final DeepstreamConfig deepstreamConfig;
     private final IConnection connection;
@@ -20,6 +20,7 @@ public class RecordHandler implements RecordEventsListener, Record.RecordDestroy
     private final UtilSingleNotifier hasRegistry;
     private final UtilSingleNotifier snapshotRegistry;
     private final Map<String, UtilListener> listeners;
+    private final RecordHandlerListeners recordHandlerListeners;
 
     /**
      * A collection of factories for records. This class
@@ -33,6 +34,7 @@ public class RecordHandler implements RecordEventsListener, Record.RecordDestroy
         this.deepstreamConfig = deepstreamConfig;
         this.connection = connection;
         this.client = client;
+        recordHandlerListeners = new RecordHandlerListeners();
 
         records = new HashMap<>();
         lists = new HashMap<>();
@@ -54,8 +56,8 @@ public class RecordHandler implements RecordEventsListener, Record.RecordDestroy
             synchronized (this) {
                 record = new Record(name, new HashMap(), connection, deepstreamConfig, client);
                 records.put(name, record);
-                record.addRecordEventsListener(this);
-                record.addRecordDestroyPendingListener(this);
+                record.addRecordEventsListener(recordHandlerListeners);
+                record.addRecordDestroyPendingListener(recordHandlerListeners);
                 record.start();
             }
         }
@@ -342,38 +344,47 @@ public class RecordHandler implements RecordEventsListener, Record.RecordDestroy
 
     }
 
-    @Override
-    public void onError(String recordName, Event errorType, String errorMessage) {
-        client.onError( Topic.RECORD, errorType, recordName + ":" + errorMessage );
-    }
+    private class RecordHandlerListeners implements RecordEventsListener, Record.RecordDestroyPendingListener {
+        /**
+         * A collection of factories for records. This class
+         * is exposed as client.record
+         */
+        RecordHandlerListeners() {
+        }
 
-    /**
-     * When the client calls discard or delete on a record, there is a short delay
-     * before the corresponding ACK message is received from the server. To avoid
-     * race conditions if the record is re-requested straight away the old record is
-     * removed from the cache straight awy and will only listen for one last ACK message
-     */
-    @Override
-    public void onDestroyPending(final String recordName) {
-        //TODO:
-        /*destroyEventEmitter.on( "destroy_ack_" + recordName, new Emitter.Listener() {
-            @Override
-            public void call(Object... args) {
-                Record record = records.get( recordName );
-                record.onMessage( (Message) args[ 0 ] );
-            }
-        } );*/
-        onRecordDiscarded( recordName );
-    }
+        @Override
+        public void onError(String recordName, Event errorType, String errorMessage) {
+            client.onError(Topic.RECORD, errorType, recordName + ":" + errorMessage);
+        }
 
-    @Override
-    public void onRecordDeleted(String recordName) {
-        onRecordDiscarded( recordName );
-    }
+        /**
+         * When the client calls discard or delete on a record, there is a short delay
+         * before the corresponding ACK message is received from the server. To avoid
+         * race conditions if the record is re-requested straight away the old record is
+         * removed from the cache straight awy and will only listen for one last ACK message
+         */
+        @Override
+        public void onDestroyPending(final String recordName) {
+            //TODO:
+            /*destroyEventEmitter.on( "destroy_ack_" + recordName, new Emitter.Listener() {
+                @Override
+                public void call(Object... args) {
+                    Record record = records.get( recordName );
+                    record.onMessage( (Message) args[ 0 ] );
+                }
+            } );*/
+            onRecordDiscarded(recordName);
+        }
 
-    @Override
-    public void onRecordDiscarded(String recordName) {
-        records.remove( recordName );
-        lists.remove( recordName );
+        @Override
+        public void onRecordDeleted(String recordName) {
+            onRecordDiscarded(recordName);
+        }
+
+        @Override
+        public void onRecordDiscarded(String recordName) {
+            records.remove(recordName);
+            lists.remove(recordName);
+        }
     }
 }

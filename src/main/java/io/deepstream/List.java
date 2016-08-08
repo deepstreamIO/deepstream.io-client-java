@@ -223,8 +223,6 @@ public class List {
 
     /**
      * Returns the underlying record, used with the ready handler to allow the API to be sync
-     *
-     * @return
      */
     Record getUnderlyingRecord() {
         return this.record;

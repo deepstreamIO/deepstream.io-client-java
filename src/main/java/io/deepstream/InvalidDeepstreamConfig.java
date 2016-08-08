@@ -1,4 +1,4 @@
 package io.deepstream;
 
-public class InvalidDeepstreamConfig extends Throwable {
+public class InvalidDeepstreamConfig extends Exception {
 }

@@ -86,7 +86,7 @@ public class RpcHandler {
      * arguments and a callback to notify you with the rpc result or potential error.
      * @param rpcName The name of the rpc
      * @param data Serializable data that will be passed to the provider
-     * @returns Find out if the rpc succeeded via {@link RpcResponse#success()} and associated data via {@link RpcResponse#getData()}
+     * @return Find out if the rpc succeeded via {@link RpcResponse#success()} and associated data via {@link RpcResponse#getData()}
      */
     public RpcResponse make(String rpcName, Object data) {
         final RpcResponse[] rpcResponse = new RpcResponse[1];
