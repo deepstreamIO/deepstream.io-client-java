@@ -1,8 +1,5 @@
 package io.deepstream;
 
-import io.deepstream.constants.Actions;
-import io.deepstream.constants.Topic;
-
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 

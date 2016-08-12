@@ -1,7 +1,5 @@
 package io.deepstream;
 
-import io.deepstream.constants.*;
-
 /**
  * Message is the internal representation of a message that is sent to received from a deepstream
  * server

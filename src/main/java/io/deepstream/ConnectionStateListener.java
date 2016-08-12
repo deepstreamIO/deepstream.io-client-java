@@ -1,7 +1,5 @@
 package io.deepstream;
 
-import io.deepstream.constants.ConnectionState;
-
 /**
  * A listener that will be notified whenever the ConnectionState changes. Can be added via
  * {@link DeepstreamClient#addConnectionChangeListener(ConnectionStateListener)} and removed via

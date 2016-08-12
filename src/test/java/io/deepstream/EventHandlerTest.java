@@ -1,10 +1,6 @@
 package io.deepstream;
 
 
-import io.deepstream.constants.Actions;
-import io.deepstream.constants.ConnectionState;
-import io.deepstream.constants.Event;
-import io.deepstream.constants.Topic;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

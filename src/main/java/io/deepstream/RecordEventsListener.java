@@ -1,7 +1,5 @@
 package io.deepstream;
 
-import io.deepstream.constants.Event;
-
 /**
  * Record state changed listener, used to be notified whenever the record state has occurred
  */

@@ -1,4 +1,4 @@
-package io.deepstream.constants;
+package io.deepstream;
 
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -22,7 +22,7 @@ public enum EndpointType {
         this.endpointType = topic;
     }
 
-    static public EndpointType getEndpointType(String endpointType) {
+    static EndpointType getEndpointType(String endpointType) {
         return lookup.get(endpointType);
     }
 

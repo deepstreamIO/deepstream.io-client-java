@@ -1,7 +1,6 @@
 package io.deepstream;
 
 import com.google.gson.JsonElement;
-import io.deepstream.constants.Event;
 
 /**
  * Thrown when a version conflict occurs, and is only exposed to the client

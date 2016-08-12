@@ -2,10 +2,6 @@ package io.deepstream;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
-import io.deepstream.constants.Actions;
-import io.deepstream.constants.Event;
-import io.deepstream.constants.Topic;
-import io.deepstream.constants.Types;
 
 import java.util.ArrayList;
 import java.util.Arrays;

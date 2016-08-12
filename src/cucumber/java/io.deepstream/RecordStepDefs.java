@@ -5,7 +5,6 @@ import com.google.gson.JsonElement;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
-import io.deepstream.constants.MergeStrategy;
 import org.junit.Assert;
 import org.mockito.Matchers;
 
@@ -22,6 +21,7 @@ public class RecordStepDefs {
 
     ListenListener listenCallback = mock( ListenListener.class );
     RecordChangedCallback recordChangedCallback = mock( RecordChangedCallback.class );
+    RecordPathChangedCallback recordPathChangedCallback = mock( RecordPathChangedCallback.class );
     Record record;
 
     JsonElement snapshotData;
@@ -111,7 +111,7 @@ public class RecordStepDefs {
     @Then("^the client will not be notified of the record change$")
     public void the_client_will_not_be_notified_of_the_record_change() throws Throwable {
         verify( recordChangedCallback, times( 0) ).onRecordChanged(Matchers.anyString(), Matchers.any(JsonElement.class));
-        verify( recordChangedCallback, times( 0) ).onRecordChanged(Matchers.anyString(), Matchers.anyString(), Matchers.any());
+        verify( recordPathChangedCallback, times( 0) ).onRecordPathChanged(Matchers.anyString(), Matchers.anyString(), Matchers.any(JsonElement.class));
         reset( recordChangedCallback );
     }
 
@@ -120,10 +120,11 @@ public class RecordStepDefs {
         try {
             verify( recordChangedCallback, times( 1) ).onRecordChanged(Matchers.anyString(), Matchers.any(JsonElement.class));
         } catch( Throwable e ) {
-            verify( recordChangedCallback, times( 1) ).onRecordChanged(Matchers.anyString(), Matchers.anyString(), Matchers.any());
+            verify( recordPathChangedCallback, times( 1) ).onRecordPathChanged(Matchers.anyString(), Matchers.anyString(), Matchers.any(JsonElement.class));
         }
 
         reset( recordChangedCallback );
+        reset( recordPathChangedCallback );
     }
 
     @Then("^the client will be notified of the partial record change$")
@@ -136,13 +137,15 @@ public class RecordStepDefs {
         record.unsubscribe( recordChangedCallback );
         Thread.sleep(GENERAL_TIMEOUT);
         reset( recordChangedCallback );
+        reset( recordPathChangedCallback );
     }
 
     @When("^the client subscribes to \"([^\"]*)\" for the record \"([^\"]*)\"$")
     public void the_client_subscribes_to_for_the_record(String path, String recordName) throws Throwable {
-        record.subscribe( path, recordChangedCallback );
+        record.subscribe( path, recordPathChangedCallback );
         Thread.sleep(GENERAL_TIMEOUT);
         reset( recordChangedCallback );
+        reset( recordPathChangedCallback );
     }
 
     @Then("^the client will be notified of the second record change$")
@@ -152,9 +155,10 @@ public class RecordStepDefs {
 
     @Given("^the client unsubscribes to \"([^\"]*)\" for the record \"([^\"]*)\"$")
     public void the_client_unsubscribes_to_for_the_record(String path, String recordName) throws Throwable {
-        record.unsubscribe( path, recordChangedCallback );
+        record.unsubscribe( path, recordPathChangedCallback );
         Thread.sleep(GENERAL_TIMEOUT);
         reset( recordChangedCallback );
+        reset( recordPathChangedCallback );
     }
 
     /**

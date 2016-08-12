@@ -23,7 +23,7 @@ repositories {
 }
 
 sourceSets {
-    deepstreamTest {
+    testapplication {
         compileClasspath += sourceSets.main.runtimeClasspath
     }
 }

@@ -1,4 +1,4 @@
-package io.deepstream.constants;
+package io.deepstream;
 
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -48,7 +48,7 @@ public enum Actions {
             lookup.put( s.toString(), s);
     }
 
-    static public Actions getAction( String action ) {
+    static Actions getAction( String action ) {
         return lookup.get( action );
     }
 }

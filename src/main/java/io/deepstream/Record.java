@@ -4,7 +4,6 @@ package io.deepstream;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import io.deepstream.constants.*;
 
 import java.util.*;
 import java.util.List;
@@ -36,6 +35,7 @@ public class Record {
     private RecordMergeStrategy mergeStrategy;
     private RecordRemoteUpdateHandler recordRemoteUpdateHandler;
     private JsonElement data;
+    private boolean hasProvider;
 
     /**
      * Constructor is not public since it is created via {@link RecordHandler#getRecord(String)}
@@ -59,6 +59,7 @@ public class Record {
         this.subscribers = new UtilEmitter();
         this.isReady = false;
         this.isDestroyed = false;
+        this.hasProvider = false;
 
         this.recordEventsListeners = new ArrayList<>();
         this.onceRecordReadyListeners = new ArrayList<>();
@@ -86,6 +87,14 @@ public class Record {
      */
     public boolean isReady() {
         return this.isReady;
+    }
+
+    /**
+     * Return whether the record has an active provider
+     * @return true if record has been loaded
+     */
+    public boolean hasProvider() {
+        return this.hasProvider;
     }
 
     /**
@@ -226,27 +235,10 @@ public class Record {
 
     /**
      * Notifies the user whenever anything under the path provided has changed.
-     * @see Record#subscribe(String, RecordChangedCallback, boolean)
+     * @see Record#subscribe(String, RecordPathChangedCallback, boolean)
      */
-    public Record subscribe( String path, RecordChangedCallback recordChangedCallback ) throws DeepstreamRecordDestroyedException {
-        return subscribe( path, recordChangedCallback, false );
-    }
-
-    /**
-     * Notifies the user whenever anything inside the Record has changed.
-     * @see Record#subscribe(String, RecordChangedCallback, boolean)
-     */
-    public Record subscribe( RecordChangedCallback recordChangedCallback ) throws DeepstreamRecordDestroyedException {
-        return subscribe( null, recordChangedCallback, false );
-    }
-
-    /**
-     *  Notifies the user whenever anything inside the Record has changed, and triggers the listener immediately.
-     * @see Record#subscribe(String, RecordChangedCallback, boolean)
-     */
-    public Record subscribe( RecordChangedCallback recordChangedCallback, boolean triggerNow ) throws DeepstreamRecordDestroyedException {
-        subscribe( null, recordChangedCallback, triggerNow );
-        return this;
+    public Record subscribe(String path, RecordPathChangedCallback recordPathChangedCallback ) throws DeepstreamRecordDestroyedException {
+        return subscribe( path, recordPathChangedCallback, false );
     }
 
     /**
@@ -257,24 +249,42 @@ public class Record {
      * If trigger now is true, the listener will be immediately fired with the current value.
      *
      * @param path The path to listen to
-     * @param recordChangedCallback The listener to add
+     * @param recordPathChangedCallback The listener to add
      * @param triggerNow Whether to immediately trigger the listener with the current value
      * @return The record
      * @throws DeepstreamRecordDestroyedException Thrown if the record has been destroyed and can't perform more actions
      */
-    public Record subscribe( String path, RecordChangedCallback recordChangedCallback, boolean triggerNow ) throws DeepstreamRecordDestroyedException {
+    public Record subscribe( String path, RecordPathChangedCallback recordPathChangedCallback, boolean triggerNow ) throws DeepstreamRecordDestroyedException {
         throwExceptionIfDestroyed( "subscribe" );
 
-        if( path == null ) {
-            this.subscribers.on( ALL_EVENT, recordChangedCallback );
-        } else {
-            this.subscribers.on( path, recordChangedCallback );
+        this.subscribers.on( path, recordPathChangedCallback );
+
+        if( triggerNow ) {
+            recordPathChangedCallback.onRecordPathChanged( this.name, path, this.get( path ) );
         }
 
-        if( triggerNow && path == null ) {
+        return this;
+    }
+
+    /**
+     * Notifies the user whenever anything inside the Record has changed.
+     * @see Record#subscribe(RecordChangedCallback, boolean)
+     */
+    public Record subscribe( RecordChangedCallback recordChangedCallback ) throws DeepstreamRecordDestroyedException {
+        return subscribe( recordChangedCallback, false );
+    }
+
+    /**
+     *  Notifies the user whenever anything inside the Record has changed, and triggers the listener immediately.
+     * @see Record#subscribe(RecordChangedCallback, boolean)
+     */
+    public Record subscribe( RecordChangedCallback recordChangedCallback, boolean triggerNow ) throws DeepstreamRecordDestroyedException {
+        throwExceptionIfDestroyed( "subscribe" );
+
+        this.subscribers.on( ALL_EVENT, recordChangedCallback );
+
+        if( triggerNow ) {
             recordChangedCallback.onRecordChanged( this.name, this.get() );
-        } else if( triggerNow ) {
-            recordChangedCallback.onRecordChanged( this.name, path, this.get( path ) );
         }
 
         return this;
@@ -283,29 +293,26 @@ public class Record {
     /**
      * Remove the listener added via {@link Record#subscribe(RecordChangedCallback, boolean)}
      *
-     * @see Record#unsubscribe(String, RecordChangedCallback)
-     */
-    public Record unsubscribe( RecordChangedCallback recordChangedCallback ) throws DeepstreamRecordDestroyedException {
-        unsubscribe( null, recordChangedCallback );
-        return this;
-    }
-
-    /**
-     * Remove the listener added via {@link Record#subscribe(String,RecordChangedCallback, boolean)}
-     * @param path The path to unsubscribe from
      * @param recordChangedCallback The listener to remove
      * @throws DeepstreamRecordDestroyedException Thrown if the record has been destroyed and can't perform more actions
      * @return The record
      */
-    public Record unsubscribe( String path, RecordChangedCallback recordChangedCallback ) throws DeepstreamRecordDestroyedException {
+    public Record unsubscribe( RecordChangedCallback recordChangedCallback ) throws DeepstreamRecordDestroyedException {
         throwExceptionIfDestroyed( "unsubscribe" );
+        this.subscribers.off( ALL_EVENT, recordChangedCallback );
+        return this;
+    }
 
-        if( path == null ) {
-            this.subscribers.off( ALL_EVENT, recordChangedCallback );
-        } else {
-            this.subscribers.off( path, recordChangedCallback );
-        }
-
+    /**
+     * Remove the listener added via {@link Record#subscribe(String,RecordPathChangedCallback, boolean)}
+     * @param path The path to unsubscribe from
+     * @param recordPathChangedCallback The listener to remove
+     * @throws DeepstreamRecordDestroyedException Thrown if the record has been destroyed and can't perform more actions
+     * @return The record
+     */
+    public Record unsubscribe( String path, RecordPathChangedCallback recordPathChangedCallback ) throws DeepstreamRecordDestroyedException {
+        throwExceptionIfDestroyed( "unsubscribe" );
+        this.subscribers.off( path, recordPathChangedCallback );
         return this;
     }
 
@@ -546,7 +553,9 @@ public class Record {
             if( oldValue == null || !oldValue.equals( newValue ) ) {
                 listeners = this.subscribers.listeners( key );
                 for( Object listener : listeners ) {
-                    ((RecordChangedCallback) listener).onRecordChanged( this.name, key, newValue );
+                    if( listener instanceof RecordPathChangedCallback ) {
+                        ((RecordPathChangedCallback) listener).onRecordPathChanged( this.name, key, newValue );
+                    }
                 }
             }
         }

@@ -1,9 +1,6 @@
 package io.deepstream;
 
 import com.google.gson.JsonElement;
-import io.deepstream.constants.ConnectionState;
-import io.deepstream.constants.Event;
-import io.deepstream.constants.Topic;
 
 abstract class DeepstreamClientAbstract {
     private UtilAckTimeoutRegistry utilAckTimeoutRegistry;

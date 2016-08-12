@@ -1,7 +1,6 @@
 package io.deepstream;
 
 import com.google.gson.JsonElement;
-import io.deepstream.constants.ConnectionState;
 
 import java.util.ArrayList;
 import java.util.HashMap;

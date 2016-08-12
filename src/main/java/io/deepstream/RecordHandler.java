@@ -2,9 +2,6 @@ package io.deepstream;
 
 
 import com.google.gson.JsonElement;
-import io.deepstream.constants.Actions;
-import io.deepstream.constants.Event;
-import io.deepstream.constants.Topic;
 
 import java.util.HashMap;
 import java.util.Map;

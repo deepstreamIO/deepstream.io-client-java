@@ -1,8 +1,5 @@
 package io.deepstream;
 
-import io.deepstream.constants.Event;
-import io.deepstream.constants.Topic;
-
 /**
  * A DeepstreamException is a RuntimeException since they mostly occur when recieving an out of sync message
  * from the server, or if an Ack has timed out. You can catch these via {@link DeepstreamClient#setRuntimeErrorHandler(DeepstreamRuntimeErrorHandler)}

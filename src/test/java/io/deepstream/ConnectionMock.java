@@ -1,9 +1,5 @@
 package io.deepstream;
 
-import io.deepstream.constants.Actions;
-import io.deepstream.constants.ConnectionState;
-import io.deepstream.constants.Topic;
-
 public class ConnectionMock implements IConnection {
 
     public String lastSentMessage;

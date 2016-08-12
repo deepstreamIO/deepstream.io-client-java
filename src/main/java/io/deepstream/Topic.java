@@ -1,4 +1,4 @@
-package io.deepstream.constants;
+package io.deepstream;
 
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -30,7 +30,7 @@ public enum Topic {
             lookup.put( s.toString(), s);
     }
 
-    static public Topic getTopic( String topic ) {
+    static Topic getTopic( String topic ) {
         return lookup.get( topic );
     }
 }

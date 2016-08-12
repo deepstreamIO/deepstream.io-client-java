@@ -1,4 +1,4 @@
-package io.deepstream.constants;
+package io.deepstream;
 
 import java.util.EnumSet;
 
@@ -25,7 +25,7 @@ public enum Event {
     RECORD_NOT_FOUND,
     MESSAGE_DENIED;
 
-    static public Event getEvent(String event ) {
+    static Event getEvent(String event ) {
 
         for( Event s : EnumSet.allOf( Event.class ) ) {
             if( s.name().equals( event ) ) {

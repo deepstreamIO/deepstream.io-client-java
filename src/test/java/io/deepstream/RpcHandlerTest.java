@@ -2,10 +2,6 @@ package io.deepstream;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import io.deepstream.constants.Actions;
-import io.deepstream.constants.ConnectionState;
-import io.deepstream.constants.Event;
-import io.deepstream.constants.Topic;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -27,7 +23,7 @@ public class RpcHandlerTest {
     int rpcCalls = 0;
     RpcRequestedListener addTwoCallback = new RpcRequestedListener() {
         @Override
-        public void onRPCRequested(String rpcName, Object data, RpcRequest response) {
+        public void onRPCRequested(String rpcName, Object data, RpcResponse response) {
             rpcCalls++;
             double numA = ((JsonElement) data).getAsJsonObject().get("numA").getAsDouble();
             double numB = ((JsonElement) data).getAsJsonObject().get("numB").getAsDouble();
@@ -126,7 +122,7 @@ public class RpcHandlerTest {
         data.addProperty("numA", 3);
         data.addProperty("numB", 8);
 
-        final RpcResponse[] rpcResponse = new RpcResponse[1];
+        final RpcResult[] rpcResponse = new RpcResult[1];
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -154,7 +150,7 @@ public class RpcHandlerTest {
         data.addProperty("numA", 3);
         data.addProperty("numB", 8);
 
-        final RpcResponse[] rpcResponse = new RpcResponse[1];
+        final RpcResult[] rpcResponse = new RpcResult[1];
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -185,7 +181,7 @@ public class RpcHandlerTest {
         data.addProperty("numA", 3);
         data.addProperty("numB", 8);
 
-        final RpcResponse[] rpcResponse = new RpcResponse[1];
+        final RpcResult[] rpcResponse = new RpcResult[1];
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -193,9 +189,9 @@ public class RpcHandlerTest {
             }
         }).start();
 
-        Thread.sleep( 20 );
+        Thread.sleep(200);
         Assert.assertEquals( TestUtil.replaceSeperators("P|REQ|addTwo|1|O{\"numA\":3,\"numB\":8}+"), connectionMock.lastSentMessage);
-        Thread.sleep(50);
+        Thread.sleep(250);
 
         verify(this.errorCallbackMock, times(1)).onException( Topic.RPC, Event.ACK_TIMEOUT, "No ACK message received in time for REQUEST 1" );
     }
@@ -206,7 +202,7 @@ public class RpcHandlerTest {
         data.addProperty("numA", 3);
         data.addProperty("numB", 8);
 
-        final RpcResponse[] rpcResponse = new RpcResponse[1];
+        final RpcResult[] rpcResponse = new RpcResult[1];
         new Thread(new Runnable() {
             @Override
             public void run() {

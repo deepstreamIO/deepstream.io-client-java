@@ -9,7 +9,7 @@ targetCompatibility = 1.7
 
 defaultTasks 'cucumber'
 
-group 'io.io.deepstream.gherkin'
+group 'io.deepstream'
 version '1.0-SNAPSHOT'
 
 repositories {
@@ -17,8 +17,8 @@ repositories {
 }
 
 sourceSets {
-    deepstreamTest {
-        compileClasspath += sourceSets.main.runtimeClasspath
+    testapplication {
+        compileClasspath += sourceSets.main.compileClasspath
     }
 }
 

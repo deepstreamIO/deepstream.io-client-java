@@ -1,4 +1,4 @@
-package io.deepstream.constants;
+package io.deepstream;
 
 public enum ConfigOptions {
     ENDPOINT_TYPE("endpointType"),

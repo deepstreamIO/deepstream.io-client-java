@@ -13,8 +13,8 @@ public class RpcStepDefs {
 
     RpcRequestedListenerMock toUpperCaseMock = new RpcRequestedListenerMock();
 
-    RpcResponse rpcResponse;
-    RpcRequest rpcRequest;
+    RpcResult rpcResponse;
+    RpcResponse rpcRequest;
     String response;
     String request;
 
@@ -79,7 +79,7 @@ public class RpcStepDefs {
 
     class RpcRequestedListenerMock implements RpcRequestedListener {
         @Override
-        public void onRPCRequested(String rpcName, Object data, RpcRequest response) {
+        public void onRPCRequested(String rpcName, Object data, RpcResponse response) {
             request = (String) data;
             rpcRequest = response;
         }

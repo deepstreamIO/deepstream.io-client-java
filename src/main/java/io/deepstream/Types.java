@@ -1,4 +1,4 @@
-package io.deepstream.constants;
+package io.deepstream;
 
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -29,7 +29,7 @@ public enum Types {
             lookup.put( s.toString(), s);
     }
 
-    static public Types getType( char type ) {
+    static Types getType( char type ) {
         return lookup.get( type + "" );
     }
 }

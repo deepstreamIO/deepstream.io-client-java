@@ -1,7 +1,6 @@
 package io.deepstream;
 
 import com.google.gson.JsonElement;
-import io.deepstream.constants.Event;
 
 import java.util.Map;
 

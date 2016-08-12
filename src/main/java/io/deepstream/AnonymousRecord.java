@@ -150,7 +150,13 @@ public class AnonymousRecord {
      * @return The AnonymousRecord
      */
     public AnonymousRecord subscribe( RecordChangedCallback recordChangedCallback ) {
-        return this.subscribe( null, recordChangedCallback );
+        this.subscriptions.add( new Subscription( recordChangedCallback ) );
+
+        if( this.record != null ) {
+            this.record.subscribe( recordChangedCallback, true );
+        }
+
+        return this;
     }
 
     /**
@@ -158,14 +164,14 @@ public class AnonymousRecord {
      * can be used. Can be called prior to {@link AnonymousRecord#setName}). Please note, triggerIfReady
      * will always be set to true to reflect changes in the underlying record.
      * @param path The path to listen to
-     * @param recordChangedCallback The listener to add
+     * @param recordPathChangedCallback The listener to add
      * @return The AnonymousRecord
      */
-    public AnonymousRecord subscribe( String path, RecordChangedCallback recordChangedCallback ) {
-        this.subscriptions.add( new Subscription( path, recordChangedCallback ) );
+    public AnonymousRecord subscribe( String path, RecordPathChangedCallback recordPathChangedCallback ) {
+        this.subscriptions.add( new Subscription( path, recordPathChangedCallback ) );
 
         if( this.record != null ) {
-            this.record.subscribe( path, recordChangedCallback, true );
+            this.record.subscribe( path, recordPathChangedCallback, true );
         }
 
         return this;
@@ -177,27 +183,35 @@ public class AnonymousRecord {
      * @return The AnonymousRecord
      */
     public AnonymousRecord unsubscribe( RecordChangedCallback recordChangedCallback ) {
-        return this.unsubscribe( null, recordChangedCallback );
+        for( Subscription subscription : subscriptions ) {
+            if( subscription.recordChangedCallback == recordChangedCallback ) {
+                subscriptions.remove( subscription );
+            }
+        }
+
+        if( this.record != null ) {
+            this.record.unsubscribe( recordChangedCallback );
+        }
+
+        return this;
     }
 
     /**
      * Proxies the actual {@link Record#unsubscribe} method. The same parameters
      * can be used. Can be called prior to {@link AnonymousRecord#setName}).
      * @param path The path to unlisten to
-     * @param recordChangedCallback The listen to remove
+     * @param recordPathChangedCallback The listen to remove
      * @return The AnonymousRecord
      */
-    public AnonymousRecord unsubscribe( String path, RecordChangedCallback recordChangedCallback ) {
-        this.subscriptions.remove( new Subscription( path, recordChangedCallback ) );
-
+    public AnonymousRecord unsubscribe( String path, RecordPathChangedCallback recordPathChangedCallback ) {
         for( Subscription subscription : subscriptions ) {
-            if( subscription.path.equals( path ) && subscription.recordChangedCallback == recordChangedCallback ) {
+            if( subscription.path.equals( path ) && subscription.recordPathChangedCallback == recordPathChangedCallback ) {
                 subscriptions.remove( subscription );
             }
         }
 
         if( this.record != null ) {
-            this.record.unsubscribe( path, recordChangedCallback );
+            this.record.unsubscribe( path, recordPathChangedCallback );
         }
 
         return this;
@@ -277,8 +291,11 @@ public class AnonymousRecord {
      */
     private void subscribeRecord() {
         for( Subscription subscription : this.subscriptions ) {
-            if( subscription.recordChangedCallback != null ) {
-                this.record.subscribe( subscription.path, subscription.recordChangedCallback, true );
+            if( subscription.recordPathChangedCallback != null ) {
+                this.record.subscribe( subscription.path, subscription.recordPathChangedCallback, true );
+            }
+            else if( subscription.recordChangedCallback != null ) {
+                this.record.subscribe( subscription.recordChangedCallback, true );
             }
         }
     }
@@ -292,10 +309,12 @@ public class AnonymousRecord {
         }
 
         for( Subscription subscription : this.subscriptions ) {
-            if( subscription.recordChangedCallback != null ) {
-                this.record.unsubscribe( subscription.path, subscription.recordChangedCallback );
+            if( subscription.recordPathChangedCallback != null ) {
+                this.record.unsubscribe( subscription.path, subscription.recordPathChangedCallback );
             }
-
+            else if( subscription.recordChangedCallback != null ) {
+                this.record.unsubscribe( subscription.recordChangedCallback );
+            }
         }
 
         this.record.discard();
@@ -307,10 +326,14 @@ public class AnonymousRecord {
     private class Subscription {
         String path;
         RecordChangedCallback recordChangedCallback;
+        RecordPathChangedCallback recordPathChangedCallback;
         RecordEventsListener recordEventsListener;
-        Subscription(String path, RecordChangedCallback recordChangedCallback ) {
-            this.path = path;
+        Subscription(RecordChangedCallback recordChangedCallback ) {
             this.recordChangedCallback = recordChangedCallback;
+        }
+        Subscription(String path, RecordPathChangedCallback recordPathChangedCallback ) {
+            this.path = path;
+            this.recordPathChangedCallback = recordPathChangedCallback;
         }
         Subscription(RecordEventsListener recordEventsListener ) {
             this.recordEventsListener = recordEventsListener;

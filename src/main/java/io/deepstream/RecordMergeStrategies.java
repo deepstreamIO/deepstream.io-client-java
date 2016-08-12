@@ -1,7 +1,6 @@
 package io.deepstream;
 
 import com.google.gson.JsonElement;
-import io.deepstream.constants.MergeStrategy;
 
 import java.util.HashMap;
 import java.util.Map;

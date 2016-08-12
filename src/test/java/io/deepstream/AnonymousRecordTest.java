@@ -4,7 +4,6 @@ package io.deepstream;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
-import io.deepstream.constants.ConnectionState;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -25,6 +24,7 @@ public class AnonymousRecordTest {
     RecordEventsListener recordEventsListener;
     AnonymousRecordNameChangedListener recordNameChangedListener;
     RecordChangedCallback recordChangedCallback;
+    RecordPathChangedCallback recordPathChangedCallback;
     String firstRecordName = "firstRecordName";
     String secondRecordName = "secondRecordName";
     String thirdRecordName = "thirdRecordName";
@@ -46,6 +46,7 @@ public class AnonymousRecordTest {
 
         recordHandler = new RecordHandler( new DeepstreamConfig( options ), connectionMock, deepstreamClientMock );
         recordChangedCallback = mock(RecordChangedCallback.class);
+        recordPathChangedCallback = mock(RecordPathChangedCallback.class);
         recordEventsListener = mock(RecordEventsListener.class);
         recordNameChangedListener = mock(AnonymousRecordNameChangedListener.class);
     }
@@ -70,12 +71,12 @@ public class AnonymousRecordTest {
 
         anonymousRecord.addRecordEventsListener(recordEventsListener);
         anonymousRecord.subscribe( recordChangedCallback );
-        anonymousRecord.subscribe( "firstname", recordChangedCallback );
+        anonymousRecord.subscribe( "firstname", recordPathChangedCallback );
 
         verify( recordEventsListener, times( 0 )).onRecordDeleted( anyString() );
         verify( recordEventsListener, times( 0 )).onRecordDiscarded( anyString() );
         verify( recordChangedCallback, times( 0) ).onRecordChanged( anyString(), any(JsonElement.class));
-        verify( recordChangedCallback, times( 0) ).onRecordChanged( anyString(), anyString(), any(JsonElement.class));
+        verify( recordPathChangedCallback, times( 0) ).onRecordPathChanged( anyString(), anyString(), any(JsonElement.class));
         verify( recordNameChangedListener, times( 0) ).recordNameChanged( anyString(), any(AnonymousRecord.class));
 
         Assert.assertEquals( connectionMock.lastSentMessage, null );
@@ -105,7 +106,7 @@ public class AnonymousRecordTest {
         Assert.assertEquals( connectionMock.lastSentMessage, TestUtil.replaceSeperators( "R|CR|firstRecordName+" ) );
 
         verify( recordChangedCallback, times(1) ).onRecordChanged( firstRecordName, gson.fromJson( "{\"firstname\":\"Wolfram\"}", JsonElement.class ) );
-        verify( recordChangedCallback, times(1) ).onRecordChanged( firstRecordName, "firstname", new JsonPrimitive("Wolfram") );
+        verify( recordPathChangedCallback, times(1) ).onRecordPathChanged( firstRecordName, "firstname", new JsonPrimitive("Wolfram") );
     }
 
     @Test
@@ -133,7 +134,7 @@ public class AnonymousRecordTest {
         }
 
         verify( recordChangedCallback, times(1) ).onRecordChanged( firstRecordName, gson.fromJson( "{\"firstname\":\"Wolfram\"}", JsonElement.class ) );
-        verify( recordChangedCallback, times(1) ).onRecordChanged( firstRecordName, "firstname", new JsonPrimitive("Wolfram") );
+        verify( recordPathChangedCallback, times(1) ).onRecordPathChanged( firstRecordName, "firstname", new JsonPrimitive("Wolfram") );
     }
 
     @Test
@@ -144,7 +145,7 @@ public class AnonymousRecordTest {
         anonymousRecord.setName( secondRecordName );
 
         verify( recordChangedCallback, times( 1) ).onRecordChanged( secondRecordName, gson.fromJson( "{\"firstname\":\"Egon\",\"lastname\":\"Kowalski\"}", JsonElement.class ) );
-        verify( recordChangedCallback, times(1) ).onRecordChanged(  secondRecordName, "firstname", new JsonPrimitive("Egon") );
+        verify( recordPathChangedCallback, times(1) ).onRecordPathChanged(  secondRecordName, "firstname", new JsonPrimitive("Egon") );
 
         //TODO
         //recordHandler.handle( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|A|D|firstRecordName" ), deepstreamClientMock ) );
