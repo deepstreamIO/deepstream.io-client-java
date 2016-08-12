@@ -1,6 +1,7 @@
 package io.deepstream;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import java.net.URISyntaxException;
 import java.util.*;
@@ -117,7 +118,12 @@ class Connection implements IConnection {
      */
     private void sendAuthMessage() {
         setState( ConnectionState.AUTHENTICATING );
-        String authMessage = MessageBuilder.getMsg( Topic.AUTH, Actions.REQUEST, this.authParameters.toString() );
+        String authMessage;
+        if( this.authParameters == null ) {
+            authMessage = MessageBuilder.getMsg(Topic.AUTH, Actions.REQUEST, new JsonObject().toString());
+        } else {
+            authMessage = MessageBuilder.getMsg(Topic.AUTH, Actions.REQUEST, authParameters.toString());
+        }
         this.endpoint.send( authMessage );
     }
 

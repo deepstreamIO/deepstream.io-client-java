@@ -3,9 +3,6 @@ package io.deepstream.testapp;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import io.deepstream.*;
-import io.deepstream.ConnectionState;
-import io.deepstream.Event;
-import io.deepstream.Topic;
 
 import java.util.Date;
 import java.util.concurrent.ScheduledExecutorService;

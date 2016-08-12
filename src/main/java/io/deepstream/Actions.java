@@ -32,23 +32,25 @@ public enum Actions {
     RESPONSE( "RES" ),
     REJECTION( "REJ" );
 
-    private String action;
-    Actions( String action ) {
-        this.action = action;
-    }
-
-    @Override
-    public String toString() {
-        return this.action;
-    }
-
     private static final Map<String,Actions> lookup  = new HashMap<>();
+
     static {
         for( Actions s : EnumSet.allOf( Actions.class ) )
             lookup.put( s.toString(), s);
     }
 
+    private String action;
+
+    Actions( String action ) {
+        this.action = action;
+    }
+
     static Actions getAction( String action ) {
         return lookup.get( action );
+    }
+
+    @Override
+    public String toString() {
+        return this.action;
     }
 }

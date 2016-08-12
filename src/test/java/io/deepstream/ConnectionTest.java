@@ -79,6 +79,16 @@ public class ConnectionTest {
     }
 
     @Test
+    public void sendingAuthenticationWithNoParams() throws Exception {
+        this.challengeAck();
+        JsonObject authParams = new JsonObject();
+        connection.authenticate( authParams, loginCallback );
+
+        assertEquals(endpointMock.lastSentMessage, MessageBuilder.getMsg( Topic.AUTH, Actions.REQUEST, "{}" ));
+        verifyConnectionState( ConnectionState.AUTHENTICATING );
+    }
+
+    @Test
     public void gettingValidAuthenticationBack() throws Exception {
         this.sendingAuthentication();
 

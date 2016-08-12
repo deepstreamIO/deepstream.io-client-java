@@ -14,23 +14,25 @@ public enum Topic {
     WEBRTC( "W" ),
     PRIVATE( "PRIVATE/" );
 
-    private String topic;
-    Topic( String topic ) {
-        this.topic = topic;
-    }
-
-    @Override
-    public String toString() {
-        return this.topic;
-    }
-
     private static final Map<String,Topic> lookup  = new HashMap<String,Topic>();
+
     static {
         for( Topic s : EnumSet.allOf( Topic.class ) )
             lookup.put( s.toString(), s);
     }
 
+    private String topic;
+
+    Topic( String topic ) {
+        this.topic = topic;
+    }
+
     static Topic getTopic( String topic ) {
         return lookup.get( topic );
+    }
+
+    @Override
+    public String toString() {
+        return this.topic;
     }
 }
