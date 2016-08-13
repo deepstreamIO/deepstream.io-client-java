@@ -5,9 +5,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum EndpointType {
+    /**
+     * TCP connection is used for connections with large amounts of data and no
+     * requirement for websocket/http protocol
+     */
     TCP("tcp"),
-    ENGINEIO("engineio"),
-    MOCK("mock");
+    /**
+     * EngineIO is to be used for connections that have multiple firewalls ( with access only to http ports )
+     * and for fallbacks to http polling mechanisms
+     */
+    ENGINEIO("engineio");
 
     private static final Map<String, EndpointType> lookup = new HashMap<>();
 

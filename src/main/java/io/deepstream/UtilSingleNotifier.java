@@ -70,7 +70,7 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
      * differ greatly and helps maximise reuse.
      *
      * @param name The name of the object being requested
-     * @param error An error that may have occured during the request
+     * @param error An error that may have occurred during the request
      * @param data The result data from the request
      */
     public void recieve(String name, DeepstreamError error, Object data) {

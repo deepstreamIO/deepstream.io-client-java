@@ -276,7 +276,8 @@ public class Record {
 
     /**
      *  Notifies the user whenever anything inside the Record has changed, and triggers the listener immediately.
-     * @see Record#subscribe(RecordChangedCallback, boolean)
+     *  @param recordChangedCallback The callback for whenever anything within the record changes
+     *  @param triggerNow Whether to call the callback immediately with the current value
      */
     public Record subscribe( RecordChangedCallback recordChangedCallback, boolean triggerNow ) throws DeepstreamRecordDestroyedException {
         throwExceptionIfDestroyed( "subscribe" );
@@ -328,7 +329,7 @@ public class Record {
      * @throws DeepstreamRecordDestroyedException Thrown if the record has been destroyed and can't perform more actions
      */
     public Record discard() throws DeepstreamRecordDestroyedException {
-        throwExceptionIfDestroyed( "delete" );
+        throwExceptionIfDestroyed("discard");
         this.usages--;
         if( this.usages <= 0 ) {
             this.whenReady(new RecordReadyListener() {
@@ -393,7 +394,7 @@ public class Record {
      * Invoked when a message is received from {@link RecordHandler#handle(Message)}
      * @param message The message received from the server
      */
-    protected void onMessage(Message message) {
+    void onMessage(Message message) {
         if( message.action == Actions.ACK ) {
             processAckMessage( message );
         } else if (message.action == Actions.READ && this.version() == -1) {

@@ -123,7 +123,6 @@ public class RecordHandler {
      */
     public void listen( String pattern, ListenListener listenCallback ) {
         if( listeners.containsKey( pattern ) ) {
-            // TODO: Do we really want to throw an error here?
             client.onError( Topic.RECORD, Event.LISTENER_EXISTS, pattern );
         } else {
             synchronized (this) {
@@ -145,7 +144,6 @@ public class RecordHandler {
             listener.destroy();
             listeners.remove( pattern );
         } else {
-            // TODO: Do we really want to throw an error here?
             client.onError( Topic.RECORD, Event.NOT_LISTENING, pattern );
         }
     }
@@ -352,6 +350,11 @@ public class RecordHandler {
         @Override
         public void onError(String recordName, Event errorType, String errorMessage) {
             client.onError(Topic.RECORD, errorType, recordName + ":" + errorMessage);
+        }
+
+        @Override
+        public void onRecordHasProviderChanged(String recordName, boolean hasProvider) {
+
         }
 
         /**

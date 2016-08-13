@@ -363,7 +363,7 @@ public class List {
     /**
      * A class to contain all the interface implementations to not pollute the public API
      */
-    private class RecordListeners implements RecordChangedCallback, RecordEventsListener, Record.RecordRemoteUpdateHandler {
+    private class RecordListeners implements RecordChangedCallback, Record.RecordRemoteUpdateHandler {
 
         private final List list;
         private final Record record;
@@ -372,20 +372,7 @@ public class List {
         RecordListeners( List list, Record record ) {
             this.list = list;
             this.record = record;
-            this.record.addRecordEventsListener( this );
             this.record.setRecordRemoteUpdateHandler( this );
-        }
-
-        @Override
-        public void onError(String recordName, Event errorType, String errorMessage) {
-        }
-
-        @Override
-        public void onRecordDeleted(String recordName) {
-        }
-
-        @Override
-        public void onRecordDiscarded(String recordName) {
         }
 
         @Override

@@ -5,6 +5,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Events are deepstream's implementation of the publish/subscribe pattern.
+ * This class is exposed as client.record
+ */
 public class EventHandler {
 
     private final int subscriptionTimeout;
@@ -36,15 +40,28 @@ public class EventHandler {
         });
     }
 
+    /**
+     * Subscribes to eventName and notifies the listener via {@link EventListener}
+     * whenever it occurs locally or remotely
+     *
+     * @param eventName     The event name
+     * @param eventListener The eventListener
+     */
     public void subscribe( String eventName, EventListener eventListener ) {
         if (this.emitter.hasListeners(eventName)) {
             this.subscriptions.add( eventName );
             this.ackTimeoutRegistry.add( Topic.EVENT, Actions.SUBSCRIBE, eventName, this.subscriptionTimeout );
             this.connection.send( MessageBuilder.getMsg( Topic.EVENT, Actions.SUBSCRIBE, eventName ) );
         }
-        this.emitter.on( eventName, eventListener );
+        this.emitter.on(eventName, eventListener);
     }
 
+    /**
+     * Removes the listener added via {@link EventHandler}
+     *
+     * @param eventName     The event name
+     * @param eventListener The listener that was previous added
+     */
     public void unsubscribe( String eventName, EventListener eventListener ) {
         this.subscriptions.remove( eventName );
         this.emitter.off(eventName, eventListener);
@@ -54,28 +71,51 @@ public class EventHandler {
         }
     }
 
+    /**
+     * @see EventHandler
+     */
     public void emit( String eventName ) {
-        this.connection.send( MessageBuilder.getMsg( Topic.EVENT, Actions.EVENT, eventName ) );
-        this.broadcastEvent( eventName );
+        this.connection.send( MessageBuilder.getMsg( Topic.EVENT, Actions.EVENT, eventName));
+        this.broadcastEvent(eventName);
     }
 
+    /**
+     * Emit an event that you want all subscribers, both local and remote to be informed of. You
+     * can provide any object that can be serialised to json
+     * @param eventName the event name
+     * @param data the data to serialise and send with the event
+     */
     public void emit( String eventName, Object data ) {
-        this.connection.send( MessageBuilder.getMsg( Topic.EVENT, Actions.EVENT, eventName, MessageBuilder.typed( data ) ) );
-        this.broadcastEvent( eventName, data );
+        this.connection.send( MessageBuilder.getMsg( Topic.EVENT, Actions.EVENT, eventName, MessageBuilder.typed( data)));
+        this.broadcastEvent(eventName, data);
     }
 
-    public void listen( String pattern, ListenListener callback ) {
+    /**
+     * Listen to any subscriptions that have been made on the system that match the provided
+     * pattern. If that subscription is found it will give the client the opportunity to accept
+     * the role of being the provider, or rejecting it to pass responsibility to someone else.
+     *
+     * @param pattern        The pattern to match, must be valid regex
+     * @param listenListener The listener to inform the client when a subscription
+     *                       has been found or removed
+     */
+    public void listen(String pattern, ListenListener listenListener ) {
         if( this.listeners.get( pattern ) != null ) {
             this.client.onError( Topic.EVENT, Event.LISTENER_EXISTS, pattern );
         } else {
             synchronized (this) {
-                UtilListener eventListener = new UtilListener(Topic.EVENT, pattern, callback, this.deepstreamConfig, this.client, this.connection);
+                UtilListener eventListener = new UtilListener(Topic.EVENT, pattern, listenListener, this.deepstreamConfig, this.client, this.connection);
                 this.listeners.put(pattern, eventListener);
                 eventListener.start();
             }
         }
     }
 
+    /**
+     * Remove the listener added via {@link EventHandler}, this will remove
+     * the provider as the active provider and allow another provider to take its place
+     * @param pattern The pattern that has been previously listened to
+     */
     public void unlisten( String pattern ) {
         UtilListener listener = this.listeners.get( pattern );
         if( listener != null ) {
