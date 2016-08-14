@@ -4,6 +4,10 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Provides the different topics that deepstream connections use. A user of this sdk will only need to access these
+ * during error messages, such as via the {@link DeepstreamException}
+ */
 public enum Topic {
     /**
      * Connection topic, related to the first exchanges with server to validate connection

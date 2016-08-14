@@ -4,6 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
+/**
+ * The entry point for rpcs, both requesting them via {@link RpcHandler#make(String, Object)} and
+ * providing them via {@link RpcHandler#provide(String, RpcRequestedListener)}
+ */
 public class RpcHandler {
     private final DeepstreamConfig deepstreamConfig;
     private final IConnection connection;

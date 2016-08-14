@@ -2,6 +2,9 @@ package io.deepstream;
 
 import java.util.EnumSet;
 
+/**
+ * Provides all the different events that may occur. Most are related to errors for finer debugging and logging
+ */
 public enum Event {
     /**
      * To indicate a connection has not been authenticated longer than expected

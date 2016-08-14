@@ -43,8 +43,6 @@ public class ConnectingStepDefs {
                     loginResult = client.login(authData);
                 } catch (DeepstreamException ex) {
                     deepstreamException = ex;
-                } catch (DeepstreamLoginException e) {
-                    e.printStackTrace();
                 }
             }
         }).start();

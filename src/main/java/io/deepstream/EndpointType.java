@@ -4,6 +4,9 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Provides the different types of connections the deepstream client support
+ */
 public enum EndpointType {
     /**
      * TCP connection is used for connections with large amounts of data and no

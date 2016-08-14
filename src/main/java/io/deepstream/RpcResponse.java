@@ -1,6 +1,9 @@
 package io.deepstream;
 
-
+/**
+ * This object provides a number of methods that allow a rpc provider
+ * to respond to a request
+ */
 public class RpcResponse {
 
     private final IConnection connection;

@@ -1,5 +1,8 @@
 package io.deepstream;
 
+/**
+ * Provides all the different connection states a deepstream client can go through its lifetime
+ */
 public enum ConnectionState {
     /**
      * Connection is closed, usually due to closing the client or getting multiple authentication rejects

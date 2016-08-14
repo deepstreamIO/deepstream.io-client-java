@@ -4,7 +4,8 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
-public enum Types {
+
+enum Types {
     /**
      * A string representation.
      * Example: SDog -> "Dog"

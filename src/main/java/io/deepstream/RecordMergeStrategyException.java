@@ -8,17 +8,33 @@ import com.google.gson.JsonElement;
  */
 public class RecordMergeStrategyException extends RuntimeException {
 
-    public JsonElement newData;
-    public int remoteVersion;
-    public JsonElement oldData;
-    public int localVersion;
-    public String error;
+    /**
+     * The new data attempted to be set from the server
+     */
+    public final JsonElement newData;
+    /**
+     * The version of the record on the server
+     */
+    public final int remoteVersion;
+    /**
+     * The old data currently on the client
+     */
+    public final JsonElement oldData;
+    /**
+     * The version of the record on the client
+     */
+    public final int localVersion;
+    /**
+     * The error message associated with merge conflict returned by a custom {@link RecordMergeStrategy}
+     */
+    public final String error;
 
     /**
      * Use when you don't need any merge conflict data
      * @see RecordMergeStrategyException#RecordMergeStrategyException(int, JsonElement, int, JsonElement, String)
      */
     public RecordMergeStrategyException() {
+        this(null);
     }
 
     /**
@@ -26,7 +42,7 @@ public class RecordMergeStrategyException extends RuntimeException {
      * @see RecordMergeStrategyException#RecordMergeStrategyException(int, JsonElement, int, JsonElement, String)
      */
     public RecordMergeStrategyException( String error ) {
-        this.error = error;
+        this(-1, null, -1, null, error);
     }
 
     /**

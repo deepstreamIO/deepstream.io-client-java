@@ -37,14 +37,29 @@ public class LoginResult {
         this.data = data;
     }
 
+    /**
+     * Whether or not the login occurred successfully
+     *
+     * @return true if login was successful, false otherwise
+     */
     public boolean loggedIn() {
         return this.loggedIn;
     }
 
+    /**
+     * Return the data associated with login. If login was successful,
+     * this would be the user associated data. Otherwise data explaining
+     * the reason why it wasn't.
+     * @return A JsonElement containing the data recieved from the server during login
+     */
     public Object getData() {
         return this.data;
     }
 
+    /**
+     * The error message the server sent to explain why the client couldn't log in.
+     * @return an error event
+     */
     public Event getErrorEvent() {
         return this.errorEvent;
     }

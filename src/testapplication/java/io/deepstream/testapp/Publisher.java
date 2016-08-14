@@ -75,7 +75,7 @@ public class Publisher {
                     record.set( data );
                     //System.out.println( "Updating record " + subscription + " " + record.get() );
                 }
-            }, 1, 10, TimeUnit.MILLISECONDS);
+            }, 1, 5, TimeUnit.SECONDS);
         }
 
         private void listenEvent(final DeepstreamClient client) {

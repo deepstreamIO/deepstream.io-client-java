@@ -7,6 +7,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
+/**
+ * The getters for data-sync, such as {@link RecordHandler#getRecord(String)},
+ * {@link RecordHandler#getList(String)}, provider functionality such as {@link RecordHandler#listen(String, ListenListener)}
+ * and single requests like {@link RecordHandler#snapshot(String)}
+ */
 public class RecordHandler {
 
     private final DeepstreamConfig deepstreamConfig;

@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Events are deepstream's implementation of the publish/subscribe pattern.
- * This class is exposed as client.record
+ * The entry point for events, such as {@link EventHandler#subscribe(String, EventListener)},
+ * {@link EventHandler#emit(String)} and provider functionality such as {@link EventHandler#listen(String, ListenListener)}
  */
 public class EventHandler {
 

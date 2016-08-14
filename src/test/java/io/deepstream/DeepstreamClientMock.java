@@ -28,12 +28,12 @@ public class DeepstreamClientMock extends DeepstreamClientAbstract {
     }
 
     @Override
-    LoginResult login() throws DeepstreamLoginException {
+    LoginResult login() {
         return new LoginResult( true, new HashMap());
     }
 
     @Override
-    LoginResult login(JsonElement data) throws DeepstreamLoginException {
+    LoginResult login(JsonElement data) {
         return new LoginResult( true, new HashMap());
     }
 

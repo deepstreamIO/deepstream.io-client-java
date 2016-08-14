@@ -1,5 +1,11 @@
 package io.deepstream;
 
+import java.util.Properties;
+
+/**
+ * These are all the options available to configure a deepstream client. You can either use them to construct
+ * a map to pass into {@link DeepstreamClient#DeepstreamClient(String, Properties)}, or via a {@link Properties} file
+ */
 public enum ConfigOptions {
     /**
      * A {@link EndpointType}, currently either TCP or EngineIO

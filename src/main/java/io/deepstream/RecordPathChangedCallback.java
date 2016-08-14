@@ -3,7 +3,7 @@ package io.deepstream;
 import com.google.gson.JsonElement;
 
 /**
- * Record data changed listener, used to be notified whenever the record data has been modified either locally or remotely.
+ * Record data changed listener, used to be notified whenever the record data under a path has been modified either locally or remotely.
  */
 public interface RecordPathChangedCallback {
     /**

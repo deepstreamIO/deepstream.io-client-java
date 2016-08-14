@@ -1,6 +1,9 @@
 package io.deepstream;
 
-
+/**
+ * RpcResult provides you access to the response state
+ * of a rpc request called via {@link RpcHandler#make(String, Object)}
+ */
 public class RpcResult {
 
     private boolean success;

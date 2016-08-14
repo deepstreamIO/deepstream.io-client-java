@@ -1,7 +1,7 @@
 package io.deepstream;
 
 /**
- * List change callbacks
+ * List change callback, occurs whenever an the entries change
  */
 public interface ListChangedListener {
     /**

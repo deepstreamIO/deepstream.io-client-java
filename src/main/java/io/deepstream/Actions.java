@@ -4,6 +4,10 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Actions provide the intent of a message sent. A user of this sdk will only need to access these
+ * during error messages, such as via the {@link DeepstreamException}
+ */
 public enum Actions {
     /**
      * Error action to indicate something on the server did not go as expected

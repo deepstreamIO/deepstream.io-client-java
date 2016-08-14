@@ -1,7 +1,7 @@
 package io.deepstream;
 
 /**
- * List entry callbacks
+ * List entry callbacks, called whenever an entry is added, removed or moved within the list
  */
 public interface ListEntryChangedListener {
     /**
