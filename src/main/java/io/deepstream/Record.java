@@ -401,6 +401,8 @@ public class Record {
             onRead( message );
         } else if( message.action == Actions.READ || message.action == Actions.UPDATE || message.action == Actions.PATCH ) {
             applyUpdate( message );
+        } else if (message.action == Actions.SUBSCRIPTION_HAS_PROVIDER) {
+            updateHasProvider(message);
         } else if( message.data[ 0 ].equals( Event.VERSION_EXISTS.toString() ) ) {
             recoverRecord( Integer.parseInt( message.data[ 2 ] ), gson.fromJson( message.data[ 3 ], JsonElement.class ));
         } else if( message.data[ 0 ].equals( Event.MESSAGE_DENIED.toString() ) ) {
@@ -414,6 +416,13 @@ public class Record {
      */
     void setRecordRemoteUpdateHandler(RecordRemoteUpdateHandler recordRemoteUpdateHandler) {
         this.recordRemoteUpdateHandler = recordRemoteUpdateHandler;
+    }
+
+    private void updateHasProvider(Message message) {
+        this.hasProvider = (boolean) MessageParser.convertTyped(message.data[1], this.client);
+        for (RecordEventsListener recordEventsListener : this.recordEventsListeners) {
+            recordEventsListener.onRecordHasProviderChanged(this.name, this.hasProvider);
+        }
     }
 
     /**

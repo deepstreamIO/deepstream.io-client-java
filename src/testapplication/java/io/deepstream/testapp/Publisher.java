@@ -5,10 +5,7 @@ import com.google.gson.JsonObject;
 import io.deepstream.*;
 
 import java.util.Date;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public class Publisher {
     public static void main(String[] args) throws InvalidDeepstreamConfig, InterruptedException {
@@ -49,7 +46,15 @@ public class Publisher {
                 @Override
                 public boolean onSubscriptionForPatternAdded(final String subscription) {
                     System.out.println(String.format("Record %s just subscribed.", subscription));
-                    updateRecord(subscription, client, scheduledFuture[0]);
+
+                    ExecutorService executor = Executors.newSingleThreadExecutor();
+                    executor.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateRecord(subscription, client, scheduledFuture[0]);
+                        }
+                    });
+
                     return true;
                 }
 

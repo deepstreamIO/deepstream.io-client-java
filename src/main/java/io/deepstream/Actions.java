@@ -83,6 +83,10 @@ public enum Actions {
      */
     SUBSCRIPTION_FOR_PATTERN_REMOVED( "SR" ),
     /**
+     * Used to indicate if a record has a provider currently providing it data
+     */
+    SUBSCRIPTION_HAS_PROVIDER("SH"),
+    /**
      * Inform the server that it the client is willing to provide any subscription matching
      * a pattern
      */
@@ -92,6 +96,14 @@ public enum Actions {
      * matching a pattern
      */
     UNLISTEN( "UL" ),
+    /**
+     * Inform the server the provider is willing to provide the subscription
+     */
+    LISTEN_ACCEPT("LA"),
+    /**
+     * Inform the server the provider is not willing to provide the subscription
+     */
+    LISTEN_REJECT("LR"),
     /**
      * Inform the client a remote event has occured
      */

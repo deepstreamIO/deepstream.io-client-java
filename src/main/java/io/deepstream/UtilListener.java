@@ -51,22 +51,29 @@ class UtilListener implements UtilResubscribeNotifier.UtilResubscribeListener {
         if( message.action.equals( Actions.ACK ) ) {
             this.ackTimoutRegistry.clear( message );
         } else {
-            executorService.execute(new Runnable() {
-                @Override
-                public void run() {
-                    boolean isFound = message.action.equals(Actions.SUBSCRIPTION_FOR_PATTERN_FOUND);
-                    if (isFound) {
-                        listenerCallback.onSubscriptionForPatternAdded(message.data[1]);
-                    } else {
-                        listenerCallback.onSubscriptionForPatternRemoved(message.data[1]);
-                    }
+            if (message.action.equals(Actions.SUBSCRIPTION_FOR_PATTERN_FOUND)) {
+                boolean accepted = listenerCallback.onSubscriptionForPatternAdded(message.data[1]);
+                if (accepted) {
+                    sendAccept(message.data[1]);
+                } else {
+                    sendReject(message.data[1]);
                 }
-            });
+            } else if (message.action.equals(Actions.SUBSCRIPTION_FOR_PATTERN_REMOVED)) {
+                listenerCallback.onSubscriptionForPatternRemoved(message.data[1]);
+            }
         }
     }
 
     private void sendListen() {
         this.connection.sendMsg( this.topic, Actions.LISTEN, new String[] { this.pattern } );
+    }
+
+    private void sendAccept(String subscription) {
+        this.connection.sendMsg(this.topic, Actions.LISTEN_ACCEPT, new String[]{this.pattern, subscription});
+    }
+
+    private void sendReject(String subscription) {
+        this.connection.sendMsg(this.topic, Actions.LISTEN_REJECT, new String[]{this.pattern, subscription});
     }
 
     private void scheduleAckTimeout() {
