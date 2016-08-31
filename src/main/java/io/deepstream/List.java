@@ -1,7 +1,6 @@
 package io.deepstream;
 
 import com.google.gson.JsonElement;
-import io.deepstream.constants.Event;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,7 +16,8 @@ public class List {
     private final RecordListeners recordListeners;
     private final Record record;
     private final ArrayList<ListChangedListener> listChangedListeners;
-    
+    private final ArrayList<ListEntryChangedListener> listEntryChangedListeners;
+
     /**
      * Constructor is not public since it is created via {@link RecordHandler#getList(String)}
      * @param recordHandler The recordHandler to get the underlying record
@@ -28,6 +28,7 @@ public class List {
 
         this.recordListeners = new List.RecordListeners( this, this.record );
         this.listChangedListeners = new ArrayList<>();
+        this.listEntryChangedListeners = new ArrayList<>();
     }
 
     /**
@@ -222,6 +223,36 @@ public class List {
     }
 
     /**
+     * Notifies the user whenever the list has changed
+     * @param listEntryChangedListener The listener to add
+     * @return The list
+     */
+    public List subscribe(ListEntryChangedListener listEntryChangedListener) {
+        this.listEntryChangedListeners.add(listEntryChangedListener);
+
+        if( this.listEntryChangedListeners.size() == 0 ) {
+            this.record.subscribe( this.recordListeners );
+        }
+
+        return this;
+    }
+
+    /**
+     * Removes the listener added via {@link List#subscribe(ListChangedListener, boolean)}
+     * @param listEntryChangedListener The listener to remove
+     * @return The list
+     */
+    public List unsubscribe(ListEntryChangedListener listEntryChangedListener) {
+        this.listEntryChangedListeners.remove(listEntryChangedListener);
+
+        if( this.listEntryChangedListeners.size() == 0 ) {
+            this.record.unsubscribe( this.recordListeners );
+        }
+
+        return this;
+    }
+
+    /**
      * Returns the underlying record, used with the ready handler to allow the API to be sync
      */
     Record getUnderlyingRecord() {
@@ -267,8 +298,8 @@ public class List {
 
             for( Integer index : oldIndexes ) {
                 if( newIndexes == null ) {
-                    for (ListChangedListener listChangedListener : this.listChangedListeners) {
-                        listChangedListener.onEntryRemoved(this.name(), entryName, index);
+                    for (ListEntryChangedListener listEntryChangedListener : this.listEntryChangedListeners) {
+                        listEntryChangedListener.onEntryRemoved(this.name(), entryName, index);
                     }
                 }
             }
@@ -280,8 +311,8 @@ public class List {
 
             if( oldIndexes == null ) {
                 for( Integer index : newIndexes ) {
-                    for (ListChangedListener listChangedListener : this.listChangedListeners) {
-                        listChangedListener.onEntryAdded(this.name(), entryName, index);
+                    for (ListEntryChangedListener listEntryChangedListener : this.listEntryChangedListeners) {
+                        listEntryChangedListener.onEntryAdded(this.name(), entryName, index);
                     }
                 }
             } else {
@@ -289,12 +320,12 @@ public class List {
                     Integer index = newIndexes.get( i );
                     if( oldIndexes.size() < i || !oldIndexes.get( i ).equals( newIndexes.get( i ) ) ) {
                         if( oldIndexes.size() < i ) {
-                            for (ListChangedListener listChangedListener : this.listChangedListeners) {
-                                listChangedListener.onEntryAdded(this.name(), entryName, index);
+                            for (ListEntryChangedListener listEntryChangedListener : this.listEntryChangedListeners) {
+                                listEntryChangedListener.onEntryAdded(this.name(), entryName, index);
                             }
                         } else {
-                            for (ListChangedListener listChangedListener : this.listChangedListeners) {
-                                listChangedListener.onEntryMoved(this.name(), entryName, index);
+                            for (ListEntryChangedListener listEntryChangedListener : this.listEntryChangedListeners) {
+                                listEntryChangedListener.onEntryMoved(this.name(), entryName, index);
                             }
                         }
                     }
@@ -332,7 +363,7 @@ public class List {
     /**
      * A class to contain all the interface implementations to not pollute the public API
      */
-    private class RecordListeners implements RecordChangedCallback, RecordEventsListener, Record.RecordRemoteUpdateHandler {
+    private class RecordListeners implements RecordChangedCallback, Record.RecordRemoteUpdateHandler {
 
         private final List list;
         private final Record record;
@@ -341,20 +372,7 @@ public class List {
         RecordListeners( List list, Record record ) {
             this.list = list;
             this.record = record;
-            this.record.addRecordEventsListener( this );
             this.record.setRecordRemoteUpdateHandler( this );
-        }
-
-        @Override
-        public void onError(String recordName, Event errorType, String errorMessage) {
-        }
-
-        @Override
-        public void onRecordDeleted(String recordName) {
-        }
-
-        @Override
-        public void onRecordDiscarded(String recordName) {
         }
 
         @Override
@@ -362,10 +380,6 @@ public class List {
             for (ListChangedListener listChangeListener : this.list.listChangedListeners) {
                 listChangeListener.onListChanged(this.list.name(), this.list.getEntries());
             }
-        }
-
-        @Override
-        public void onRecordChanged(String recordName, String path, Object data) {
         }
 
         @Override

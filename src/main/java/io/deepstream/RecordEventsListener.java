@@ -1,7 +1,5 @@
 package io.deepstream;
 
-import io.deepstream.constants.Event;
-
 /**
  * Record state changed listener, used to be notified whenever the record state has occurred
  */
@@ -16,6 +14,14 @@ public interface RecordEventsListener {
      *                     logging! All checks should be against errorType
      */
     void onError(String recordName, Event errorType, String errorMessage);
+
+    /**
+     * Notified when a listener has confirmed that it will be publishing data. This is extremely useful
+     * in the case of records, where you can indicate whether the values shown are cached or up to date.
+     * @param recordName The name of the record which has gained/lost a provider
+     * @param hasProvider true if provider was found, false otherwise
+     */
+    void onRecordHasProviderChanged(String recordName, boolean hasProvider);
 
     /**
      * Notified when the record was deleted, whether by this client or by another.<br/>

@@ -1,8 +1,5 @@
 package io.deepstream;
 
-import io.deepstream.constants.ConfigOptions;
-import io.deepstream.constants.EndpointType;
-
 import java.util.Properties;
 
 class DeepstreamConfig {

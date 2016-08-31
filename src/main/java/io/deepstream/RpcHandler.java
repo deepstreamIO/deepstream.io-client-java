@@ -1,14 +1,13 @@
 package io.deepstream;
 
-import io.deepstream.constants.Actions;
-import io.deepstream.constants.ConnectionState;
-import io.deepstream.constants.Event;
-import io.deepstream.constants.Topic;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
+/**
+ * The entry point for rpcs, both requesting them via {@link RpcHandler#make(String, Object)} and
+ * providing them via {@link RpcHandler#provide(String, RpcRequestedListener)}
+ */
 public class RpcHandler {
     private final DeepstreamConfig deepstreamConfig;
     private final IConnection connection;
@@ -86,10 +85,10 @@ public class RpcHandler {
      * arguments and a callback to notify you with the rpc result or potential error.
      * @param rpcName The name of the rpc
      * @param data Serializable data that will be passed to the provider
-     * @return Find out if the rpc succeeded via {@link RpcResponse#success()} and associated data via {@link RpcResponse#getData()}
+     * @return Find out if the rpc succeeded via {@link RpcResult#success()} and associated data via {@link RpcResult#getData()}
      */
-    public RpcResponse make(String rpcName, Object data) {
-        final RpcResponse[] rpcResponse = new RpcResponse[1];
+    public RpcResult make(String rpcName, Object data) {
+        final RpcResult[] rpcResponse = new RpcResult[1];
         final CountDownLatch responseLatch = new CountDownLatch(1);
 
 
@@ -98,13 +97,13 @@ public class RpcHandler {
             this.rpcs.put(uid, new Rpc(this.deepstreamConfig, this.client, rpcName, uid, new RpcResponseCallback() {
                 @Override
                 public void onRpcSuccess(String rpcName, Object data) {
-                    rpcResponse[0] = new RpcResponse(true, data);
+                    rpcResponse[0] = new RpcResult(true, data);
                     responseLatch.countDown();
                 }
 
                 @Override
                 public void onRpcError(String rpcName, Object error) {
-                    rpcResponse[0] = new RpcResponse(false, error);
+                    rpcResponse[0] = new RpcResult(false, error);
                     responseLatch.countDown();
                 }
             }));
@@ -201,7 +200,7 @@ public class RpcHandler {
     private void respondToRpc( Message message ) {
         String rpcName = message.data[ 0 ];
         String correlationId = message.data[ 1 ];
-        RpcRequest response;
+        RpcResponse response;
         Object data = null;
 
         if( message.data[ 2 ] != null ) {
@@ -210,7 +209,7 @@ public class RpcHandler {
 
         RpcRequestedListener callback = this.providers.get( rpcName );
         if( callback != null ) {
-            response = new RpcRequest(this.connection, rpcName, correlationId);
+            response = new RpcResponse(this.connection, rpcName, correlationId);
             callback.onRPCRequested(rpcName, data, response);
         } else {
             this.connection.sendMsg( Topic.RPC, Actions.REJECTION, new String[] { rpcName, correlationId } );

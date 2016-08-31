@@ -1,36 +1,90 @@
 package io.deepstream;
 
-
+/**
+ * This object provides a number of methods that allow a rpc provider
+ * to respond to a request
+ */
 public class RpcResponse {
 
-    private boolean success;
-    private Object data;
+    private final IConnection connection;
+    private final String name;
+    private final String correlationId;
+
+    private boolean isAcknowledged;
+    private boolean isComplete;
 
     /**
-     * This object gives you access to the rpc response state
+     * This object provides a number of methods that allow a rpc provider
      * to respond to a request
-     * @param success true the rpc completed succesfully
-     * @param data the data returned by the request
+     *
+     * @param connection    the clients connection object
+     * @param name          the name of the rpc
+     * @param correlationId the correlationId for the RPC
      */
-    RpcResponse(boolean success, Object data) {
-        this.success = success;
-        this.data = data;
+    RpcResponse(IConnection connection, String name, String correlationId) {
+        this.connection = connection;
+        this.name = name;
+        this.correlationId = correlationId;
+        this.isAcknowledged = false;
+        this.isComplete = false;
+        this.ack();
     }
 
     /**
-     * Whether or not the RPC completed
-     * @return true if the Request was completed successfully
+     * Acknowledges the receipt of the request. This
+     * will happen implicitly unless the request callback
+     * explicitly sets autoAck to false
      */
-    public boolean success() {
-        return this.success;
+    public void ack() {
+        if (!this.isAcknowledged) {
+            this.connection.sendMsg(Topic.RPC, Actions.ACK, new String[]{this.name, this.correlationId});
+            this.isAcknowledged = true;
+        }
     }
 
     /**
-     * The data returned by the RPC. If {@link RpcResponse#success()} is true the resulting
-     * data from your rpc, if false data associated with why it failed.
-     * @return the object the provider returned
+     * Reject the request. This might be necessary if the client
+     * is already processing a large number of requests. If deepstream
+     * receives a rejection message it will try to route the request to
+     * another provider - or return a NO_RPC_PROVIDER error if there are no
+     * providers left
      */
-    public Object getData() {
-        return this.data;
+    public void reject() {
+        this.isComplete = true;
+        this.isAcknowledged = true;
+        this.connection.sendMsg(Topic.RPC, Actions.REJECTION, new String[]{this.name, this.correlationId});
+    }
+
+    /**
+     * Completes the request by sending the response data
+     * to the server. If data is an array or object it will
+     * automatically be serialised.<br/>
+     * If autoAck is disabled and the response is sent before
+     * the ack message the request will still be completed and the
+     * ack message ignored
+     *
+     * @param data the data send by the provider. Has to be JsonSerializable
+     */
+    public void send(Object data) {
+        if (this.isComplete) {
+            throw new DeepstreamException("Rpc " + this.name + " already completed");
+        }
+        String typedData = MessageBuilder.typed(data);
+        this.connection.sendMsg(Topic.RPC, Actions.RESPONSE, new String[]{
+                this.name, this.correlationId, typedData
+        });
+        this.isComplete = true;
+    }
+
+    /**
+     * Notifies the server that an error has occured while trying to process the request.
+     * This will complete the rpc.
+     *
+     * @param errorMsg the message used to describe the error that occured
+     */
+    public void error(String errorMsg) {
+        this.isComplete = true;
+        this.isAcknowledged = true;
+        this.connection.sendMsg(Topic.RPC, Actions.ERROR, new String[]{errorMsg, this.name, this.correlationId});
     }
 }

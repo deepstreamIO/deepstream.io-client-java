@@ -1,9 +1,6 @@
 package io.deepstream;
 
 import com.google.gson.JsonElement;
-import io.deepstream.constants.ConnectionState;
-import io.deepstream.constants.Event;
-import io.deepstream.constants.Topic;
 
 abstract class DeepstreamClientAbstract {
     private UtilAckTimeoutRegistry utilAckTimeoutRegistry;
@@ -13,9 +10,9 @@ abstract class DeepstreamClientAbstract {
     abstract DeepstreamClientAbstract removeConnectionChangeListener(ConnectionStateListener connectionStateListener);
     abstract ConnectionState getConnectionState();
 
-    abstract LoginResult login() throws DeepstreamLoginException;
+    abstract LoginResult login();
 
-    abstract LoginResult login(JsonElement data) throws DeepstreamLoginException;
+    abstract LoginResult login(JsonElement data);
     abstract DeepstreamClientAbstract close();
     abstract String getUid();
 

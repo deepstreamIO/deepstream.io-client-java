@@ -4,10 +4,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.deepstream.*;
-import io.deepstream.constants.ConfigOptions;
-import io.deepstream.constants.ConnectionState;
-import io.deepstream.constants.Event;
-import io.deepstream.constants.Topic;
 
 import java.util.Properties;
 import java.util.concurrent.Executors;
@@ -89,7 +85,7 @@ public class Subscriber {
             executorService.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
-                    RpcResponse rpcResponse = client.rpc.make("add-numbers", new Double[]{Math.floor(Math.random() * 10), Math.floor(Math.random() * 10)});
+                    RpcResult rpcResponse = client.rpc.make("add-numbers", new Double[]{Math.floor(Math.random() * 10), Math.floor(Math.random() * 10)});
                     if (rpcResponse.success() == false) {
                         System.out.println(String.format("RPC failed with data: %s", rpcResponse.getData()));
                     } else {
@@ -131,7 +127,8 @@ public class Subscriber {
                         public void onListChanged(String listName, java.util.List entries) {
                             System.out.println(String.format("List %s entries changed to %s", listName, entries));
                         }
-
+                    });
+                    list.subscribe(new ListEntryChangedListener() {
                         @Override
                         public void onEntryAdded(String listName, String entry, int position) {
                             System.out.println(String.format("List %s entry %s added at %i", listName, entry, position));
@@ -161,11 +158,6 @@ public class Subscriber {
                         @Override
                         public void onRecordChanged(String recordName, JsonElement data) {
                             System.out.println(String.format("Record '%s' changed, data is now: %s", recordName, data));
-                        }
-
-                        @Override
-                        public void onRecordChanged(String recordName, String path, Object data) {
-                            System.out.println(String.format("Record '%s' changed, data at path '%s' is now: %s", recordName, path, data));
                         }
                     });
                     System.out.println(String.format("Record '%s' initial state: ", record.name(), record.get()));

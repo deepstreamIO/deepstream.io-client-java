@@ -2,7 +2,6 @@ package io.deepstream;
 
 
 import com.google.gson.JsonObject;
-import io.deepstream.constants.ConnectionState;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

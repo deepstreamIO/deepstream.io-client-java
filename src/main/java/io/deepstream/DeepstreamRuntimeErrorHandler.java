@@ -1,8 +1,5 @@
 package io.deepstream;
 
-import io.deepstream.constants.Event;
-import io.deepstream.constants.Topic;
-
 /**
  * The expectations would be for java clients to implement this and add it
  * via the *setDeepstreamRuntimeErrorHandler* handler in order to catch all

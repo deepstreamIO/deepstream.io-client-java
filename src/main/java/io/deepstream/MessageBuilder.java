@@ -2,9 +2,6 @@ package io.deepstream;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import io.deepstream.constants.Actions;
-import io.deepstream.constants.Topic;
-import io.deepstream.constants.Types;
 
 /**
  * Creates a deepstream message string, based on the

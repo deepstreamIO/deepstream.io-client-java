@@ -6,6 +6,9 @@ package io.deepstream;
  */
 public class DeepstreamRecordDestroyedException extends RuntimeException {
 
+    /**
+     * The name of the method that was attempted to be invoked
+     */
     public final String method;
 
     DeepstreamRecordDestroyedException(String method ) {

@@ -1,13 +1,23 @@
-package io.deepstream.constants;
+package io.deepstream;
 
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Provides the different types of connections the deepstream client support
+ */
 public enum EndpointType {
+    /**
+     * TCP connection is used for connections with large amounts of data and no
+     * requirement for websocket/http protocol
+     */
     TCP("tcp"),
-    ENGINEIO("engineio"),
-    MOCK("mock");
+    /**
+     * EngineIO is to be used for connections that have multiple firewalls ( with access only to http ports )
+     * and for fallbacks to http polling mechanisms
+     */
+    ENGINEIO("engineio");
 
     private static final Map<String, EndpointType> lookup = new HashMap<>();
 
@@ -22,7 +32,7 @@ public enum EndpointType {
         this.endpointType = topic;
     }
 
-    static public EndpointType getEndpointType(String endpointType) {
+    static EndpointType getEndpointType(String endpointType) {
         return lookup.get(endpointType);
     }
 

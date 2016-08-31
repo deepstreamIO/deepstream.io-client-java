@@ -1,7 +1,6 @@
 package io.deepstream;
 
 
-import io.deepstream.constants.ConnectionState;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,6 +18,7 @@ public class ListChangedTest {
     List list;
     RecordEventsListener recordEventsListener;
     ListChangedListener listChangedListener;
+    ListEntryChangedListener listEntryChangedListener;
     String listName = "someList";
 
     @Before
@@ -39,21 +39,22 @@ public class ListChangedTest {
         recordHandler = new RecordHandler( new DeepstreamConfig( options ), connectionMock, deepstreamClientMock );
         recordEventsListener = mock(RecordEventsListener.class);
         listChangedListener = mock( ListChangedListener.class);
+        listEntryChangedListener = mock( ListEntryChangedListener.class);
 
         new Thread(new Runnable() {
             @Override
             public void run() {
-                System.out.println( "Called" );
                 list = recordHandler.getList( listName );
                 list.addRecordEventsListener(recordEventsListener);
                 list.subscribe( listChangedListener );
+                list.subscribe( listEntryChangedListener );
             }
         }).start();
 
         try {
-            Thread.sleep(50);
+            Thread.sleep(300);
             recordHandler.handle( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|someList|1|[\"a\",\"b\",\"c\",\"d\",\"e\"]" ), deepstreamClientMock ) );
-            Thread.sleep(200);
+            Thread.sleep(300);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -66,33 +67,33 @@ public class ListChangedTest {
     @Test
     public void entryAddedLocallyTest() {
         list.addEntry( "f" );
-        verify( listChangedListener, times( 1 ) ).onEntryAdded( listName, "f", 5 );
+        verify( listEntryChangedListener, times( 1 ) ).onEntryAdded( listName, "f", 5 );
     }
 
     @Test
     public void entryAddedLocallyWithIndexTest() {
         list.addEntry( "f", 3 );
-        verify( listChangedListener, times( 1 ) ).onEntryAdded( listName, "f", 3 );
+        verify( listEntryChangedListener, times( 1 ) ).onEntryAdded( listName, "f", 3 );
     }
 
     @Test
     public void entryAddedRemotelyTest() {
         recordHandler.handle( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|someList|2|[\"a\",\"b\",\"c\",\"d\",\"e\",\"f\"]" ), deepstreamClientMock ) );
-        verify( listChangedListener, times( 1 ) ).onEntryAdded( listName, "f", 5 );
+        verify( listEntryChangedListener, times( 1 ) ).onEntryAdded( listName, "f", 5 );
     }
 
     @Test
     public void entryRemovedLocallyTest() {
         list.removeEntry( "c" );
-        verify( listChangedListener, times( 0 ) ).onEntryAdded( anyString(), anyString(), anyInt() );
-        verify( listChangedListener, times( 1 ) ).onEntryRemoved( listName, "c", 2 );
+        verify( listEntryChangedListener, times( 0 ) ).onEntryAdded( anyString(), anyString(), anyInt() );
+        verify( listEntryChangedListener, times( 1 ) ).onEntryRemoved( listName, "c", 2 );
     }
 
     @Test
     public void entryRemovedLocallyWithIndexTest() {
         list.removeEntry( "c", 2 );
-        verify( listChangedListener, times( 0 ) ).onEntryAdded( anyString(), anyString(), anyInt() );
-        verify( listChangedListener, times( 1 ) ).onEntryRemoved( listName, "c", 2 );
+        verify( listEntryChangedListener, times( 0 ) ).onEntryAdded( anyString(), anyString(), anyInt() );
+        verify( listEntryChangedListener, times( 1 ) ).onEntryRemoved( listName, "c", 2 );
     }
 
     @Test
@@ -106,11 +107,11 @@ public class ListChangedTest {
 
         list.setEntries( entries );
 
-        verify( listChangedListener, times( 0 ) ).onEntryAdded( anyString(), anyString(), anyInt() );
-        verify( listChangedListener, times( 0 ) ).onEntryRemoved( anyString(), anyString(), anyInt() );
+        verify( listEntryChangedListener, times( 0 ) ).onEntryAdded( anyString(), anyString(), anyInt() );
+        verify( listEntryChangedListener, times( 0 ) ).onEntryRemoved( anyString(), anyString(), anyInt() );
 
-        verify( listChangedListener, times( 1 ) ).onEntryMoved( listName, "e", 2 );
-        verify( listChangedListener, times( 1 ) ).onEntryMoved( listName, "c", 4 );
+        verify( listEntryChangedListener, times( 1 ) ).onEntryMoved( listName, "e", 2 );
+        verify( listEntryChangedListener, times( 1 ) ).onEntryMoved( listName, "c", 4 );
     }
 
     //TODO
@@ -118,11 +119,11 @@ public class ListChangedTest {
     public void notifiesWhenAnotherInstanceOfSameItemIsAddedWithIndex() {
         list.addEntry( "a", 3 );
 
-        verify( listChangedListener, times( 1 ) ).onEntryAdded( listName, "a", 3 );
-        verify( listChangedListener, times( 0 ) ).onEntryRemoved( anyString(), anyString(), anyInt() );
+        verify( listEntryChangedListener, times( 1 ) ).onEntryAdded( listName, "a", 3 );
+        verify( listEntryChangedListener, times( 0 ) ).onEntryRemoved( anyString(), anyString(), anyInt() );
 
-        verify( listChangedListener, times( 1 ) ).onEntryMoved(  listName, "d" , 4 );
-        verify( listChangedListener, times( 1 ) ).onEntryMoved(  listName, "e" , 5 );
+        verify( listEntryChangedListener, times( 1 ) ).onEntryMoved(  listName, "d" , 4 );
+        verify( listEntryChangedListener, times( 1 ) ).onEntryMoved(  listName, "e" , 5 );
     }
 
     //TODO
@@ -130,9 +131,9 @@ public class ListChangedTest {
     public void notifiesWhenAnotherInstanceOfSameItemIsAddedWithoutIndex() {
         list.addEntry( "b" );
 
-        verify( listChangedListener, times( 1 ) ).onEntryAdded( listName, "b", 5 );
-        verify( listChangedListener, times( 0 ) ).onEntryRemoved( anyString(), anyString(), anyInt() );
-        verify( listChangedListener, times( 0 ) ).onEntryMoved( anyString(), anyString(), anyInt() );
+        verify( listEntryChangedListener, times( 1 ) ).onEntryAdded( listName, "b", 5 );
+        verify( listEntryChangedListener, times( 0 ) ).onEntryRemoved( anyString(), anyString(), anyInt() );
+        verify( listEntryChangedListener, times( 0 ) ).onEntryMoved( anyString(), anyString(), anyInt() );
     }
 
     @Test
@@ -145,13 +146,13 @@ public class ListChangedTest {
 
         list.setEntries( entries );
 
-        verify( listChangedListener, times( 0 ) ).onEntryAdded( anyString(), anyString(), anyInt() );
+        verify( listEntryChangedListener, times( 0 ) ).onEntryAdded( anyString(), anyString(), anyInt() );
 
-        verify( listChangedListener, times( 1 ) ).onEntryMoved( listName, "d", 1 );
-        verify( listChangedListener, times( 1 ) ).onEntryMoved( listName, "b", 2 );
-        verify( listChangedListener, times( 1 ) ).onEntryMoved( listName, "c", 3 );
+        verify( listEntryChangedListener, times( 1 ) ).onEntryMoved( listName, "d", 1 );
+        verify( listEntryChangedListener, times( 1 ) ).onEntryMoved( listName, "b", 2 );
+        verify( listEntryChangedListener, times( 1 ) ).onEntryMoved( listName, "c", 3 );
 
-        verify( listChangedListener, times( 1 ) ).onEntryRemoved( listName, "e", 4 );
+        verify( listEntryChangedListener, times( 1 ) ).onEntryRemoved( listName, "e", 4 );
     }
 
     //TODO
@@ -167,12 +168,12 @@ public class ListChangedTest {
 
         list.setEntries( entries );
 
-        verify( listChangedListener, times( 1 ) ).onEntryAdded( listName, "c", 3 );
+        verify( listEntryChangedListener, times( 1 ) ).onEntryAdded( listName, "c", 3 );
 
-        verify( listChangedListener, times( 1 ) ).onEntryMoved( listName, "d", 4 );
-        verify( listChangedListener, times( 1 ) ).onEntryMoved( listName, "b", 5 );
+        verify( listEntryChangedListener, times( 1 ) ).onEntryMoved( listName, "d", 4 );
+        verify( listEntryChangedListener, times( 1 ) ).onEntryMoved( listName, "b", 5 );
 
-        verify( listChangedListener, times( 0 ) ).onEntryRemoved( anyString(), anyString(), anyInt() );
+        verify( listEntryChangedListener, times( 0 ) ).onEntryRemoved( anyString(), anyString(), anyInt() );
     }
 
     @Test
@@ -184,13 +185,13 @@ public class ListChangedTest {
 
         list.setEntries( entries );
 
-        verify( listChangedListener, times( 1 ) ).onEntryAdded( listName, "f", 2 );
+        verify( listEntryChangedListener, times( 1 ) ).onEntryAdded( listName, "f", 2 );
 
-        verify( listChangedListener, times( 1 ) ).onEntryMoved( listName, "c", 0 );
+        verify( listEntryChangedListener, times( 1 ) ).onEntryMoved( listName, "c", 0 );
 
-        verify( listChangedListener, times( 1 ) ).onEntryRemoved( listName, "a", 0 );
-        verify( listChangedListener, times( 1 ) ).onEntryRemoved( listName, "d", 3 );
-        verify( listChangedListener, times( 1 ) ).onEntryRemoved( listName, "e", 4 );
+        verify( listEntryChangedListener, times( 1 ) ).onEntryRemoved( listName, "a", 0 );
+        verify( listEntryChangedListener, times( 1 ) ).onEntryRemoved( listName, "d", 3 );
+        verify( listEntryChangedListener, times( 1 ) ).onEntryRemoved( listName, "e", 4 );
     }
 
 

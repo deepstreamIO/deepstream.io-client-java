@@ -3,6 +3,8 @@ package io.deepstream;
 /**
  * An exception that is thrown if you try to do a {@link AnonymousRecord#discard()} or {@link AnonymousRecord#delete()}
  * before a record has been set via {@link AnonymousRecord#setName(String)}
+ * </br>
+ * The AnonymousRecordUninitialized extends {@link Exception}
  */
 public class AnonymousRecordUninitialized extends Exception {
     /**

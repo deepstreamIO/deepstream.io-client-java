@@ -5,7 +5,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
-import io.deepstream.constants.ConnectionState;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -26,7 +25,8 @@ public class RecordSubscriptionLocalTest {
     private ConnectionMock connectionMock;
     private DeepstreamClientMock deepstreamClientMock;
     private DeepstreamRuntimeErrorHandler errorCallbackMock;
-    private RecordChangedCallback subscriptionCallback;
+    private RecordChangedCallback recordChangedCallback;
+    private RecordPathChangedCallback recordPathChangedCallback;
 
     @Before
     public void setUp() throws DeepstreamRecordDestroyedException, InvalidDeepstreamConfig {
@@ -47,8 +47,9 @@ public class RecordSubscriptionLocalTest {
         record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|testRecord|0|{}" ), deepstreamClientMock ) );
         Assert.assertEquals( new JsonObject(), record.get() );
 
-        subscriptionCallback = mock( RecordChangedCallback.class );
-        record.subscribe( subscriptionCallback );
+        recordChangedCallback = mock( RecordChangedCallback.class );
+        recordPathChangedCallback = mock( RecordPathChangedCallback.class );
+        record.subscribe(recordChangedCallback);
     }
 
     @After
@@ -58,20 +59,20 @@ public class RecordSubscriptionLocalTest {
 
     @Test
     public void subscribesToAPath() throws DeepstreamRecordDestroyedException {
-        record.subscribe( "firstname", subscriptionCallback );
+        record.subscribe( "firstname", recordPathChangedCallback);
 
         JsonObject object = new JsonObject();
         object.addProperty( "firstname", "Wolfram" );
 
         record.set( "firstname", "Wolfram" );
 
-        verify( subscriptionCallback, times( 1) ).onRecordChanged( "testRecord", object );
-        verify( subscriptionCallback, times( 1) ).onRecordChanged( "testRecord", "firstname", object.get( "firstname" ) );
+        verify(recordChangedCallback, times( 1) ).onRecordChanged( "testRecord", object );
+        verify(recordPathChangedCallback, times( 1) ).onRecordPathChanged( "testRecord", "firstname", object.get( "firstname" ) );
     }
 
     @Test
     public void subscribesToADifferentPath() throws DeepstreamRecordDestroyedException {
-        record.subscribe( "lastname", subscriptionCallback );
+        record.subscribe( "lastname", recordPathChangedCallback);
 
         JsonObject object = new JsonObject();
         object.addProperty( "firstname", "Wolfram" );
@@ -80,26 +81,27 @@ public class RecordSubscriptionLocalTest {
         record.set( "firstname", "Wolfram" );
         record.set( "lastname", "Hempel" );
 
-        verify( subscriptionCallback, times( 1) ).onRecordChanged( "testRecord", object );
-        verify( subscriptionCallback, times( 1) ).onRecordChanged( "testRecord", "lastname", object.get( "lastname" ) );
+        verify(recordChangedCallback, times( 1) ).onRecordChanged( "testRecord", object );
+        verify(recordPathChangedCallback, times( 1) ).onRecordPathChanged( "testRecord", "lastname", object.get( "lastname" ) );
     }
 
     @Test
     public void unsubscribesFromAPath() throws DeepstreamRecordDestroyedException {
         subscribesToAPath();
-        reset( subscriptionCallback );
+        reset(recordChangedCallback);
+        reset(recordPathChangedCallback);
 
-        record.unsubscribe( "firstname", subscriptionCallback );
+        record.unsubscribe( "firstname", recordPathChangedCallback);
 
         record.set( "firstname", "Alex" );
 
-        verify( subscriptionCallback, times( 1) ).onRecordChanged( Matchers.matches("testRecord"),  Matchers.any(JsonElement.class) );
-        verify( subscriptionCallback, times( 0) ).onRecordChanged( Matchers.anyString(), Matchers.anyString(), Matchers.any() );
+        verify(recordChangedCallback, times( 1) ).onRecordChanged( Matchers.matches("testRecord"),  Matchers.any(JsonElement.class) );
+        verify(recordPathChangedCallback, times( 0) ).onRecordPathChanged( Matchers.anyString(), Matchers.anyString(), Matchers.any(JsonElement.class) );
     }
 
     @Test
     public void subscribesToADeepPath() throws DeepstreamRecordDestroyedException {
-        record.subscribe( "addresses[1].street", subscriptionCallback );
+        record.subscribe( "addresses[1].street", recordPathChangedCallback);
 
         JsonObject address = new JsonObject();
         address.addProperty( "street", "someStreet" );
@@ -113,8 +115,8 @@ public class RecordSubscriptionLocalTest {
 
         record.set( "addresses[ 1 ].street", "someStreet" );
 
-        verify( subscriptionCallback, times( 1) ).onRecordChanged( "testRecord", object );
-        verify( subscriptionCallback, times( 1) ).onRecordChanged(
+        verify(recordChangedCallback, times( 1) ).onRecordChanged( "testRecord", object );
+        verify(recordPathChangedCallback, times( 1) ).onRecordPathChanged(
                 "testRecord",
                 "addresses[1].street",
                 object.get( "addresses" ).getAsJsonArray().get(1).getAsJsonObject().get("street")
@@ -123,8 +125,8 @@ public class RecordSubscriptionLocalTest {
 
     @Test
     public void callsAllCallbacksWhenWholeRecordIsSet() throws DeepstreamRecordDestroyedException {
-        record.subscribe( "firstname", subscriptionCallback );
-        record.subscribe( "brother.age", subscriptionCallback );
+        record.subscribe( "firstname", recordPathChangedCallback);
+        record.subscribe( "brother.age", recordPathChangedCallback);
 
         JsonObject brother = new JsonObject();
         brother.addProperty( "name", "secret" );
@@ -137,8 +139,8 @@ public class RecordSubscriptionLocalTest {
 
         record.set( data );
 
-        verify( subscriptionCallback, times( 1) ).onRecordChanged( "testRecord", data );
-        verify( subscriptionCallback, times( 1) ).onRecordChanged(
+        verify(recordChangedCallback, times( 1) ).onRecordChanged( "testRecord", data );
+        verify(recordPathChangedCallback, times( 1) ).onRecordPathChanged(
                 "testRecord",
                 "brother.age",
                 data.get( "brother" ).getAsJsonObject().get( "age" )

@@ -1,9 +1,5 @@
 package io.deepstream;
 
-import io.deepstream.constants.ConnectionState;
-import io.deepstream.constants.Event;
-import io.deepstream.constants.Topic;
-
 import java.net.URISyntaxException;
 import java.util.Properties;
 

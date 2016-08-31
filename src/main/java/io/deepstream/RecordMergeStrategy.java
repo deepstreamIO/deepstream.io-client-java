@@ -6,9 +6,8 @@ import com.google.gson.JsonElement;
  * Allows users to reconcile record versions if the data is not correctly in sync ( out of sync record versions )
  */
 public interface RecordMergeStrategy {
+    //TODO: Run this in a thread since its blocking?
     /**
-     * //TODO: Run this in a thread since its blocking?
-     *
      * Whenever a version conflict occurs the MergeStrategy set via {@link Record#setMergeStrategy(RecordMergeStrategy)}
      * will be called to merge the data and send the data back to the server.<br/>
      *

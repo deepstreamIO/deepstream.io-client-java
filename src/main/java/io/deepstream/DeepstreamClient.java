@@ -1,8 +1,6 @@
 package io.deepstream;
 
 import com.google.gson.JsonElement;
-import io.deepstream.constants.ConnectionState;
-import io.deepstream.constants.Event;
 
 import java.net.URISyntaxException;
 import java.util.Map;
@@ -11,7 +9,9 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
 /**
- * deepstream.io java client
+ * The main entry point for a DeepstreamClient. You can create a client directly using the constructors or use the
+ * {@link DeepstreamFactory#getClient()}, {@link DeepstreamFactory#getClient(String)} or
+ * {@link DeepstreamFactory#getClient(String, Properties)} to create one for you and hold them for future reference.
  */
 public class DeepstreamClient extends DeepstreamClientAbstract {
 
@@ -81,11 +81,9 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      *
      * Does not call the login callback, used mainly for anonymous logins where your guaranteed login
      *
-     * @throws DeepstreamLoginException Thrown if the user can no longer login due to multiple attempts or other
-     * fatal reasons
      * @return The login result
      */
-    public LoginResult login() throws DeepstreamLoginException {
+    public LoginResult login() {
         return this.login(null);
     }
 
@@ -111,11 +109,9 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      * forcefully closed by the server since its maxAuthAttempts threshold has been exceeded
      *
      * @param authParams JSON.serializable authentication data
-     * @throws DeepstreamLoginException Thrown if the user can no longer login due to multiple attempts or other
-     * fatal reasons
      * @return The login result
      */
-    public LoginResult login(JsonElement authParams) throws DeepstreamLoginException {
+    public LoginResult login(JsonElement authParams) {
         final CountDownLatch loggedInLatch = new CountDownLatch(1);
         final LoginResult[] loginResult = new LoginResult[1];
 
@@ -136,7 +132,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
         try {
             loggedInLatch.await();
         } catch (InterruptedException e) {
-            throw new DeepstreamLoginException();
+            loginResult[0] = new LoginResult(false, null, "An issue occured during login");
         }
 
         return loginResult[0];

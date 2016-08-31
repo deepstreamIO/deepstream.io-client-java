@@ -5,7 +5,6 @@ import com.google.gson.JsonObject;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
-import io.deepstream.constants.ConnectionState;
 import org.junit.Assert;
 
 public class ConnectingStepDefs {
@@ -44,8 +43,6 @@ public class ConnectingStepDefs {
                     loginResult = client.login(authData);
                 } catch (DeepstreamException ex) {
                     deepstreamException = ex;
-                } catch (DeepstreamLoginException e) {
-                    e.printStackTrace();
                 }
             }
         }).start();

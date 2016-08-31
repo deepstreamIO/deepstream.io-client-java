@@ -3,15 +3,9 @@ package io.deepstream.testapp;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import io.deepstream.*;
-import io.deepstream.constants.ConnectionState;
-import io.deepstream.constants.Event;
-import io.deepstream.constants.Topic;
 
 import java.util.Date;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public class Publisher {
     public static void main(String[] args) throws InvalidDeepstreamConfig, InterruptedException {
@@ -50,9 +44,18 @@ public class Publisher {
             final ScheduledFuture[] scheduledFuture = new ScheduledFuture[1];
             client.record.listen("record/.*", new ListenListener() {
                 @Override
-                public void onSubscriptionForPatternAdded(final String subscription) {
+                public boolean onSubscriptionForPatternAdded(final String subscription) {
                     System.out.println(String.format("Record %s just subscribed.", subscription));
-                    updateRecord(subscription, client, scheduledFuture[0]);
+
+                    ExecutorService executor = Executors.newSingleThreadExecutor();
+                    executor.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateRecord(subscription, client, scheduledFuture[0]);
+                        }
+                    });
+
+                    return true;
                 }
 
                 @Override
@@ -65,12 +68,16 @@ public class Publisher {
 
         private void updateRecord(final String subscription, DeepstreamClient client, ScheduledFuture scheduledFuture) {
             final Record record = client.record.getRecord(subscription);
+            final int[] count = {0};
             ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(1);
             scheduledFuture = executor.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
-                    record.set("time", new Date().getTime());
-                    record.set("id", subscription);
+                    JsonObject data = new JsonObject();
+                    data.addProperty( "time", new Date().getTime() );
+                    data.addProperty( "id", subscription );
+                    data.addProperty( "count", count[0]++ );
+                    record.set( data );
                     //System.out.println( "Updating record " + subscription + " " + record.get() );
                 }
             }, 1, 5, TimeUnit.SECONDS);
@@ -80,9 +87,10 @@ public class Publisher {
             final ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(1);
             client.event.listen("event/.*", new ListenListener() {
                 @Override
-                public void onSubscriptionForPatternAdded(final String subscription) {
+                public boolean onSubscriptionForPatternAdded(final String subscription) {
                     System.out.println(String.format("Event %s just subscribed.", subscription));
                     publishEvent(subscription, client, executorService);
+                    return true;
                 }
 
                 @Override
@@ -108,7 +116,7 @@ public class Publisher {
                 public void run() {
                     client.rpc.provide("add-numbers", new RpcRequestedListener() {
                         @Override
-                        public void onRPCRequested(String rpcName, Object data, RpcRequest response) {
+                        public void onRPCRequested(String rpcName, Object data, RpcResponse response) {
                             System.out.println("Got an RPC request");
                             JsonArray numbers = (JsonArray) data;
                             double random = Math.random();

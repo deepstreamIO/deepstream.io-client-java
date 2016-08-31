@@ -39,27 +39,27 @@ public class RpcResponseTest {
 
     @Test
     public void sendsAckMessageAutomatically() {
-        RpcRequest response = new RpcRequest( connectionMock, "addTwo", "123" );
+        RpcResponse response = new RpcResponse( connectionMock, "addTwo", "123" );
         Assert.assertEquals(TestUtil.replaceSeperators("P|A|addTwo|123+"), connectionMock.lastSentMessage);
     }
 
     @Test
     public void sendsTheResponse() {
-        RpcRequest response = new RpcRequest( connectionMock, "addTwo", "123" );
+        RpcResponse response = new RpcResponse( connectionMock, "addTwo", "123" );
         response.send( 14 );
         Assert.assertEquals(TestUtil.replaceSeperators("P|RES|addTwo|123|N14+"), connectionMock.lastSentMessage);
     }
 
     @Test
     public void rejectsTheMessage() {
-        RpcRequest response = new RpcRequest( connectionMock, "addTwo", "123" );
+        RpcResponse response = new RpcResponse( connectionMock, "addTwo", "123" );
         response.reject();
         Assert.assertEquals(TestUtil.replaceSeperators("P|REJ|addTwo|123+"), connectionMock.lastSentMessage);
     }
 
     @Test
     public void throwsWhenSendingRejectedMessage() {
-        RpcRequest response = new RpcRequest( connectionMock, "addTwo", "123" );
+        RpcResponse response = new RpcResponse( connectionMock, "addTwo", "123" );
         response.reject();
         try {
             response.send( "bla" );
@@ -70,14 +70,14 @@ public class RpcResponseTest {
 
     @Test
     public void errorsTheMessage() {
-        RpcRequest response = new RpcRequest( connectionMock, "addTwo", "123" );
+        RpcResponse response = new RpcResponse( connectionMock, "addTwo", "123" );
         response.error( "Error Message" );
         Assert.assertEquals(TestUtil.replaceSeperators("P|E|Error Message|addTwo|123+"), connectionMock.lastSentMessage);
     }
 
     @Test
     public void throwsWhenSendingErroredMessage() {
-        RpcRequest response = new RpcRequest( connectionMock, "addTwo", "123" );
+        RpcResponse response = new RpcResponse( connectionMock, "addTwo", "123" );
         response.error( "Err msg" );
         try {
             response.send( "bla" );

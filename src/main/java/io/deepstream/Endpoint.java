@@ -1,8 +1,8 @@
 package io.deepstream;
 
 /**
- * The interface required for any connection endpoints. Currently we support {@link io.deepstream.constants.EndpointType#ENGINEIO}
- * and {@link io.deepstream.constants.EndpointType#TCP}. Adding a custom endpoint would require you to fork the repo and can't
+ * The interface required for any connection endpoints. Currently we support {@link EndpointType#ENGINEIO}
+ * and {@link EndpointType#TCP}. Adding a custom endpoint would require you to fork the repo and can't
  * be injected.
  */
 interface Endpoint {

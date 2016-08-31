@@ -2,8 +2,6 @@ package io.deepstream;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import io.deepstream.constants.*;
-
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.List;
@@ -84,16 +82,17 @@ class Connection implements IConnection {
      * Authenticate the user connection
      * @param authParameters The authentication parameters to send to deepstream
      * @param loginCallback The callback for a successful / unsuccessful login attempt
-     * @throws DeepstreamLoginException Thrown if the user no longer can login, due to multiple attempts or an invalid
      * connection
      */
-    void authenticate(JsonElement authParameters, DeepstreamClient.LoginCallback loginCallback) throws DeepstreamLoginException {
-        if( this.tooManyAuthAttempts || this.challengeDenied ) {
-            this.client.onError( Topic.ERROR, Event.IS_CLOSED, "The client\'s connection was closed" );
-            return;
-        }
+    void authenticate(JsonElement authParameters, DeepstreamClient.LoginCallback loginCallback) {
         this.loginCallback = loginCallback;
         this.authParameters = authParameters;
+
+        if( this.tooManyAuthAttempts || this.challengeDenied ) {
+            this.client.onError( Topic.ERROR, Event.IS_CLOSED, "The client\'s connection was closed" );
+            this.loginCallback.loginFailed(Event.IS_CLOSED, "The client\'s connection was closed");
+            return;
+        }
 
         if( this.connectionState == ConnectionState.AWAITING_AUTHENTICATION ) {
             this.sendAuthMessage();
