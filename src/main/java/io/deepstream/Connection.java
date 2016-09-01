@@ -2,7 +2,6 @@ package io.deepstream;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.List;
