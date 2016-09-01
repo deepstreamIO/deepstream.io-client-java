@@ -1,9 +1,7 @@
 package io.deepstream;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 /**
  * The entry point for events, such as {@link EventHandler#subscribe(String, EventListener)},
@@ -138,9 +136,9 @@ public class EventHandler {
 
         if( message.action == Actions.EVENT ) {
             if( message.data.length == 2 ) {
-                this.emit( eventName, MessageParser.convertTyped( message.data[ 1 ], this.client ) );
+                this.broadcastEvent( eventName, MessageParser.convertTyped(message.data[1], this.client) );
             } else {
-                this.emit( eventName );
+                this.broadcastEvent(eventName);
             }
         }
         else if( this.listeners.get( eventName ) != null ) {
