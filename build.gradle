@@ -22,6 +22,13 @@ sourceSets {
     }
 }
 
+task apidoc(type: Javadoc) {
+    options.memberLevel = JavadocMemberLevel.PUBLIC
+    failOnError = false
+    classpath += sourceSets.main.compileClasspath
+    source = sourceSets.main.allJava
+}
+
 dependencies {
     compile 'com.google.code.gson:gson:2.6.2'
     compile 'io.socket:engine.io-client:0.7.0'
