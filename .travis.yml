@@ -17,4 +17,4 @@ before_install:
 script:
 - ./gradlew -b build-prod.gradle
 after_success:
-  - if [ -n "TRAVIS_TAG" ]; ./gradlew -b build-prod.gradle bintrayUpload fi
+  - if [ -n "TRAVIS_TAG" ]; ./gradlew -b build-prod.gradle bintrayUpload; fi
