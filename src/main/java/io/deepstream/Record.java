@@ -5,6 +5,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 import java.util.*;
 import java.util.List;
 
@@ -45,6 +47,7 @@ public class Record {
      * @param deepstreamConfig Deepstream deepstreamConfig
      * @param client deepstream.io client
      */
+    @ObjectiveCName("init:recordOptions:connection:deepstreamConfig:client:")
     Record(String name, Map recordOptions, IConnection connection, DeepstreamConfig deepstreamConfig, DeepstreamClientAbstract client) {
         this.ackTimeoutRegistry = client.getAckTimeoutRegistry();
         this.name = name;
@@ -127,6 +130,7 @@ public class Record {
      * @param recordEventsListener The listener to add
      * @return The record
      */
+    @ObjectiveCName("addRecordEventsListener:")
     public Record addRecordEventsListener(RecordEventsListener recordEventsListener) {
         this.recordEventsListeners.add( recordEventsListener );
         return this;
@@ -137,6 +141,7 @@ public class Record {
      * @param recordEventsListener The listener to remove
      * @return The record
      */
+    @ObjectiveCName("removeRecordEventsListener:")
     public Record removeRecordEventsListener(RecordEventsListener recordEventsListener) {
         this.recordEventsListeners.remove( recordEventsListener );
         return this;
@@ -147,6 +152,7 @@ public class Record {
      * @param mergeStrategy The name of the built in merge strategy to use
      * @return The record
      */
+    @ObjectiveCName("setMergeStrategy:")
     public Record setMergeStrategy(MergeStrategy mergeStrategy) {
         this.mergeStrategy = RecordMergeStrategies.INSTANCE.getMergeStrategy( mergeStrategy );
         return this;
@@ -157,6 +163,7 @@ public class Record {
      * @param mergeStrategy The custom merge strategy to use
      * @return The record
      */
+    @ObjectiveCName("setMergeStrategyWithRecordMergeStrategy:")
     public Record setMergeStrategy(RecordMergeStrategy mergeStrategy) {
         this.mergeStrategy = mergeStrategy;
         return this;
@@ -187,6 +194,7 @@ public class Record {
      *
      * @return The record data as a JsonElement
      */
+    @ObjectiveCName("get:")
     public JsonElement get( String path ) {
         return deepCopy( this.path.get( path ) );
     }
@@ -210,7 +218,8 @@ public class Record {
      * such as {@link Map}. Since this is a root the object should also not be a primitive.
      *
      * @see Record#set(String, Object)
-     */
+     */ 
+    @ObjectiveCName("set:")
     public Record set( Object value ) throws DeepstreamRecordDestroyedException {
         return this.set( null, value, false );
     }
@@ -229,6 +238,7 @@ public class Record {
      * @return The record
      * @throws DeepstreamRecordDestroyedException Thrown if the record has been destroyed and can't perform more actions
      */
+    @ObjectiveCName("set:value:")
     public Record set(String path, Object value ) throws DeepstreamRecordDestroyedException {
         return this.set( path, value, false );
     }
@@ -237,6 +247,7 @@ public class Record {
      * Notifies the user whenever anything under the path provided has changed.
      * @see Record#subscribe(String, RecordPathChangedCallback, boolean)
      */
+    @ObjectiveCName("subscribe:recordPathChangedCallback:")
     public Record subscribe(String path, RecordPathChangedCallback recordPathChangedCallback ) throws DeepstreamRecordDestroyedException {
         return subscribe( path, recordPathChangedCallback, false );
     }
@@ -254,6 +265,7 @@ public class Record {
      * @return The record
      * @throws DeepstreamRecordDestroyedException Thrown if the record has been destroyed and can't perform more actions
      */
+    @ObjectiveCName("subscribe:recordPathChangedCallback:triggerNow:")
     public Record subscribe( String path, RecordPathChangedCallback recordPathChangedCallback, boolean triggerNow ) throws DeepstreamRecordDestroyedException {
         throwExceptionIfDestroyed( "subscribe" );
 
@@ -270,6 +282,7 @@ public class Record {
      * Notifies the user whenever anything inside the Record has changed.
      * @see Record#subscribe(RecordChangedCallback, boolean)
      */
+    @ObjectiveCName("subscribe:")
     public Record subscribe( RecordChangedCallback recordChangedCallback ) throws DeepstreamRecordDestroyedException {
         return subscribe( recordChangedCallback, false );
     }
@@ -279,6 +292,7 @@ public class Record {
      *  @param recordChangedCallback The callback for whenever anything within the record changes
      *  @param triggerNow Whether to call the callback immediately with the current value
      */
+    @ObjectiveCName("subscribe:triggerNow:")
     public Record subscribe( RecordChangedCallback recordChangedCallback, boolean triggerNow ) throws DeepstreamRecordDestroyedException {
         throwExceptionIfDestroyed( "subscribe" );
 
@@ -298,6 +312,7 @@ public class Record {
      * @throws DeepstreamRecordDestroyedException Thrown if the record has been destroyed and can't perform more actions
      * @return The record
      */
+    @ObjectiveCName("unsubscribe:")
     public Record unsubscribe( RecordChangedCallback recordChangedCallback ) throws DeepstreamRecordDestroyedException {
         throwExceptionIfDestroyed( "unsubscribe" );
         this.subscribers.off( ALL_EVENT, recordChangedCallback );
@@ -311,6 +326,7 @@ public class Record {
      * @throws DeepstreamRecordDestroyedException Thrown if the record has been destroyed and can't perform more actions
      * @return The record
      */
+    @ObjectiveCName("unsubscribe:recordPathChangedCallback:")
     public Record unsubscribe( String path, RecordPathChangedCallback recordPathChangedCallback ) throws DeepstreamRecordDestroyedException {
         throwExceptionIfDestroyed( "unsubscribe" );
         this.subscribers.off( path, recordPathChangedCallback );
@@ -381,6 +397,7 @@ public class Record {
      * @param recordReadyListener The recordReadyListener that will be triggered only **once**
      * @return The record
      */
+    @ObjectiveCName("whenReady:")
     Record whenReady(RecordReadyListener recordReadyListener) {
         if( this.isReady ) {
             recordReadyListener.onRecordReady( this.name, this );
@@ -394,6 +411,7 @@ public class Record {
      * Invoked when a message is received from {@link RecordHandler#handle(Message)}
      * @param message The message received from the server
      */
+    @ObjectiveCName("onMessage:")
     void onMessage(Message message) {
         if( message.action == Actions.ACK ) {
             processAckMessage( message );
@@ -414,10 +432,12 @@ public class Record {
      * This gives us a handle to before and after a record is updated remotely. This is currently used by {@link io.deepstream.List}
      * @param recordRemoteUpdateHandler The listener to notify before and after an update is applied
      */
+    @ObjectiveCName("setRecordRemoteUpdateHandler:")
     void setRecordRemoteUpdateHandler(RecordRemoteUpdateHandler recordRemoteUpdateHandler) {
         this.recordRemoteUpdateHandler = recordRemoteUpdateHandler;
     }
 
+    // @ObjectiveCName("updateHasProvider:")
     private void updateHasProvider(Message message) {
         this.hasProvider = (boolean) MessageParser.convertTyped(message.data[1], this.client);
         for (RecordEventsListener recordEventsListener : this.recordEventsListeners) {
@@ -428,6 +448,7 @@ public class Record {
     /**
      * Apply the message received on the server on the record
      */
+    @ObjectiveCName("applyUpdate:")
     private void applyUpdate(Message message) {
         int newVersion = Integer.parseInt(message.data[1]);
 
@@ -480,6 +501,7 @@ public class Record {
      * @param remoteVersion The remote version number
      * @param remoteData The remote object data
      */
+    @ObjectiveCName("recoverRecord:remoteData:")
     private void recoverRecord(int remoteVersion, JsonElement remoteData) {
         try {
             JsonElement mergedData = this.mergeStrategy.merge( this, remoteData, remoteVersion );
@@ -540,6 +562,7 @@ public class Record {
      *
      * @param oldValues The previous paths and values
      */
+    // @ObjectiveCName("completeChange:")
     private void completeChange(Map<String,JsonElement> oldValues) {
         List<Object> listeners;
 
@@ -576,6 +599,7 @@ public class Record {
      * @param method The method to call
      * @throws DeepstreamRecordDestroyedException Thrown if the record has been destroyed and can't perform more actions
      */
+    // @ObjectiveCName("throwExceptionIfDestroyed:")
     private void throwExceptionIfDestroyed(String method) throws DeepstreamRecordDestroyedException {
         if( this.isDestroyed ) {
             throw new DeepstreamRecordDestroyedException( method );
@@ -585,6 +609,7 @@ public class Record {
     /**
      * @param message The ack {@link Message}
      */
+    @ObjectiveCName("processAckMessage:")
     private void processAckMessage(Message message) {
         Actions action = Actions.getAction( message.data[ 0 ] );
         this.ackTimeoutRegistry.clear( message );
@@ -607,6 +632,7 @@ public class Record {
      * Callback for incoming read messages
      * @param message The read {@link Message}
      */
+    @ObjectiveCName("onRead:")
     private void onRead( Message message ) {
         ackTimeoutRegistry.clear( message );
 
@@ -646,6 +672,7 @@ public class Record {
      * @param key The key to update if a patch
      * @param value The value to update the record with
      */
+    @ObjectiveCName("sendUpdate:value:")
     private void sendUpdate( String key, Object value ) {
         if( key == null || key.equals("") ) {
             this.connection.sendMsg( Topic.RECORD, Actions.UPDATE, new String[] {
@@ -678,6 +705,7 @@ public class Record {
     /**
      * Generate a deep copy of the object to prevent user to modify record data directly
      */
+    @ObjectiveCName("deepCopy:")
     private JsonElement deepCopy(JsonElement element) {
         try {
             return gson.fromJson(gson.toJson(element, JsonElement.class), JsonElement.class);
@@ -698,6 +726,7 @@ public class Record {
      * This forces an update, which is useful when trying to reconcile a merge conflict when the merge is the same
      * but the version number isn't.
      */
+    @ObjectiveCName("set:value:force:")
     private Record set(String path, Object value, boolean force ) throws DeepstreamRecordDestroyedException {
         throwExceptionIfDestroyed( "set" );
 
@@ -725,6 +754,7 @@ public class Record {
     /**
      * Add a destroy pending listener, used by the RecordHandler and potentially other internal stores
      */
+    @ObjectiveCName("addRecordDestroyPendingListener:")
     void addRecordDestroyPendingListener(RecordDestroyPendingListener recordDestroyPendingListener) {
         this.recordDestroyPendingListeners.add( recordDestroyPendingListener );
     }
