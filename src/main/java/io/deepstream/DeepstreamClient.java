@@ -2,6 +2,8 @@ package io.deepstream;
 
 import com.google.gson.JsonElement;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.Properties;
@@ -40,6 +42,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      *
      * @throws URISyntaxException Thrown if the url in incorrect
      */
+    @ObjectiveCName("init:")
     public DeepstreamClient(final String url) throws URISyntaxException {
         this(url, new DeepstreamConfig());
     }
@@ -49,6 +52,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      *
      * @throws URISyntaxException Thrown if the url in incorrect
      */
+    @ObjectiveCName("init:properties:")
     public DeepstreamClient(final String url, Properties options) throws URISyntaxException, InvalidDeepstreamConfig {
         this(url, new DeepstreamConfig(options));
     }
@@ -59,6 +63,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      * @param deepstreamConfig A map of options that extend the ones specified in DefaultConfig.properties
      * @throws URISyntaxException Thrown if the url in incorrect
      */
+    @ObjectiveCName("init:deepstreamConfig:")
     private DeepstreamClient(final String url, DeepstreamConfig deepstreamConfig) throws URISyntaxException {
         this.connection = new Connection(url, deepstreamConfig, this);
         this.event = new EventHandler(deepstreamConfig, this.connection, this);
@@ -111,6 +116,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      * @param authParams JSON.serializable authentication data
      * @return The login result
      */
+    // @ObjectiveCName("loginWithAuthPara:")
     public LoginResult login(JsonElement authParams) {
         final CountDownLatch loggedInLatch = new CountDownLatch(1);
         final LoginResult[] loginResult = new LoginResult[1];
