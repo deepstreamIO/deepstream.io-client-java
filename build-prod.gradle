@@ -49,6 +49,11 @@ j2objcConfig {
     testPattern {
         include '**/*Test.java'
     }
+
+    translateArgs "--no-package-directories", "-use-arc", "--build-closure"
+    translateArgs "--prefixes", "${projectDir}/prefixes.properties"
+    translateArgs "--doc-comments"
+
     finalConfigure()          // Must be last call to configuration
 }
 
