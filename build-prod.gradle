@@ -43,7 +43,6 @@ dependencies {
 }
 
 j2objcConfig {
-    // Sets up libraries you depend on
     skipJ2objcVerification true
     autoConfigureDeps true
     supportedArchs += ['ios_i386']
@@ -51,11 +50,15 @@ j2objcConfig {
         include '**/*Test.java'
     }
 
+    xcodeProjectDir '../DeepstreamIO/'
+    xcodeTargetsIos 'DeepstreamIO'
+
     translateArgs "--no-package-directories", "-use-arc", "--build-closure"
     translateArgs "--prefixes", "${projectDir}/prefixes.properties"
     translateArgs "--doc-comments"
 
-    finalConfigure()          // Must be last call to configuration
+    extraObjcCompilerArgs '-fobjc-arc'
+    finalConfigure() // Must be last call to configuration
 }
 
 group 'io.deepstream'
