@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 import com.google.gson.JsonElement;
 
 /**
@@ -13,5 +15,6 @@ public interface RecordPathChangedCallback {
      * @param path The path subscribed to
      * @param data The data under the path as an Object
      */
+    @ObjectiveCName("onRecordPathChanged:path:data:")
     void onRecordPathChanged(String recordName, String path, JsonElement data);
 }
