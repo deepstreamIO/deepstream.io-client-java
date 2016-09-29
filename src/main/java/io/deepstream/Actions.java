@@ -132,7 +132,7 @@ public enum Actions {
 
     private String action;
 
-
+    @ObjectiveCName("init:")
     Actions( String action ) {
         this.action = action;
     }
