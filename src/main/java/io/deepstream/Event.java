@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 import java.util.EnumSet;
 
 /**
@@ -80,6 +82,7 @@ public enum Event {
      */
     MESSAGE_DENIED;
 
+    @ObjectiveCName("getEvent:")
     static Event getEvent(String event ) {
 
         for( Event s : EnumSet.allOf( Event.class ) ) {
