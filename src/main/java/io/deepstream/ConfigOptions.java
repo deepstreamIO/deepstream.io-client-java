@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 import java.util.Properties;
 
 /**
@@ -69,6 +71,7 @@ public enum ConfigOptions {
 
     private String configOption;
 
+    @ObjectiveCName("init:")
     ConfigOptions(String topic) {
         this.configOption = topic;
     }
