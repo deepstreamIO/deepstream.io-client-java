@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -51,10 +53,12 @@ enum Types {
 
     private String type;
 
+    @ObjectiveCName("init:")
     Types( String type ) {
         this.type = type;
     }
 
+    @ObjectiveCName("getType:")
     static Types getType( char type ) {
         return lookup.get( type + "" );
     }
