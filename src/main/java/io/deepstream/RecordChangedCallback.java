@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 import com.google.gson.JsonElement;
 
 /**
@@ -12,5 +14,6 @@ public interface RecordChangedCallback {
      * @param recordName The name of the record change
      * @param data The entire data as a {@link JsonElement}, can be retrieved via {@link JsonElement#getAsJsonObject()}
      */
+    @ObjectiveCName("onRecordChanged:data:")
     void onRecordChanged(String recordName, JsonElement data );
 }
