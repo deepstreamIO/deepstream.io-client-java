@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -130,10 +132,12 @@ public enum Actions {
 
     private String action;
 
+
     Actions( String action ) {
         this.action = action;
     }
 
+    @ObjectiveCName("getAction:")
     static Actions getAction( String action ) {
         return lookup.get( action );
     }
