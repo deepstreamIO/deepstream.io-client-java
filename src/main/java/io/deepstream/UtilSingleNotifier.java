@@ -55,7 +55,7 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
      * @param name The name of the object being requested
      * @param utilSingleNotifierCallback The callback to call once the request is completed
      */
-    @ObjectiveCName("request:utilSingleNotifierCallback")
+    @ObjectiveCName("request:utilSingleNotifierCallback:")
     public void request( String name, UtilSingleNotifierCallback utilSingleNotifierCallback ) {
         ArrayList<UtilSingleNotifierCallback> callbacks = requests.get( name );
         if( callbacks == null ) {
