@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 /**
  * A DeepstreamException is a RuntimeException since they mostly occur when receiving an out of sync message
  * from the server, or if an Ack has timed out. You can catch these via {@link DeepstreamClient#setRuntimeErrorHandler(DeepstreamRuntimeErrorHandler)}
@@ -22,11 +24,12 @@ public class DeepstreamException extends RuntimeException {
      */
     public String message;
 
-
+    @ObjectiveCName("init:")
     DeepstreamException(String message ) {
         super( message );
     }
 
+    @ObjectiveCName("init:event:message:")
     DeepstreamException(Topic topic, Event event, String message) {
         super( event + ": " + message );
         this.topic = topic;
