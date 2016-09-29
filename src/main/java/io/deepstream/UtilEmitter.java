@@ -1,5 +1,6 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -28,6 +29,7 @@ class UtilEmitter {
      * @param fn The listener to invoke
      * @return a reference to this object.
      */
+    @ObjectiveCName("on:fn:")
     public UtilEmitter on(Enum enu, Object fn ) {
         this.on( enu.toString(), fn );
         return this;
@@ -39,6 +41,7 @@ class UtilEmitter {
      * @param fn The listener to invoke
      * @return a reference to this object.
      */
+    @ObjectiveCName("onWithEvent:fn:")
     public UtilEmitter on(String event, Object fn) {
         ConcurrentLinkedQueue<Object> callbacks = this.callbacks.get(event);
         if (callbacks == null) {
@@ -59,6 +62,7 @@ class UtilEmitter {
      * @param fn The listener to invoke
      * @return a reference to this object.
      */
+    @ObjectiveCName("once:fn:")
     public UtilEmitter once(final String event, final Listener fn) {
         this.on(event, new OnceListener(event, fn));
         return this;
@@ -80,6 +84,7 @@ class UtilEmitter {
      * @param event an event name.
      * @return a reference to this object.
      */
+    @ObjectiveCName("off:")
     public UtilEmitter off(String event) {
         this.callbacks.remove(event);
         return this;
@@ -92,6 +97,7 @@ class UtilEmitter {
      * @param fn The listener to invoke
      * @return a reference to this object.
      */
+    @ObjectiveCName("off:fn:")
     public UtilEmitter off(String event, Object fn) {
         ConcurrentLinkedQueue<Object> callbacks = this.callbacks.get(event);
         if (callbacks != null) {
@@ -113,6 +119,7 @@ class UtilEmitter {
      * @param event an event name.
      * @return a reference to this object.
      */
+    @ObjectiveCName("listeners:")
     public List<Object> listeners(String event) {
         ConcurrentLinkedQueue<Object> callbacks = this.callbacks.get(event);
         return callbacks != null ?
@@ -125,6 +132,7 @@ class UtilEmitter {
      * @param event an event name.
      * @return true if a listener exists for that eventname
      */
+    @ObjectiveCName("hasListeners:")
     public boolean hasListeners(String event) {
         ConcurrentLinkedQueue<Object> callbacks = this.callbacks.get(event);
         return callbacks == null || callbacks.isEmpty();
@@ -148,6 +156,7 @@ class UtilEmitter {
     }
 
     interface Listener {
+        @ObjectiveCName("call:")
         void call(Object... args);
     }
 
@@ -156,12 +165,14 @@ class UtilEmitter {
         public final String event;
         public final Listener fn;
 
+        @ObjectiveCName("init:fn:")
         public OnceListener(String event, Listener fn) {
             this.event = event;
             this.fn = fn;
         }
 
         @Override
+        @ObjectiveCName("call:")
         public void call(Object... args) {
             UtilEmitter.this.off(this.event, this);
             this.fn.call(args);
