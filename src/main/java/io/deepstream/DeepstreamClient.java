@@ -77,6 +77,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      *
      * @param deepstreamRuntimeErrorHandler The listener to set
      */
+    @ObjectiveCName("setRuntimeErrorHandler:")
     public void setRuntimeErrorHandler( DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler )  {
         super.setRuntimeErrorHandler( deepstreamRuntimeErrorHandler );
     }
@@ -116,19 +117,21 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      * @param authParams JSON.serializable authentication data
      * @return The login result
      */
-    // @ObjectiveCName("loginWithAuthPara:")
+    @ObjectiveCName("login:")
     public LoginResult login(JsonElement authParams) {
         final CountDownLatch loggedInLatch = new CountDownLatch(1);
         final LoginResult[] loginResult = new LoginResult[1];
 
         this.connection.authenticate(authParams, new LoginCallback() {
             @Override
+            @ObjectiveCName("loginSuccess:")
             public void loginSuccess(Map userData) {
                 loginResult[0] = new LoginResult(true, userData);
                 loggedInLatch.countDown();
             }
 
             @Override
+            @ObjectiveCName("loginFailed:data:")
             public void loginFailed(Event errorEvent, Object data) {
                 loginResult[0] = new LoginResult(false, errorEvent, data);
                 loggedInLatch.countDown();
@@ -209,6 +212,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
          *
          * @param userData Optional data that is specific to the user and returned on succesfuly authentication
          */
+        @ObjectiveCName("loginSuccess:")
         void loginSuccess(Map userData);
 
         /**
@@ -217,6 +221,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
          * @param errorEvent error event
          * @param data       Contains data associated to the failed login, such as the reason
          */
+        @ObjectiveCName("loginFailed:data:")
         void loginFailed(Event errorEvent, Object data);
     }
 }
