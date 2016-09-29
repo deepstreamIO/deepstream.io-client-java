@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 /**
  * RpcResult provides you access to the response state
  * of a rpc request called via {@link RpcHandler#make(String, Object)}
@@ -15,6 +17,7 @@ public class RpcResult {
      * @param success true the rpc completed succesfully
      * @param data the data returned by the request
      */
+    @ObjectiveCName("init:data:")
     RpcResult(boolean success, Object data) {
         this.success = success;
         this.data = data;
