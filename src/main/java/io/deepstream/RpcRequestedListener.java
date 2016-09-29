@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 /**
  * Listener for any rpc requests recieved from the server
  */
@@ -11,5 +13,6 @@ public interface RpcRequestedListener {
      * @param data The data the request was made with
      * @param response The {@link RpcResponse} to respond to the request with
      */
+    @ObjectiveCName("onRPCRequested:data:response:")
     void onRPCRequested(String rpcName, Object data, RpcResponse response);
 }
