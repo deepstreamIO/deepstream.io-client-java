@@ -159,6 +159,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      * @param connectionStateListener The listener to add
      * @return The deepstream client
      */
+    @ObjectiveCName("addConnectionChangeListener:")
     public DeepstreamClient addConnectionChangeListener( ConnectionStateListener connectionStateListener) {
         this.connection.addConnectionChangeListener(connectionStateListener);
         return this;
@@ -169,6 +170,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      * @param connectionStateListener The listener to remove
      * @return The deepstream client
      */
+    @ObjectiveCName("removeConnectionChangeListener:")
     public DeepstreamClient removeConnectionChangeListener( ConnectionStateListener connectionStateListener) {
         this.connection.removeConnectionChangeListener(connectionStateListener);
         return this;
