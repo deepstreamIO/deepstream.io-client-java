@@ -29,10 +29,12 @@ abstract class DeepstreamClientAbstract {
      *
      * @param deepstreamRuntimeErrorHandler The listener to set
      */
+    @ObjectiveCName("setRuntimeErrorHandler:")
     public void setRuntimeErrorHandler(DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler) {
         this.deepstreamRuntimeErrorHandler = deepstreamRuntimeErrorHandler;
     }
 
+    @ObjectiveCName("onError:event:msg:")
     void onError(Topic topic, Event event, String msg) throws DeepstreamException {
         /*
          * Help to diagnose the problem quicker by checking for
