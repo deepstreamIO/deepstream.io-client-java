@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 import com.google.gson.JsonElement;
 
 abstract class DeepstreamClientAbstract {
