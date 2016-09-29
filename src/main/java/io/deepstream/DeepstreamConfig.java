@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 import java.util.Properties;
 
 class DeepstreamConfig {
@@ -9,6 +11,7 @@ class DeepstreamConfig {
         properties = new Properties();
     }
 
+    @ObjectiveCName("init:")
     DeepstreamConfig( Properties properties ) throws InvalidDeepstreamConfig {
         this.properties = properties;
 
@@ -78,6 +81,7 @@ class DeepstreamConfig {
         return Integer.parseInt(getOption(ConfigOptions.RECORD_DELETE_TIMEOUT, "3000"));
     }
 
+    @ObjectiveCName("getOption:defaultValue:")
     private String getOption(ConfigOptions option, String defaultValue) {
         if (properties.containsKey(option)) {
             return properties.get(option).toString();
