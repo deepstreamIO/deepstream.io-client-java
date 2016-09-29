@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,10 +46,12 @@ public enum Topic {
 
     private String topic;
 
+    @ObjectiveCName("init:")
     Topic( String topic ) {
         this.topic = topic;
     }
 
+    @ObjectiveCName("getTopic:")
     static Topic getTopic( String topic ) {
         return lookup.get( topic );
     }
