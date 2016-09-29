@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 
@@ -22,6 +24,7 @@ class MessageParser {
      * and returns an array of parsed message objects
      * or null for invalid messages
      */
+    @ObjectiveCName("parse:client:")
     static List<Message> parse( String message, DeepstreamClientAbstract client ) {
         List<Message> messages = new ArrayList<>();
         String[] rawMessages = message.split( MS );
@@ -42,6 +45,7 @@ class MessageParser {
      * @param client The deepstream client to notify if errors occur
      * @return The {@link Message} object that represents the message string
      */
+    @ObjectiveCName("parseMessage:client:")
     static Message parseMessage( String message, DeepstreamClientAbstract client ) {
         String[] parts = message.split( MPS );
 
@@ -71,6 +75,7 @@ class MessageParser {
      * @param client The deepstream client to notify if errors occur
      * @return The object the value represented
      */
+    @ObjectiveCName("convertTyped:client:")
     static Object convertTyped( String value, DeepstreamClientAbstract client ) {
 
         char type = value.charAt(0);
@@ -101,6 +106,7 @@ class MessageParser {
         return null;
     }
 
+    @ObjectiveCName("parseObject:")
     static Object parseObject(String value) {
         return new Gson().fromJson( value, JsonElement.class );
     }
