@@ -53,7 +53,8 @@ j2objcConfig {
     xcodeProjectDir '../DeepstreamIO/'
     xcodeTargetsIos 'DeepstreamIO'
 
-    translateArgs "--no-package-directories", "-use-arc", "--build-closure"
+    translateArgs "--no-package-directories", "-use-arc", "--build-closure", "--nullability"
+    translateArgs "--strip-gwt-incompatible"
     translateArgs "--prefixes", "${projectDir}/prefixes.properties"
     translateArgs "--doc-comments"
 
