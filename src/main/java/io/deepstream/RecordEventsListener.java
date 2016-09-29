@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 /**
  * Record state changed listener, used to be notified whenever the record state has occurred
  */
@@ -13,6 +15,7 @@ public interface RecordEventsListener {
      * @param errorMessage An error message in english, describing the issue. Do not use this message other than for
      *                     logging! All checks should be against errorType
      */
+    @ObjectiveCName("onError:errorType:errorMessage:")
     void onError(String recordName, Event errorType, String errorMessage);
 
     /**
@@ -21,6 +24,7 @@ public interface RecordEventsListener {
      * @param recordName The name of the record which has gained/lost a provider
      * @param hasProvider true if provider was found, false otherwise
      */
+    @ObjectiveCName("onRecordHasProviderChanged:hasProvider:")
     void onRecordHasProviderChanged(String recordName, boolean hasProvider);
 
     /**
@@ -29,6 +33,7 @@ public interface RecordEventsListener {
      * to continue setting data.
      * @param recordName The name of the deleted record
      */
+    @ObjectiveCName("onRecordDeleted:")
     void onRecordDeleted( String recordName );
 
     /**
@@ -37,5 +42,6 @@ public interface RecordEventsListener {
      * to continue setting data.
      * @param recordName The name of the discarded record
      */
+    @ObjectiveCName("onRecordDiscarded:")
     void onRecordDiscarded(String recordName);
 }
