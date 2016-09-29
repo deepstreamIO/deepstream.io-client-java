@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 import com.google.gson.JsonElement;
 
 /**
@@ -41,6 +43,7 @@ public class RecordMergeStrategyException extends RuntimeException {
      * Use when you don't need a reference to the actual conflicting data
      * @see RecordMergeStrategyException#RecordMergeStrategyException(int, JsonElement, int, JsonElement, String)
      */
+    @ObjectiveCName("init:")
     public RecordMergeStrategyException( String error ) {
         this(-1, null, -1, null, error);
     }
@@ -53,6 +56,7 @@ public class RecordMergeStrategyException extends RuntimeException {
      * @param remoteData The remote data during the merge
      * @param error An error message describing the issue
      */
+    @ObjectiveCName("init:oldData:remoteVersion:remoteData:error:")
     public RecordMergeStrategyException(int localVersion, JsonElement oldData, int remoteVersion, JsonElement remoteData, String error ) {
         this.localVersion = localVersion;
         this.oldData = oldData;
