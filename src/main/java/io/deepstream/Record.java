@@ -437,7 +437,7 @@ public class Record {
         this.recordRemoteUpdateHandler = recordRemoteUpdateHandler;
     }
 
-    // @ObjectiveCName("updateHasProvider:")
+    @ObjectiveCName("updateHasProvider:")
     private void updateHasProvider(Message message) {
         this.hasProvider = (boolean) MessageParser.convertTyped(message.data[1], this.client);
         for (RecordEventsListener recordEventsListener : this.recordEventsListeners) {
