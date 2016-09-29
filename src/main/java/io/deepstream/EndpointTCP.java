@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -27,6 +29,7 @@ class EndpointTCP implements Endpoint {
     private OutputStreamWriter out;
     private InputStreamReader in;
 
+    @ObjectiveCName("init:deepstreamConfig:connection:")
     public EndpointTCP(String url, DeepstreamConfig deepstreamConfig, Connection connection) throws URISyntaxException {
         try {
             this.host = url.substring( 0, url.indexOf( ':' ) );
@@ -90,6 +93,7 @@ class EndpointTCP implements Endpoint {
         }).start();
     }
 
+     @ObjectiveCName("onError:")
     private void onError( Exception e ) {
         String message;
 
@@ -124,6 +128,7 @@ class EndpointTCP implements Endpoint {
         this.connection.onMessage( message );
     }
 
+    @ObjectiveCName("send:")
     public void send(String message) {
         try {
             this.out.write( message, 0, message.length() );
