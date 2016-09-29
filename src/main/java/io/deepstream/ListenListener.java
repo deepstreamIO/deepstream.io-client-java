@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 /**
  * An interface that notifies whenever a pattern match has been found or removed when added via {@link RecordHandler#listen(String, ListenListener)}
  * or {@link EventHandler#listen(String, ListenListener)}
@@ -14,6 +16,7 @@ public interface ListenListener {
      * @param subscription The name of the subscription that can be provided
      * @return true if the server responds is willing to accept the request, false to reject
      */
+    @ObjectiveCName("onSubscriptionForPatternAdded:")
     boolean onSubscriptionForPatternAdded( String subscription );
 
     /**
@@ -22,5 +25,6 @@ public interface ListenListener {
      *
      * @param subscription The name of the subscription to stop providing
      */
+    @ObjectiveCName("onSubscriptionForPatternRemoved:")
     void onSubscriptionForPatternRemoved( String subscription );
 }
