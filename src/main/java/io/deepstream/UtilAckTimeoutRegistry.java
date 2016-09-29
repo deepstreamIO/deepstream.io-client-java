@@ -118,7 +118,7 @@ class UtilAckTimeoutRegistry implements ConnectionStateListener, UtilTimeoutList
      *
      * @param uniqueName The name of the message ( and possible action ) to remove the timeout for
      */
-    @ObjectiveCName("clear:")
+    @ObjectiveCName("clearWithUniqueName:")
     private boolean clear( String uniqueName ) {
         ScheduledFuture scheduledFuture = register.get( uniqueName );
         if( scheduledFuture != null ) {
