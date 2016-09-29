@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -26,6 +28,7 @@ public class RpcHandler {
      * @param connection The connection to deepstream
      * @param client The deepstream client
      */
+    @ObjectiveCName("init:connection:client:")
     RpcHandler(DeepstreamConfig deepstreamConfig, final IConnection connection, DeepstreamClientAbstract client) {
         this.deepstreamConfig = deepstreamConfig;
         this.connection = connection;
@@ -56,6 +59,7 @@ public class RpcHandler {
      * @param rpcName The rpcName of the RPC to provide
      * @param rpcRequestedListener The listener to invoke when requests are received
      */
+    @ObjectiveCName("provide:rpcRequestedListener:")
     public void provide( String rpcName, RpcRequestedListener rpcRequestedListener ) {
         if( this.providers.containsKey( rpcName ) ) {
             throw new DeepstreamException( "RPC " + rpcName + " already registered" );
@@ -71,6 +75,7 @@ public class RpcHandler {
      * Unregister a {@link RpcRequestedListener} registered via Rpc{@link #provide(String, RpcRequestedListener)}
      * @param rpcName The rpcName of the RPC to stop providing
      */
+    @ObjectiveCName("unprovide:")
     public void unprovide( String rpcName ) {
         if( this.providers.containsKey( rpcName ) ) {
             this.providers.remove( rpcName );
@@ -87,6 +92,7 @@ public class RpcHandler {
      * @param data Serializable data that will be passed to the provider
      * @return Find out if the rpc succeeded via {@link RpcResult#success()} and associated data via {@link RpcResult#getData()}
      */
+    @ObjectiveCName("make:data:")
     public RpcResult make(String rpcName, Object data) {
         final RpcResult[] rpcResponse = new RpcResult[1];
         final CountDownLatch responseLatch = new CountDownLatch(1);
@@ -126,6 +132,7 @@ public class RpcHandler {
      * from the message distributor
      * @param message The message recieved from the server
      */
+    @ObjectiveCName("handle:")
     void handle( Message message ) {
         String rpcName;
         String correlationId;
@@ -181,6 +188,7 @@ public class RpcHandler {
      * Retrieves a RPC instance for a correlationId or throws an error
      * if it can't be found (which should never happen)
      */
+    @ObjectiveCName("getRpc:raw:")
     private Rpc getRpc(String correlationId, String raw) {
         Rpc rpc = this.rpcs.get( correlationId );
 
@@ -197,6 +205,7 @@ public class RpcHandler {
      * is present (which shouldn't really happen, but might be the result of a race condition
      * if this client sends a unprovide message whilst an incoming request is already in flight)
      */
+    @ObjectiveCName("respondToRpc:")
     private void respondToRpc( Message message ) {
         String rpcName = message.data[ 0 ];
         String correlationId = message.data[ 1 ];
@@ -219,6 +228,7 @@ public class RpcHandler {
     /**
      * Send an unsubscribe or subscribe event if the connection is open
      */
+    @ObjectiveCName("sendRPCSubscribe:")
     private void sendRPCSubscribe(String rpcName) {
         if( this.client.getConnectionState() == ConnectionState.OPEN ) {
             this.ackTimeoutRegistry.add(Topic.RPC, Actions.SUBSCRIBE, rpcName, deepstreamConfig.getSubscriptionTimeout());
@@ -237,6 +247,7 @@ public class RpcHandler {
          * @param rpcName The rpc name
          * @param data    The result data from the rpc
          */
+        @ObjectiveCName("onRpcSuccess:data:")
         void onRpcSuccess(String rpcName, Object data);
 
         /**
@@ -245,6 +256,7 @@ public class RpcHandler {
          *
          * @param rpcName The rpc name
          */
+        @ObjectiveCName("onRpcError:error:")
         void onRpcError(String rpcName, Object error);
     }
 }
