@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 import com.google.gson.JsonElement;
 
 import java.util.ArrayList;
@@ -23,6 +25,8 @@ public class List {
      * @param recordHandler The recordHandler to get the underlying record
      * @param name The list name
      */
+
+    @ObjectiveCName("init:name:")
     List(RecordHandler recordHandler, String name) {
         this.record = recordHandler.getRecord( name );
 
@@ -73,6 +77,7 @@ public class List {
      * @param recordEventsListener The listener to add
      * @return The list
      */
+    @ObjectiveCName("addRecordEventsListener:")
     public List addRecordEventsListener( RecordEventsListener recordEventsListener ) {
         this.record.addRecordEventsListener( recordEventsListener );
         return this;
@@ -83,6 +88,7 @@ public class List {
      * @param recordEventsListener The listener to remove
      * @return The list
      */
+    @ObjectiveCName("removeRecordEventsListener:")
     public List removeRecordEventsListener(RecordEventsListener recordEventsListener) {
         this.record.removeRecordEventsListener( recordEventsListener );
         return this;
@@ -109,6 +115,7 @@ public class List {
      * @param entries The recordNames to update the list with
      * @return The list
      */
+    @ObjectiveCName("setEntries:")
     public List setEntries(java.util.List<String> entries) {
         this.updateList(entries);
         return this;
@@ -119,6 +126,7 @@ public class List {
      * @param entry The entry to remove from the list
      * @return The list
      */
+    @ObjectiveCName("removeEntry:")
     public List removeEntry( String entry ) {
         Collection entries = this.getEntries();
         while( entries.contains( entry ) ) entries.remove( entry );
@@ -133,6 +141,7 @@ public class List {
      * @param index The index at which the entry should reside at
      * @return The list
      */
+    @ObjectiveCName("removeEntry:index:")
     public List removeEntry( String entry, int index ) {
         java.util.List entries = this.getEntries();
         if( entries.get( index ).equals( entry ) ) {
@@ -148,6 +157,7 @@ public class List {
      * @param entry The entry to add to the list
      * @return The list
      */
+    @ObjectiveCName("addEntry:")
     public List addEntry( String entry ) {
         java.util.List<String> entries = this.getEntries();
         entries.add( entry );
@@ -161,6 +171,7 @@ public class List {
      * @param index The index to add the entry to
      * @return The list
      */
+    @ObjectiveCName("addEntry:index:")
     public List addEntry( String entry, int index ) {
         java.util.List<String> entries = this.getEntries();
         entries.add( index, entry );
@@ -181,6 +192,7 @@ public class List {
      * @param listChangedListener The listener to add
      * @return The list
      */
+    @ObjectiveCName("subscribe:")
     public List subscribe(ListChangedListener listChangedListener) {
         return this.subscribe( listChangedListener, false );
     }
@@ -191,6 +203,7 @@ public class List {
      * @param triggerNow Whether to trigger the listener immediately
      * @return The list
      */
+    @ObjectiveCName("subscribe:triggerNow:")
     public List subscribe(ListChangedListener listChangedListener, boolean triggerNow ) {
         this.listChangedListeners.add( listChangedListener );
 
@@ -212,6 +225,7 @@ public class List {
      * @param listChangedListener The listener to remove
      * @return The list
      */
+    @ObjectiveCName("unsubscribe:")
     public List unsubscribe(ListChangedListener listChangedListener) {
         this.listChangedListeners.remove(listChangedListener);
 
@@ -262,6 +276,7 @@ public class List {
     /**
      * Useful entry point for diffing previous list and new one to get entries added, removed and moved
      */
+    @ObjectiveCName("updateList:")
     private void updateList(Collection entries) {
         Map<String, ArrayList<Integer>> oldStructure = this.beforeChange();
         this.record.set( entries );
@@ -286,6 +301,7 @@ public class List {
      * Compares the structure of the list after a change to its previous structure and notifies
      * any add / move / remove listener. Won't do anything if no listeners are attached.
      */
+    @ObjectiveCName("afterChange:")
     private void afterChange( Map<String,ArrayList<Integer>> oldStructure ) {
         if( oldStructure == null ) {
             return;
@@ -369,6 +385,7 @@ public class List {
         private final Record record;
         private Map<String, ArrayList<Integer>> beforeChange;
 
+        @ObjectiveCName("init:record:")
         RecordListeners( List list, Record record ) {
             this.list = list;
             this.record = record;
@@ -376,6 +393,7 @@ public class List {
         }
 
         @Override
+        @ObjectiveCName("onRecordChanged:data:")
         public void onRecordChanged(String recordName, JsonElement data) {
             for (ListChangedListener listChangeListener : this.list.listChangedListeners) {
                 listChangeListener.onListChanged(this.list.name(), this.list.getEntries());
