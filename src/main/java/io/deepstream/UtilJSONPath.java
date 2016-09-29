@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
@@ -11,10 +13,12 @@ import java.util.Objects;
 class UtilJSONPath {
     private JsonElement coreElement;
 
+    @ObjectiveCName("init:")
     public UtilJSONPath(JsonElement e){
         this.coreElement = e;
     }
 
+    @ObjectiveCName("iterateThrough:path:value:")
     private static JsonElement iterateThrough (JsonElement element, String path, JsonElement value) {
         String[] st = path.split( "\\." );
         JsonElement parent = null;
@@ -63,6 +67,7 @@ class UtilJSONPath {
         return traverser;
     }
 
+    @ObjectiveCName("updateValue:parent:token:")
     private static void updateValue(JsonElement value, JsonElement parent, String token) {
         if( parent.isJsonObject() ) {
             JsonObject object = (JsonObject) parent;
@@ -79,6 +84,7 @@ class UtilJSONPath {
         }
     }
 
+    @ObjectiveCName("getArrayElement:token:")
     private static JsonElement getArrayElement(JsonElement traverser,
                                                String token) {
 
@@ -94,14 +100,17 @@ class UtilJSONPath {
         }
     }
 
+    @ObjectiveCName("getTokenPrefix:")
     private static String getTokenPrefix(String token) {
         return token.substring( 0, token.indexOf( "[" ) );
     }
 
+    @ObjectiveCName("getIndex:")
     private static String getIndex(String token) {
         return token.substring(token.indexOf("[") + 1, token.indexOf("]")).trim();
     }
 
+    @ObjectiveCName("isArray:")
     private static boolean isArray(String token) {
         boolean isArray = ( token.contains("[") && token.contains("]") && (token.indexOf("[") < token.indexOf("]")));
         try {
@@ -112,6 +121,7 @@ class UtilJSONPath {
         }
     }
 
+    @ObjectiveCName("get:")
     public JsonElement get(String path) {
         if (Objects.equals(path, "") || path == null) {
             return this.coreElement;
@@ -120,6 +130,7 @@ class UtilJSONPath {
         }
     }
 
+    @ObjectiveCName("set:value:")
     public void set(String path, JsonElement value) {
         if (Objects.equals(path, "")) {
             throw new RuntimeException("Setting an entire object must be done via setValue( JsonElement value );");
@@ -134,6 +145,7 @@ class UtilJSONPath {
         return coreElement;
     }
 
+    @ObjectiveCName("setCoreElement:")
     public void setCoreElement(JsonElement coreElement) {
         this.coreElement = coreElement;
     }
@@ -142,6 +154,7 @@ class UtilJSONPath {
         private final JsonArray root;
         private JsonElement coreElement;
 
+        @ObjectiveCName("init:")
         public Array(JsonArray root) {
             this.root = root;
         }
