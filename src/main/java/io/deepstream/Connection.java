@@ -1,7 +1,10 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.List;
@@ -45,6 +48,7 @@ class Connection implements IConnection {
      * @param client The deepstream client
      * @throws URISyntaxException An exception if an invalid url is passed in
      */
+    @ObjectiveCName("init:options:client:")
     Connection(final String url, final DeepstreamConfig options, DeepstreamClient client) throws URISyntaxException {
         this( url, options, client, null );
         this.endpoint = createEndpoint();
@@ -57,6 +61,7 @@ class Connection implements IConnection {
      * @param client The deepstream client
      * @param endpoint The endpoint, whether TCP, Engine.io, mock or anything else
      */
+    @ObjectiveCName("init:options:client:endpoint:")
     Connection(final String url, final DeepstreamConfig options, DeepstreamClient client, Endpoint endpoint) {
         this.client = client;
         this.connectStateListeners = new ArrayList<>();
@@ -84,6 +89,7 @@ class Connection implements IConnection {
      * @param loginCallback The callback for a successful / unsuccessful login attempt
      * connection
      */
+    @ObjectiveCName("authenticate:loginCallback:")
     void authenticate(JsonElement authParameters, DeepstreamClient.LoginCallback loginCallback) {
         this.loginCallback = loginCallback;
         this.authParameters = authParameters;
@@ -100,6 +106,7 @@ class Connection implements IConnection {
     }
 
     @Override
+    @ObjectiveCName("send:")
     public void send( String message ) {
         if( this.connectionState != ConnectionState.OPEN ) {
             this.messageBuffer.append( message );
@@ -109,6 +116,7 @@ class Connection implements IConnection {
     }
 
     @Override
+    @ObjectiveCName("sendMsg:action:data:")
     public void sendMsg( Topic topic, Actions action, String[] data ) {
         this.send( MessageBuilder.getMsg( topic, action, data ) );
     }
@@ -127,10 +135,12 @@ class Connection implements IConnection {
         this.endpoint.send( authMessage );
     }
 
+    @ObjectiveCName("addConnectionChangeListener:")
     void addConnectionChangeListener( ConnectionStateListener connectionStateListener) {
         this.connectStateListeners.add(connectionStateListener);
     }
 
+    @ObjectiveCName("removeConnectionChangeListener:")
     void removeConnectionChangeListener( ConnectionStateListener connectionStateListener) {
         this.connectStateListeners.remove(connectionStateListener);
     }
@@ -155,6 +165,7 @@ class Connection implements IConnection {
         this.setState( ConnectionState.AWAITING_CONNECTION );
     }
 
+    @ObjectiveCName("onError:")
     void onError(final String error ) {
         this.setState( ConnectionState.ERROR );
 
@@ -170,6 +181,7 @@ class Connection implements IConnection {
         }, 1000);
     }
 
+    @ObjectiveCName("onMessage:")
     void onMessage(String rawMessage) {
         List<Message> parsedMessages = MessageParser.parse( rawMessage, this.client );
         for (final Message message : parsedMessages) {
@@ -222,6 +234,7 @@ class Connection implements IConnection {
         }
     }
 
+    @ObjectiveCName("handleConnectionResponse:")
     private void handleConnectionResponse( Message message ) {
         if( message.action == Actions.ACK ) {
             this.setState( ConnectionState.AWAITING_AUTHENTICATION );
@@ -244,6 +257,7 @@ class Connection implements IConnection {
         }
     }
 
+    @ObjectiveCName("handleAuthResponse:")
     private void handleAuthResponse( Message message ) {
         if( message.action == Actions.ERROR ) {
             if( message.data[0].equals( Event.TOO_MANY_AUTH_ATTEMPTS.name() ) ) {
@@ -274,6 +288,7 @@ class Connection implements IConnection {
         }
     }
 
+    @ObjectiveCName("setState:")
     private void setState( ConnectionState connectionState ) {
         this.connectionState = connectionState;
 

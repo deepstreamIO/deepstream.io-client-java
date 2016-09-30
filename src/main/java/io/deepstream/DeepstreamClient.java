@@ -2,6 +2,8 @@ package io.deepstream;
 
 import com.google.gson.JsonElement;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.Properties;
@@ -40,6 +42,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      *
      * @throws URISyntaxException Thrown if the url in incorrect
      */
+    @ObjectiveCName("init:")
     public DeepstreamClient(final String url) throws URISyntaxException {
         this(url, new DeepstreamConfig());
     }
@@ -49,6 +52,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      *
      * @throws URISyntaxException Thrown if the url in incorrect
      */
+    @ObjectiveCName("init:properties:")
     public DeepstreamClient(final String url, Properties options) throws URISyntaxException, InvalidDeepstreamConfig {
         this(url, new DeepstreamConfig(options));
     }
@@ -59,6 +63,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      * @param deepstreamConfig A map of options that extend the ones specified in DefaultConfig.properties
      * @throws URISyntaxException Thrown if the url in incorrect
      */
+    @ObjectiveCName("init:deepstreamConfig:")
     private DeepstreamClient(final String url, DeepstreamConfig deepstreamConfig) throws URISyntaxException {
         this.connection = new Connection(url, deepstreamConfig, this);
         this.event = new EventHandler(deepstreamConfig, this.connection, this);
@@ -72,6 +77,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      *
      * @param deepstreamRuntimeErrorHandler The listener to set
      */
+    @ObjectiveCName("setRuntimeErrorHandler:")
     public void setRuntimeErrorHandler( DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler )  {
         super.setRuntimeErrorHandler( deepstreamRuntimeErrorHandler );
     }
@@ -111,18 +117,21 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      * @param authParams JSON.serializable authentication data
      * @return The login result
      */
+    @ObjectiveCName("login:")
     public LoginResult login(JsonElement authParams) {
         final CountDownLatch loggedInLatch = new CountDownLatch(1);
         final LoginResult[] loginResult = new LoginResult[1];
 
         this.connection.authenticate(authParams, new LoginCallback() {
             @Override
+            @ObjectiveCName("loginSuccess:")
             public void loginSuccess(Map userData) {
                 loginResult[0] = new LoginResult(true, userData);
                 loggedInLatch.countDown();
             }
 
             @Override
+            @ObjectiveCName("loginFailed:data:")
             public void loginFailed(Event errorEvent, Object data) {
                 loginResult[0] = new LoginResult(false, errorEvent, data);
                 loggedInLatch.countDown();
@@ -153,6 +162,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      * @param connectionStateListener The listener to add
      * @return The deepstream client
      */
+    @ObjectiveCName("addConnectionChangeListener:")
     public DeepstreamClient addConnectionChangeListener( ConnectionStateListener connectionStateListener) {
         this.connection.addConnectionChangeListener(connectionStateListener);
         return this;
@@ -163,6 +173,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      * @param connectionStateListener The listener to remove
      * @return The deepstream client
      */
+    @ObjectiveCName("removeConnectionChangeListener:")
     public DeepstreamClient removeConnectionChangeListener( ConnectionStateListener connectionStateListener) {
         this.connection.removeConnectionChangeListener(connectionStateListener);
         return this;
@@ -201,6 +212,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
          *
          * @param userData Optional data that is specific to the user and returned on succesfuly authentication
          */
+        @ObjectiveCName("loginSuccess:")
         void loginSuccess(Map userData);
 
         /**
@@ -209,6 +221,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
          * @param errorEvent error event
          * @param data       Contains data associated to the failed login, such as the reason
          */
+        @ObjectiveCName("loginFailed:data:")
         void loginFailed(Event errorEvent, Object data);
     }
 }

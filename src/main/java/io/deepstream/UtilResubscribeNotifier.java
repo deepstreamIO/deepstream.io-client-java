@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 /**
  * Makes sure that all functionality is resubscribed on reconnect. Subscription is called
  * when the connection drops - which seems counterintuitive, but in fact just means
@@ -20,6 +22,7 @@ class UtilResubscribeNotifier implements ConnectionStateListener {
      * @param client the client to listen to connection state changes on
      * @param callback the resubscribe callback
      */
+    @ObjectiveCName("init:callback:")
     public UtilResubscribeNotifier(DeepstreamClientAbstract client, UtilResubscribeListener callback) {
         this.client = client;
         this.resubscribe = callback;
@@ -41,6 +44,7 @@ class UtilResubscribeNotifier implements ConnectionStateListener {
      * @see ConnectionStateListener
      */
     @Override
+    @ObjectiveCName("connectionStateChanged:")
     public void connectionStateChanged(ConnectionState state) {
         if( state == ConnectionState.RECONNECTING && !this.isReconnecting) {
                 this.isReconnecting = true;

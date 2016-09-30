@@ -1,5 +1,6 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
 
 import com.google.gson.JsonElement;
 
@@ -32,6 +33,7 @@ public class RecordHandler {
      * @param connection The connection
      * @param client The deepstream client
      */
+    @ObjectiveCName("init:connection:client:")
     RecordHandler(DeepstreamConfig deepstreamConfig, IConnection connection, DeepstreamClientAbstract client) {
         this.deepstreamConfig = deepstreamConfig;
         this.connection = connection;
@@ -52,6 +54,7 @@ public class RecordHandler {
      * @param name The name of the record to get
      * @return Record The record
      */
+    @ObjectiveCName("getRecord:")
     public Record getRecord( String name ) {
         Record record = records.get( name );
         if( record == null ) {
@@ -90,6 +93,7 @@ public class RecordHandler {
      * @param name The name of the list to retrieve
      * @return List The List
      */
+    @ObjectiveCName("getList:")
     public List getList( String name ) {
         List list = lists.get( name );
         if( list == null ) {
@@ -126,6 +130,7 @@ public class RecordHandler {
      * @param pattern The pattern to match all records your interested in
      * @param listenCallback The listen callback when a match has been found or removed.
      */
+    @ObjectiveCName("listen:listenCallback:")
     public void listen( String pattern, ListenListener listenCallback ) {
         if( listeners.containsKey( pattern ) ) {
             client.onError( Topic.RECORD, Event.LISTENER_EXISTS, pattern );
@@ -143,6 +148,7 @@ public class RecordHandler {
      *
      * @param pattern The pattern to stop listening to
      */
+    @ObjectiveCName("unlisten:")
     public void unlisten( String pattern ) {
         UtilListener listener = listeners.get( pattern );
         if( listener != null ) {
@@ -160,6 +166,7 @@ public class RecordHandler {
      *
      * @param name The name of the record which state to retrieve
      */
+    @ObjectiveCName("snapshot:")
     public JsonElement snapshot(String name) throws DeepstreamError {
         final JsonElement[] data = new JsonElement[1];
         final DeepstreamError[] deepstreamException = new DeepstreamError[1];
@@ -173,12 +180,14 @@ public class RecordHandler {
 
             snapshotRegistry.request(name, new UtilSingleNotifier.UtilSingleNotifierCallback() {
                 @Override
+                @ObjectiveCName("onSingleNotifierError:error:")
                 public void onSingleNotifierError(String name, DeepstreamError error) {
                     deepstreamException[0] = error;
                     snapshotLatch.countDown();
                 }
 
                 @Override
+                @ObjectiveCName("onSingleNotifierResponse:recordData:")
                 public void onSingleNotifierResponse(String name, Object recordData) {
                     data[0] = (JsonElement) recordData;
                     snapshotLatch.countDown();
@@ -207,6 +216,7 @@ public class RecordHandler {
      *
      * @param name The name of the record to check
      */
+    @ObjectiveCName("has:")
     public boolean has(String name) throws DeepstreamError {
         final DeepstreamError[] deepstreamException = new DeepstreamError[1];
         final boolean[] hasRecord = new boolean[1];
@@ -219,12 +229,14 @@ public class RecordHandler {
 
             hasRegistry.request(name, new UtilSingleNotifier.UtilSingleNotifierCallback() {
                 @Override
+                @ObjectiveCName("onSingleNotifierError:error:")
                 public void onSingleNotifierError(String name, DeepstreamError error) {
                     deepstreamException[0] = error;
                     hasLatch.countDown();
                 }
 
                 @Override
+                @ObjectiveCName("onSingleNotifierResponse:data:")
                 public void onSingleNotifierResponse(String name, Object data) {
                     hasRecord[0] = (boolean) data;
                     hasLatch.countDown();
@@ -249,6 +261,7 @@ public class RecordHandler {
     /**
      * Will be called by the client for incoming messages on the RECORD topic
      */
+    @ObjectiveCName("handle:")
     protected void handle( Message message ) {
         Record record;
         boolean processed = false;
@@ -320,6 +333,7 @@ public class RecordHandler {
      * A (presumably unsolvable) problem remains when a client deletes a record in the exact moment
      * between another clients creation and read message for the same record
      */
+    @ObjectiveCName("isDiscardAck:")
     private boolean isDiscardAck( Message message ) {
         Event event = Event.getEvent( message.data[ 0 ] );
         if( event == Event.MESSAGE_DENIED && Actions.getAction(message.data[ 2 ] ) == Actions.DELETE ) {
@@ -331,6 +345,7 @@ public class RecordHandler {
         return action == Actions.DELETE || action == Actions.UNSUBSCRIBE;
     }
 
+    @ObjectiveCName("isUnhandledError:")
     private Boolean isUnhandledError(Message message) {
         if( message.action != Actions.ERROR ) {
             return false;
@@ -353,11 +368,13 @@ public class RecordHandler {
         }
 
         @Override
+        @ObjectiveCName("onError:errorType:errorMessage:")
         public void onError(String recordName, Event errorType, String errorMessage) {
             client.onError(Topic.RECORD, errorType, recordName + ":" + errorMessage);
         }
 
         @Override
+        @ObjectiveCName("onRecordHasProviderChanged:hasProvider:")
         public void onRecordHasProviderChanged(String recordName, boolean hasProvider) {
 
         }
@@ -369,6 +386,7 @@ public class RecordHandler {
          * removed from the cache straight awy and will only listen for one last ACK message
          */
         @Override
+        @ObjectiveCName("onDestroyPending:")
         public void onDestroyPending(final String recordName) {
             //TODO:
             /*destroyEventEmitter.on( "destroy_ack_" + recordName, new Emitter.Listener() {
@@ -382,11 +400,13 @@ public class RecordHandler {
         }
 
         @Override
+        @ObjectiveCName("onRecordDeleted:")
         public void onRecordDeleted(String recordName) {
             onRecordDiscarded(recordName);
         }
 
         @Override
+        @ObjectiveCName("onRecordDiscarded:")
         public void onRecordDiscarded(String recordName) {
             records.remove(recordName);
             lists.remove(recordName);

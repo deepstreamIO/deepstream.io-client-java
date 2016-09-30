@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 import com.google.gson.JsonElement;
 
 /**
@@ -24,5 +26,6 @@ public interface RecordMergeStrategy {
      * @throws RecordMergeStrategyException Thrown if a merge conflict occurs, mainly if any dependent logic doesn't work.
      *
      */
+    @ObjectiveCName("merge:remoteValue:remoteVersion:")
     JsonElement merge(Record record, JsonElement remoteValue, int remoteVersion ) throws RecordMergeStrategyException;
 }

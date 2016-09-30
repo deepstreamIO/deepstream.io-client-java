@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 import java.util.Map;
 import java.util.concurrent.*;
 
@@ -17,6 +19,7 @@ class UtilAckTimeoutRegistry implements ConnectionStateListener, UtilTimeoutList
      *
      * @param client The client it sends errors to
      */
+    @ObjectiveCName("init:")
     UtilAckTimeoutRegistry(DeepstreamClientAbstract client) {
         this.client = client;
         this.register = new ConcurrentHashMap<>();
@@ -32,6 +35,7 @@ class UtilAckTimeoutRegistry implements ConnectionStateListener, UtilTimeoutList
      *
      * @param message The message received to remove the ack timer for
      */
+    @ObjectiveCName("clear:")
     void clear( Message message ) {
         Actions action;
         String name;
@@ -51,8 +55,11 @@ class UtilAckTimeoutRegistry implements ConnectionStateListener, UtilTimeoutList
 
     /**
      * Clears the ack timeout for a message.
-
+     *
+     * @param name The name to be added to the register
+     * @param action The action to be added to the register
      */
+    @ObjectiveCName("clear:action:name:")
     void clear(  Topic topic, Actions action, String name ) {
         String uniqueName = this.getUniqueName( topic, action, name );
         this.clear( uniqueName );
@@ -65,6 +72,7 @@ class UtilAckTimeoutRegistry implements ConnectionStateListener, UtilTimeoutList
      * @param name The name to be added to the register
      * @param action The action to be added to the register
      */
+    @ObjectiveCName("add:action:name:event:timeout:")
     void add( Topic topic, Actions action, String name, Event event, int timeout ) {
         this.add( topic, action, name, event, this, timeout );
     }
@@ -76,6 +84,7 @@ class UtilAckTimeoutRegistry implements ConnectionStateListener, UtilTimeoutList
      * @param name The name to be added to the register
      * @param action The action to be added to the register
      */
+    @ObjectiveCName("add:action:name:timeout:")
     void add( Topic topic, Actions action, String name, int timeout ) {
         this.add( topic, action, name, Event.ACK_TIMEOUT, this, timeout );
     }
@@ -87,6 +96,7 @@ class UtilAckTimeoutRegistry implements ConnectionStateListener, UtilTimeoutList
      * @param name The name to be added to the register
      * @param action The action to be added to the register
      */
+    @ObjectiveCName("add:action:name:event:timeoutListener:timeout:")
     void add(Topic topic, Actions action, String name, Event event, UtilTimeoutListener timeoutListener, int timeout ) {
         String uniqueName = this.getUniqueName( topic, action, name );
         this.clear( uniqueName );
@@ -95,6 +105,7 @@ class UtilAckTimeoutRegistry implements ConnectionStateListener, UtilTimeoutList
     }
 
     @Override
+    @ObjectiveCName("connectionStateChanged:")
     public void connectionStateChanged(ConnectionState connectionState) {
         if( connectionState == ConnectionState.OPEN ) {
             scheduleAcks();
@@ -107,6 +118,7 @@ class UtilAckTimeoutRegistry implements ConnectionStateListener, UtilTimeoutList
      *
      * @param uniqueName The name of the message ( and possible action ) to remove the timeout for
      */
+    @ObjectiveCName("clearWithUniqueName:")
     private boolean clear( String uniqueName ) {
         ScheduledFuture scheduledFuture = register.get( uniqueName );
         if( scheduledFuture != null ) {
@@ -122,6 +134,7 @@ class UtilAckTimeoutRegistry implements ConnectionStateListener, UtilTimeoutList
      * Adds the uniqueName to the register. Only schedules the timer if
      * the connection state is OPEN, otherwise it adds to the queue of waiting acks.
      */
+    @ObjectiveCName("addToRegister:action:name:event:timeoutListener:timeoutDuration:")
     private void addToRegister(Topic topic, Actions action, String name, Event event, UtilTimeoutListener timeoutListener, int timeoutDuration ) {
         AckTimeout task = new AckTimeout( topic, action, name, event, timeoutListener, timeoutDuration );
 
@@ -136,6 +149,7 @@ class UtilAckTimeoutRegistry implements ConnectionStateListener, UtilTimeoutList
     }
 
     @Override
+    @ObjectiveCName("onTimeout:action:event:name:")
     public void onTimeout(Topic topic, Actions action, Event event, String name ) {
         String uniqueName = this.getUniqueName( topic, action, name );
         this.register.remove( uniqueName );
@@ -157,6 +171,7 @@ class UtilAckTimeoutRegistry implements ConnectionStateListener, UtilTimeoutList
         }
     }
 
+    @ObjectiveCName("getUniqueName:action:name:")
     private String getUniqueName( Topic topic, Actions action, String name ) {
         return topic.toString() + action.toString() + name;
     }
@@ -169,6 +184,7 @@ class UtilAckTimeoutRegistry implements ConnectionStateListener, UtilTimeoutList
         private final Event event;
         private final int timeout;
 
+        @ObjectiveCName("init:action:name:event:timeoutListener:timeout:")
         AckTimeout(Topic topic, Actions action, String name, Event event, UtilTimeoutListener timeoutListener, int timeout ) {
             this.topic = topic;
             this.action = action;

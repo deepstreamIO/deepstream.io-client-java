@@ -1,5 +1,6 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
 
 class Rpc implements UtilTimeoutListener {
 
@@ -21,6 +22,7 @@ class Rpc implements UtilTimeoutListener {
      * @param uid The unique RPC identifier
      * @param callback The callback when an RPC has been completed
      */
+    @ObjectiveCName("init:client:rpcName:uid:callback:")
     Rpc(DeepstreamConfig deepstreamConfig, DeepstreamClientAbstract client, String rpcName, String uid, RpcHandler.RpcResponseCallback callback) {
         this.deepstreamConfig = deepstreamConfig;
         this.client = client;
@@ -44,6 +46,7 @@ class Rpc implements UtilTimeoutListener {
      * @param rpcName The rpc name
      * @param data The data received from the server
      */
+    @ObjectiveCName("respond:data:")
     void respond( String rpcName, String data ) {
         Object convertedData = MessageParser.convertTyped( data, this.client );
         this.callback.onRpcSuccess(rpcName, convertedData);
@@ -58,12 +61,14 @@ class Rpc implements UtilTimeoutListener {
      * @param rpcName The rpc name
      * @param err The errorMessage received from the server
      */
+    @ObjectiveCName("error:err:")
     void error( String rpcName, String err ) {
         this.callback.onRpcError(rpcName, err);
         this.clearTimeouts();
     }
 
     @Override
+    @ObjectiveCName("onTimeout:action:event:name:")
     public void onTimeout(Topic topic, Actions action, Event event, String name) {
         this.error( this.rpcName, event.toString() );
     }

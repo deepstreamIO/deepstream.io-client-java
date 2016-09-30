@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 /**
  * A listener that will be notified whenever the ConnectionState changes. Can be added via
  * {@link DeepstreamClient#addConnectionChangeListener(ConnectionStateListener)} and removed via
@@ -12,5 +14,6 @@ public interface ConnectionStateListener {
      * the connection drops.
      * @param connectionState The current connection state
      */
+    @ObjectiveCName("connectionStateChanged:")
     void connectionStateChanged(ConnectionState connectionState );
 }

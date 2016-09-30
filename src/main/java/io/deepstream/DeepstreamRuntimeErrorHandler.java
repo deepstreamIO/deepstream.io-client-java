@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 /**
  * The expectations would be for java clients to implement this and add it
  * via the *setDeepstreamRuntimeErrorHandler* handler in order to catch all
@@ -20,5 +22,6 @@ public interface DeepstreamRuntimeErrorHandler {
      * @param event The Error Event
      * @param errorMessage The error message
      */
+    @ObjectiveCName("onException:event:errorMessage:")
     void onException(Topic topic, Event event, String errorMessage);
 }

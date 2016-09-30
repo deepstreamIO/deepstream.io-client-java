@@ -36,20 +36,27 @@ sourceSets {
 
 dependencies {
     compile 'com.google.code.gson:gson:2.6.2'
+    compile 'com.google.j2objc:j2objc-annotations:1.1'
 
     testCompile group: 'junit', name: 'junit', version: '4.11'
     testCompile "org.mockito:mockito-core:1.+"
 }
 
 j2objcConfig {
-    // Sets up libraries you depend on
     skipJ2objcVerification true
     autoConfigureDeps true
     supportedArchs += ['ios_i386']
     testPattern {
         include '**/*Test.java'
     }
-    finalConfigure()          // Must be last call to configuration
+
+    translateArgs "--no-package-directories", "-use-arc", "--build-closure", "--nullability"
+    translateArgs "--strip-gwt-incompatible"
+    translateArgs "--prefixes", "${projectDir}/prefixes.properties"
+    translateArgs "--doc-comments"
+
+    extraObjcCompilerArgs '-fobjc-arc', '-fembed-bitcode'
+    finalConfigure() // Must be last call to configuration
 }
 
 group 'io.deepstream'

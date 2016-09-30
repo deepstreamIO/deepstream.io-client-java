@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -17,6 +19,7 @@ class UtilListener implements UtilResubscribeNotifier.UtilResubscribeListener {
 
     private ExecutorService executorService;
 
+    @ObjectiveCName("init:pattern:listenerCallback:deepstreamConfig:client:connection:")
     public UtilListener(Topic topic, String pattern, ListenListener listenerCallback, DeepstreamConfig deepstreamConfig, DeepstreamClientAbstract client, IConnection connection) {
         this.topic = topic;
         this.pattern = pattern;
@@ -47,6 +50,7 @@ class UtilListener implements UtilResubscribeNotifier.UtilResubscribeListener {
         this.ackTimoutRegistry = null;
     }
 
+    @ObjectiveCName("onMessage:")
     public void onMessage(final Message message) {
         if( message.action.equals( Actions.ACK ) ) {
             this.ackTimoutRegistry.clear( message );
@@ -68,10 +72,12 @@ class UtilListener implements UtilResubscribeNotifier.UtilResubscribeListener {
         this.connection.sendMsg( this.topic, Actions.LISTEN, new String[] { this.pattern } );
     }
 
+    @ObjectiveCName("sendAccept:")
     private void sendAccept(String subscription) {
         this.connection.sendMsg(this.topic, Actions.LISTEN_ACCEPT, new String[]{this.pattern, subscription});
     }
 
+    @ObjectiveCName("sendReject:")
     private void sendReject(String subscription) {
         this.connection.sendMsg(this.topic, Actions.LISTEN_REJECT, new String[]{this.pattern, subscription});
     }

@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -12,10 +14,12 @@ class MessageBuilder {
     static private final String MPS = Character.toString( '\u001f' );
     static private final String MS = Character.toString( '\u001e' );
 
+    @ObjectiveCName("getMsg:action:name:data:")
     public static String getMsg( Topic topic, Actions action, String name, String data ) {
         return topic.toString() + MPS + action.toString() + MPS + name + MPS +  data + MS;
     }
 
+    @ObjectiveCName("getMsg:action:data:")
     public static String getMsg( Topic topic, Actions action, String data ) {
         return topic.toString() + MPS + action.toString() + MPS +  data + MS;
     }
@@ -24,6 +28,7 @@ class MessageBuilder {
         return topic.toString() + MPS + action.toString() + MPS + join( data) + MS;
     }
 
+    @ObjectiveCName("getMsg:action:")
     public static String getMsg( Topic topic, Actions action ) {
         return topic.toString() + MPS + action.toString() + MS;
     }
@@ -63,6 +68,7 @@ class MessageBuilder {
      * @param list A list of messages
      * @return A string representation of messages joined together
      */
+    @ObjectiveCName("join:")
     private static String join(String[] list) {
 
         StringBuilder sb = new StringBuilder();

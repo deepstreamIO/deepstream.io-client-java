@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 import com.google.gson.JsonElement;
 
 import java.util.HashMap;
@@ -33,6 +35,7 @@ class RecordMergeStrategies {
      * @param mergeStrategy The merge strategy enum defined in {@link MergeStrategy}
      * @return The {@link RecordMergeStrategy}
      */
+    @ObjectiveCName("getMergeStrategy:")
     public RecordMergeStrategy getMergeStrategy(MergeStrategy mergeStrategy) {
         return strategies.get(mergeStrategy);
     }

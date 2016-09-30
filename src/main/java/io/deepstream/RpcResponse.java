@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 /**
  * This object provides a number of methods that allow a rpc provider
  * to respond to a request
@@ -21,6 +23,7 @@ public class RpcResponse {
      * @param name          the name of the rpc
      * @param correlationId the correlationId for the RPC
      */
+    @ObjectiveCName("init:name:correlationId:")
     RpcResponse(IConnection connection, String name, String correlationId) {
         this.connection = connection;
         this.name = name;
@@ -65,6 +68,7 @@ public class RpcResponse {
      *
      * @param data the data send by the provider. Has to be JsonSerializable
      */
+    @ObjectiveCName("send:")
     public void send(Object data) {
         if (this.isComplete) {
             throw new DeepstreamException("Rpc " + this.name + " already completed");
@@ -82,6 +86,7 @@ public class RpcResponse {
      *
      * @param errorMsg the message used to describe the error that occured
      */
+    @ObjectiveCName("error:")
     public void error(String errorMsg) {
         this.isComplete = true;
         this.isAcknowledged = true;
