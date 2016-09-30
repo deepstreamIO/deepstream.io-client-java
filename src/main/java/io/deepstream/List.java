@@ -241,6 +241,7 @@ public class List {
      * @param listEntryChangedListener The listener to add
      * @return The list
      */
+    @ObjectiveCName("subscribeWithListEntryChangedListener:")
     public List subscribe(ListEntryChangedListener listEntryChangedListener) {
         this.listEntryChangedListeners.add(listEntryChangedListener);
 
@@ -256,6 +257,7 @@ public class List {
      * @param listEntryChangedListener The listener to remove
      * @return The list
      */
+    @ObjectiveCName("unsubscribeWithListEntryChangedListener:")
     public List unsubscribe(ListEntryChangedListener listEntryChangedListener) {
         this.listEntryChangedListeners.remove(listEntryChangedListener);
 
