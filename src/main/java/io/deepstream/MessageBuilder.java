@@ -24,6 +24,7 @@ class MessageBuilder {
         return topic.toString() + MPS + action.toString() + MPS +  data + MS;
     }
 
+    @ObjectiveCName("getMsg:action:dataArray:")
     public static String getMsg( Topic topic, Actions action, String[] data ) {
         return topic.toString() + MPS + action.toString() + MPS + join( data) + MS;
     }
@@ -39,6 +40,7 @@ class MessageBuilder {
      * @param value The value to serialised
      * @return string representation of the value
      */
+    @ObjectiveCName("typed:")
     public static String typed( Object value ) {
         if( value instanceof String ) {
             return Types.STRING.toString() + value;
