@@ -34,7 +34,7 @@ class DeepstreamConfig {
     }
 
     EndpointType getEndpointType() {
-        return EndpointType.getEndpointType(getOption(ConfigOptions.ENDPOINT_TYPE, EndpointType.TCP.toString()));
+        return EndpointType.getEndpointType(getOption(ConfigOptions.ENDPOINT_TYPE, EndpointType.WEBSOCKET.toString()));
     }
 
     int getReconnectIntervalIncrement() {

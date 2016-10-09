@@ -9,15 +9,13 @@ import java.util.Map;
  */
 public enum EndpointType {
     /**
-     * TCP connection is used for connections with large amounts of data and no
-     * requirement for websocket/http protocol
+     * TCP connection is deprecated
      */
     TCP("tcp"),
     /**
-     * EngineIO is to be used for connections that have multiple firewalls ( with access only to http ports )
-     * and for fallbacks to http polling mechanisms
+     * Websockets is the only type of transport supported going forward
      */
-    ENGINEIO("engineio");
+    WEBSOCKET("websocket");
 
     private static final Map<String, EndpointType> lookup = new HashMap<>();
 

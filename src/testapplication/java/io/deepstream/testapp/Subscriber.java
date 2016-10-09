@@ -18,7 +18,6 @@ public class Subscriber {
     static class SubscriberApplication {
 
         SubscriberApplication() throws InvalidDeepstreamConfig {
-
             try {
                 JsonObject authData = new JsonObject();
                 authData.addProperty("username", "Yasser");
@@ -28,7 +27,7 @@ public class Subscriber {
                 config.put(ConfigOptions.RECORD_READ_ACK_TIMEOUT.toString(), 500);
                 config.put(ConfigOptions.RECORD_READ_TIMEOUT.toString(), 500);
 
-                DeepstreamClient client = new DeepstreamClient("localhost:6021", config);
+                DeepstreamClient client = new DeepstreamClient("ws://localhost:6020/deepstream", config);
                 subscribeConnectionChanges(client);
                 subscribeRuntimeErrors(client);
 

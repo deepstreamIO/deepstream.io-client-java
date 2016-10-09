@@ -108,6 +108,7 @@ class Connection implements IConnection {
     @Override
     @ObjectiveCName("send:")
     public void send( String message ) {
+        System.out.println( this.endpoint );
         if( this.connectionState != ConnectionState.OPEN ) {
             this.messageBuffer.append( message );
         } else {
@@ -132,6 +133,7 @@ class Connection implements IConnection {
         } else {
             authMessage = MessageBuilder.getMsg(Topic.AUTH, Actions.REQUEST, authParameters.toString());
         }
+        System.out.println( this.endpoint );
         this.endpoint.send( authMessage );
     }
 
@@ -150,6 +152,7 @@ class Connection implements IConnection {
     }
 
     public void close() {
+
         this.deliberateClose = true;
         if( this.endpoint != null ) {
             endpoint.close();
@@ -306,10 +309,13 @@ class Connection implements IConnection {
 
         if (options.getEndpointType().equals(EndpointType.TCP)) {
             endpoint = new EndpointTCP( url, options, this );
-            this.endpoint = endpoint;
-        } else if (options.getEndpointType().equals(EndpointType.ENGINEIO)) {
-            System.out.println( "EngineIO doesn't transpile" );
+        } else if (options.getEndpointType().equals(EndpointType.WEBSOCKET)) {
+            endpoint = new EndpointWebsocketJava( url, options, this );
+            endpoint.open();
+        } else {
+            throw new URISyntaxException("This isn't actually a URI Sytnax Exception", "A second string");
         }
+
         return endpoint;
     }
 

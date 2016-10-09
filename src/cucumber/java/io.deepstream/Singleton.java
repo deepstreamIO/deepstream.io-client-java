@@ -48,6 +48,7 @@ class Singleton {
 
         System.out.println( "Creating new client" );
         Properties options = new Properties();
+        options.put("endpointType", "tcp");
         options.put("subscriptionTimeout", "150");
         options.put("recordReadAckTimeout", "150");
         options.put("recordReadTimeout", "1000");

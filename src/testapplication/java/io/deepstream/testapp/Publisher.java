@@ -20,7 +20,7 @@ public class Publisher {
                 JsonObject authData = new JsonObject();
                 authData.addProperty("username", "Publisher");
 
-                DeepstreamClient client = new DeepstreamClient("localhost:6021");
+                DeepstreamClient client = new DeepstreamClient("ws://localhost:6020");
                 subscribeConnectionChanges(client);
                 subscribeRuntimeErrors(client);
 

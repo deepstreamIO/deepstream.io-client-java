@@ -180,6 +180,21 @@ public class List {
     }
 
     /**
+     * Discard the List. This should be called whenever you are done with the List retrieved by {@link RecordHandler#getList(String)}.
+     * This does not guarantee that your subscriptions have been unsubscribed, so make sure to do that first!<br/>
+     *
+     * If all usages of the same List have been discarded, the List will no longer be updated from the server and
+     * any further usages will require the List to be retrieved again via {@link RecordHandler#getList(String)}<br/>
+     *
+     * @return The list
+     * @throws DeepstreamRecordDestroyedException Thrown if the list has been destroyed and can't perform more actions
+     */
+    public List discard() {
+        this.record.discard();
+        return this;
+    }
+
+    /**
      * Returns true if the list is empty
      * @return true if this list contains no elements
      */
