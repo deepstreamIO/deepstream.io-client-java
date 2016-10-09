@@ -1,0 +1,3 @@
+[submodule "src/cucumber/resources"]
+	path = src/cucumber/resources
+	url = https://github.com/deepstreamIO/deepstream.io-client-specs.git
