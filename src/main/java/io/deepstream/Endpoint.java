@@ -3,9 +3,8 @@ package io.deepstream;
 import com.google.j2objc.annotations.ObjectiveCName;
 
 /**
- * The interface required for any connection endpoints. Currently we support {@link EndpointType#ENGINEIO}
- * and {@link EndpointType#TCP}. Adding a custom endpoint would require you to fork the repo and can't
- * be injected.
+ * The interface required for any connection endpoints. Currently we support {@link EndpointType#WEBSOCKET}
+ * and {@link EndpointType#TCP} but will be dropping TCP in upcoming releases.
  */
 interface Endpoint {
     /**

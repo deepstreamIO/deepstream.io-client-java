@@ -10,8 +10,13 @@ import java.util.Properties;
  */
 public enum ConfigOptions {
     /**
-     * A {@link EndpointType}, currently either TCP or EngineIO
-     * Defaults to TCP
+     * Default path to use when connection using websockets
+     * Defaults to /deepstream
+     */
+    PATH("path"),
+    /**
+     * A {@link EndpointType}, currently either TCP or Websockets
+     * Defaults to Websocket
      */
     ENDPOINT_TYPE("endpointType"),
     /**

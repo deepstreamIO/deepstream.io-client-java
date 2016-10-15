@@ -16,6 +16,7 @@ class DeepstreamConfig {
         this.properties = properties;
 
         try {
+            this.getPath();
             this.getEndpointType();
             this.getReconnectIntervalIncrement();
             this.getMaxReconnectAttempts();
@@ -31,6 +32,10 @@ class DeepstreamConfig {
             throw new InvalidDeepstreamConfig();
         }
 
+    }
+
+    String getPath() {
+        return getOption(ConfigOptions.PATH, "/deepstream");
     }
 
     EndpointType getEndpointType() {
@@ -91,4 +96,5 @@ class DeepstreamConfig {
             return defaultValue;
         }
     }
+
 }
