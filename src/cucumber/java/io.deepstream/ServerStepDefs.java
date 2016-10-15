@@ -5,6 +5,8 @@ import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
 import org.junit.Assert;
 
+import java.util.ArrayList;
+
 public class ServerStepDefs {
 
     private final char MPS =  '\u001f';
@@ -14,8 +16,8 @@ public class ServerStepDefs {
     int server2Port;
     Context context;
     String clientUid;
-    private MockTcpServer server;
-    private MockTcpServer server2;
+    private MockWebSocketServer server;
+    private MockWebSocketServer server2;
 
     public ServerStepDefs( Context context ) {
         this.context = context;
@@ -44,7 +46,6 @@ public class ServerStepDefs {
 
     @Then("^the server sends the message (.*?)$")
     public void The_server_sends_the_message(String message) throws Throwable {
-        System.out.println("Sending message " + message);
         if( message.contains( "<UID>" ) ) {
             message = message.replace( "<UID>", clientUid );
         }
@@ -62,7 +63,6 @@ public class ServerStepDefs {
     public void The_last_message_the_server_received_is( String message ) {
         String lastMsg = context.recieveMessage( server.getLastMessage() );
         message = context.recieveMessage( message );
-        System.out.println( "Server Received: " + message + " " + lastMsg );
         if (!lastMsg.equals(message)) {
             Assert.assertTrue( "Expected \n\t'" + lastMsg + "' to match \n\t'" + message + "'", lastMsg.matches( message ) );
         }
@@ -70,7 +70,8 @@ public class ServerStepDefs {
 
     @Then("^the server received the message (.*?)$")
     public void server_received_message( String message ) throws InterruptedException {
-        for ( String msg : server.messages) {
+        ArrayList<String> messages = server.getMessages();
+        for ( String msg : messages) {
             if( msg.matches(context.recieveMessage( message )) ) {
                 Assert.assertTrue( true );
                 return;
@@ -80,7 +81,7 @@ public class ServerStepDefs {
             }
         }
 
-        Assert.assertTrue( "Expected " + context.recieveMessage( message ) + " from " + server.messages, false );
+        Assert.assertTrue( "Expected " + context.recieveMessage( message ) + " from " + messages, false );
     }
 
     @Then("^the last message the second server recieved is (.*?)$")

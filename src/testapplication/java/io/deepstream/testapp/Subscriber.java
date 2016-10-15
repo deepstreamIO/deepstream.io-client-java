@@ -27,7 +27,7 @@ public class Subscriber {
                 config.put(ConfigOptions.RECORD_READ_ACK_TIMEOUT.toString(), 500);
                 config.put(ConfigOptions.RECORD_READ_TIMEOUT.toString(), 500);
 
-                DeepstreamClient client = new DeepstreamClient("ws://localhost:6020/deepstream", config);
+                DeepstreamClient client = new DeepstreamClient("localhost:6020/deepstream?appid=bob", config);
                 subscribeConnectionChanges(client);
                 subscribeRuntimeErrors(client);
 

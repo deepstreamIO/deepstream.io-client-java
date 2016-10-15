@@ -12,8 +12,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Establishes a connection to a deepstream server, either
- * using TCP or engine.io.
+ * Establishes a connection to a deepstream server via websockets.
  */
 class Connection implements IConnection {
 
@@ -59,7 +58,7 @@ class Connection implements IConnection {
      * and messages
      * @param url The endpoint url* @param options The options used to initialise the deepstream client
      * @param client The deepstream client
-     * @param endpoint The endpoint, whether TCP, Engine.io, mock or anything else
+     * @param endpoint The endpoint
      */
     @ObjectiveCName("init:options:client:endpoint:")
     Connection(final String url, final DeepstreamConfig options, DeepstreamClient client, Endpoint endpoint) {
@@ -108,7 +107,6 @@ class Connection implements IConnection {
     @Override
     @ObjectiveCName("send:")
     public void send( String message ) {
-        System.out.println( this.endpoint );
         if( this.connectionState != ConnectionState.OPEN ) {
             this.messageBuffer.append( message );
         } else {
@@ -133,7 +131,6 @@ class Connection implements IConnection {
         } else {
             authMessage = MessageBuilder.getMsg(Topic.AUTH, Actions.REQUEST, authParameters.toString());
         }
-        System.out.println( this.endpoint );
         this.endpoint.send( authMessage );
     }
 
@@ -305,17 +302,8 @@ class Connection implements IConnection {
     }
 
     private Endpoint createEndpoint() throws URISyntaxException {
-        Endpoint endpoint = null;
-
-        if (options.getEndpointType().equals(EndpointType.TCP)) {
-            endpoint = new EndpointTCP( url, options, this );
-        } else if (options.getEndpointType().equals(EndpointType.WEBSOCKET)) {
-            endpoint = new EndpointWebsocketJava( url, options, this );
-            endpoint.open();
-        } else {
-            throw new URISyntaxException("This isn't actually a URI Sytnax Exception", "A second string");
-        }
-
+        Endpoint endpoint = endpoint = new EndpointWebsocket( url, options, this );
+        endpoint.open();
         return endpoint;
     }
 

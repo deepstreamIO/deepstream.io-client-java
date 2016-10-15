@@ -9,8 +9,8 @@ class Singleton {
     private int serverPort = 7777;
     private int server2port = 8888;
     private String lastErrorMessage;
-    private MockTcpServer server = new MockTcpServer( serverPort );
-    private MockTcpServer server2 = new MockTcpServer( server2port );
+    private MockWebSocketServer server = new MockWebSocketServer( serverPort );
+    private MockWebSocketServer server2 = new MockWebSocketServer( server2port );
     private DeepstreamClient client;
 
     private Singleton() {
@@ -20,22 +20,21 @@ class Singleton {
         if( singleton != null ) {
             return singleton;
         }
-        System.out.println( "New Singleton" );
         singleton = new Singleton();
         return singleton;
     }
 
-    MockTcpServer getServer1() {
+    MockWebSocketServer getServer1() {
         return this.server;
     }
 
-    MockTcpServer getServer2() {
+    MockWebSocketServer getServer2() {
         return this.server2;
     }
 
-    MockTcpServer getNewServer1() {
+    MockWebSocketServer getNewServer1() {
         this.server.close();
-        this.server = new MockTcpServer( serverPort );
+        this.server = new MockWebSocketServer( serverPort );
         return this.server;
     }
 
@@ -68,12 +67,14 @@ class Singleton {
             }
         });
 
+/*
         this.client.addConnectionChangeListener(new ConnectionStateListener() {
             @Override
             public void connectionStateChanged(ConnectionState connectionState) {
                 System.out.println( "Connection state changed to: " + connectionState );
             }
         });
+*/
 
         lastErrorMessage = null;
 

@@ -16,7 +16,6 @@ class DeepstreamConfig {
         this.properties = properties;
 
         try {
-            this.getEndpointType();
             this.getReconnectIntervalIncrement();
             this.getMaxReconnectAttempts();
             this.getRpcAckTimeout();
@@ -33,9 +32,7 @@ class DeepstreamConfig {
 
     }
 
-    EndpointType getEndpointType() {
-        return EndpointType.getEndpointType(getOption(ConfigOptions.ENDPOINT_TYPE, EndpointType.WEBSOCKET.toString()));
-    }
+    String getPath() { return getOption(ConfigOptions.PATH, "/deepstream" ); }
 
     int getReconnectIntervalIncrement() {
         return Integer.parseInt(getOption(ConfigOptions.RECONNECT_INTERVAL_INCREMENT, "4000"));

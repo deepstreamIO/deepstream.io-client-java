@@ -12,7 +12,7 @@ public class Context {
     static int serverPort = 7777;
     static int server2port = 8888;
     DeepstreamClient client;
-    MockTcpServer server, server2;
+    MockWebSocketServer server, server2;
     CountDownLatch serverResponseLatch;
 
     public Context() throws InterruptedException, URISyntaxException, InvalidDeepstreamConfig {
@@ -49,7 +49,7 @@ public class Context {
                 .replace( '+', MS );
     }
 
-    public MockTcpServer getNewServer1() {
+    public MockWebSocketServer getNewServer1() {
         this.server = Singleton.getSingleton().getNewServer1();
         return this.server;
     }

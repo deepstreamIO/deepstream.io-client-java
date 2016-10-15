@@ -10,10 +10,9 @@ import java.util.Properties;
  */
 public enum ConfigOptions {
     /**
-     * A {@link EndpointType}, currently either TCP or EngineIO
-     * Defaults to TCP
+     * The default path to use when establishing a websocket connection
      */
-    ENDPOINT_TYPE("endpointType"),
+    PATH("path"),
     /**
      * Specifies the number of milliseconds by which the time until the next reconnection attempt will be incremented
      * after every unsuccessful attempt.
