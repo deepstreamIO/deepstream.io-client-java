@@ -16,11 +16,8 @@ class EndpointWebsocket implements Endpoint {
     private final Connection connection;
 
     EndpointWebsocket(String url, DeepstreamConfig deepstreamConfig, Connection connection ) throws URISyntaxException {
-        originalURI = parseUri( url, deepstreamConfig.getPath() );
+        this.originalURI = parseUri( url, deepstreamConfig.getPath() );
         this.connection = connection;
-
-        websocket = new WebSocket( this.originalURI, new Draft_10() );
-        websocket.connect();
     }
 
      /**
@@ -49,20 +46,22 @@ class EndpointWebsocket implements Endpoint {
 
     @Override
     public void send(String message) {
-        websocket.send( message );
+        this.websocket.send( message );
     }
 
     @Override
     public void close() {
-        websocket.close();
+        this.websocket.close();
     }
 
     @Override
     public void open() {
+        this.websocket = new WebSocket( this.originalURI, new Draft_10() );
+        this.websocket.connect();
     }
 
-    class WebSocket extends WebSocketClient {
-        public WebSocket( URI serverUri , Draft draft  ) {
+    private class WebSocket extends WebSocketClient {
+        WebSocket( URI serverUri , Draft draft  ) {
             super( serverUri, draft );
         }
 

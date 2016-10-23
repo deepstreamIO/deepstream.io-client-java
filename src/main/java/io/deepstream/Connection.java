@@ -237,7 +237,10 @@ class Connection implements IConnection {
 
     @ObjectiveCName("handleConnectionResponse:")
     private void handleConnectionResponse( Message message ) {
-        if( message.action == Actions.ACK ) {
+        if( message.action == Actions.PING ) {
+            this.endpoint.send( MessageBuilder.getMsg( Topic.CONNECTION, Actions.PONG ) );
+        }
+        else if( message.action == Actions.ACK ) {
             this.setState( ConnectionState.AWAITING_AUTHENTICATION );
             if( this.authParameters != null ) {
                 this.sendAuthMessage();

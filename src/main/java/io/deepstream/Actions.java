@@ -16,6 +16,14 @@ public enum Actions {
      */
     ERROR("E"),
     /**
+     * A heartbeat ping from server
+     */
+    PING( "PI" ),
+    /**
+     * An heartbeat pong to server
+     */
+    PONG( "PO" ),
+    /**
      * An acknowledgement from serer
      */
     ACK( "A" ),
