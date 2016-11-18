@@ -40,7 +40,7 @@ public class RpcResponse {
      */
     public void ack() {
         if (!this.isAcknowledged) {
-            this.connection.sendMsg(Topic.RPC, Actions.ACK, new String[]{this.name, this.correlationId});
+            this.connection.sendMsg(Topic.RPC, Actions.ACK, new String[]{Actions.REQUEST.toString(), this.name, this.correlationId});
             this.isAcknowledged = true;
         }
     }

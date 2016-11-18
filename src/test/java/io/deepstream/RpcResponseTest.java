@@ -40,7 +40,7 @@ public class RpcResponseTest {
     @Test
     public void sendsAckMessageAutomatically() {
         RpcResponse response = new RpcResponse( connectionMock, "addTwo", "123" );
-        Assert.assertEquals(TestUtil.replaceSeperators("P|A|addTwo|123+"), connectionMock.lastSentMessage);
+        Assert.assertEquals(TestUtil.replaceSeperators("P|A|REQ|addTwo|123+"), connectionMock.lastSentMessage);
     }
 
     @Test
