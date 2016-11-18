@@ -154,7 +154,7 @@ public class RpcHandler {
          * Error messages always have the error as first parameter. So the
          * order is different to ack and response messages
          */
-        if( message.action == Actions.ERROR ) {
+        if( message.action == Actions.ERROR || message.action == Actions.ACK ) {
             rpcName = message.data[ 1 ];
             correlationId = message.data[ 2 ];
         } else {
