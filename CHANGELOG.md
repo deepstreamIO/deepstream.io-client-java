@@ -1,3 +1,8 @@
+## [1.0.1] - 2016.11.21
+
+### Bug Fixes
+- Fixed travis deploy
+
 ## [1.0] - 2016.11.21
 
 ### Bug Fixes
