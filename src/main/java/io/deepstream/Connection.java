@@ -242,9 +242,6 @@ class Connection implements IConnection {
         }
         else if( message.action == Actions.ACK ) {
             this.setState( ConnectionState.AWAITING_AUTHENTICATION );
-            if( this.authParameters != null ) {
-                this.sendAuthMessage();
-            }
         }
         else if( message.action == Actions.CHALLENGE ) {
             this.setState( ConnectionState.CHALLENGING );
@@ -268,6 +265,7 @@ class Connection implements IConnection {
                 this.deliberateClose = true;
                 this.tooManyAuthAttempts = true;
             } else {
+                this.authParameters = null;
                 this.setState( ConnectionState.AWAITING_AUTHENTICATION );
             }
 
@@ -296,12 +294,12 @@ class Connection implements IConnection {
     private void setState( ConnectionState connectionState ) {
         this.connectionState = connectionState;
 
-        if( connectionState == ConnectionState.AWAITING_CONNECTION && this.authParameters != null ) {
-            this.sendAuthMessage();
-        }
-
         for (ConnectionStateListener connectStateListener : this.connectStateListeners) {
             connectStateListener.connectionStateChanged(connectionState);
+        }
+
+        if( connectionState == ConnectionState.AWAITING_AUTHENTICATION && this.authParameters != null ) {
+            this.sendAuthMessage();
         }
     }
 
