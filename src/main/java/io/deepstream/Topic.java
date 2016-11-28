@@ -35,7 +35,11 @@ public enum Topic {
     /**
      * RPC data is routed through this topic
      */
-    RPC("P");
+    RPC("P"),
+    /**
+     * Presence data is routed through this topic
+     */
+    PRESENCE( "U" );
 
     private static final Map<String,Topic> lookup  = new HashMap<String,Topic>();
 

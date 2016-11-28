@@ -129,7 +129,19 @@ public enum Actions {
     /**
      * Used to reject RPC requests
      */
-    REJECTION( "REJ" );
+    REJECTION( "REJ" ),
+    /**
+     * Called when a user logs in
+     */
+    PRESENCE_JOIN( "PNJ" ),
+    /**
+     * Called when a user logs out
+     */
+    PRESENCE_LEAVE( "PNL" ),
+    /**
+     * Used to query for clients
+     */
+    QUERY( "Q" );
 
     private static final Map<String,Actions> lookup  = new HashMap<>();
 
