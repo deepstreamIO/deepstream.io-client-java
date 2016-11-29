@@ -37,11 +37,16 @@ public class PresenceHandler {
      *                          of connected clients
      */
     public void getAll( PresenceListener presenceListener ) {
-        if (!this.emitter.hasListeners( Actions.QUERY.toString() )) {
-            this.connection.send( MessageBuilder.getMsg( Topic.PRESENCE, Actions.QUERY, Actions.QUERY.toString() ) );
+        if (this.emitter.hasListeners(Actions.QUERY.toString())) {
+            this.emitter.on(Actions.QUERY, presenceListener);
+            this.connection.send(MessageBuilder.getMsg(Topic.PRESENCE, Actions.QUERY, Actions.QUERY.toString()));
+        } else {
+            this.emitter.on(Actions.QUERY, presenceListener);
         }
-        this.emitter.on(Actions.QUERY.toString(), presenceListener);
     }
+
+
+
 
     /**
      * Removes the listener added via {@link EventHandler}
@@ -50,9 +55,9 @@ public class PresenceHandler {
      *                      and a boolean to indicated whether they logged in or out
      */
     public void subscribe( PresenceEventListener eventListener ) {
-        if (!this.emitter.hasListeners(Topic.PRESENCE.toString())) {
-            this.ackTimeoutRegistry.add( Topic.PRESENCE, Actions.SUBSCRIBE, Topic.PRESENCE.name(), this.subscriptionTimeout );
-            this.connection.send(MessageBuilder.getMsg(Topic.PRESENCE, Actions.SUBSCRIBE, Actions.SUBSCRIBE.name()));
+        if (this.emitter.hasListeners(Topic.PRESENCE.toString())) {
+            this.ackTimeoutRegistry.add( Topic.PRESENCE, Actions.SUBSCRIBE, Topic.PRESENCE.toString(), this.subscriptionTimeout );
+            this.connection.send(MessageBuilder.getMsg(Topic.PRESENCE, Actions.SUBSCRIBE, Actions.SUBSCRIBE.toString()));
         }
         this.emitter.on(Topic.PRESENCE, eventListener);
     }
@@ -81,13 +86,13 @@ public class PresenceHandler {
             this.ackTimeoutRegistry.clear( message );
         }
         else if( message.action == Actions.PRESENCE_JOIN ) {
-            this.broadcastEvent( Topic.PRESENCE.name(), message.data[0], true );
+            this.broadcastEvent( Topic.PRESENCE.toString(), message.data[0], true );
         }
         else if( message.action == Actions.PRESENCE_LEAVE ) {
-            this.broadcastEvent( Topic.PRESENCE.name(), message.data[0], false );
+            this.broadcastEvent( Topic.PRESENCE.toString(), message.data[0], false );
         }
         else if( message.action == Actions.QUERY ) {
-            this.broadcastEvent( Actions.QUERY.name(), message.data );
+            this.broadcastEvent( Actions.QUERY.toString(), message.data );
         }
         else {
             this.client.onError( Topic.PRESENCE, Event.UNSOLICITED_MESSAGE, message.action.name() );
@@ -98,9 +103,10 @@ public class PresenceHandler {
         java.util.List<Object> listeners = this.emitter.listeners( eventName );
         for( Object listener : listeners ) {
             if( args != null ) {
-                ((EventListener) listener).onEvent(eventName, args);
-            } else {
-                ((EventListener) listener).onEvent(eventName);
+                if( listener instanceof PresenceListener )
+                    ((PresenceListener) listener).onClients( args );
+                else
+                    ((PresenceEventListener) listener).onEvent((String) args[0], (boolean) args[1]);
             }
         }
     }

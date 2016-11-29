@@ -37,6 +37,7 @@ class Connection implements IConnection {
     private ExecutorService rpcThread;
     private ExecutorService recordThread;
     private ExecutorService eventThread;
+    private ExecutorService presenceThread;
 
     /**
      * Creates an endpoint and passed it to {@link Connection#Connection(String, DeepstreamConfig, DeepstreamClient, Endpoint)}
@@ -81,6 +82,7 @@ class Connection implements IConnection {
         this.recordThread = Executors.newSingleThreadExecutor();
         this.eventThread = Executors.newSingleThreadExecutor();
         this.rpcThread = Executors.newSingleThreadExecutor();
+        this.presenceThread = Executors.newSingleThreadExecutor();
     }
 
     /**
@@ -211,8 +213,15 @@ class Connection implements IConnection {
                         client.record.handle(message);
                     }
                 });
+            } else if ( message.topic == Topic.PRESENCE ) {
+                this.presenceThread.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        client.presence.handle( message );
+                    }
+                });
             } else {
-                //TODO: Throw error
+                this.client.onError(Topic.ERROR, Event.UNSOLICITED_MESSAGE, message.action.toString());
             }
         }
     }
