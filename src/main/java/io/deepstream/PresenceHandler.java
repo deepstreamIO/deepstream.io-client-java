@@ -50,14 +50,12 @@ public class PresenceHandler {
 
         notifier.request(Actions.QUERY.toString(), new UtilSingleNotifier.UtilSingleNotifierCallback() {
             @Override
-            @ObjectiveCName("onSingleNotifierError:error:")
             public void onSingleNotifierError(String name, DeepstreamError error) {
                 deepstreamException[0] = error;
                 snapshotLatch.countDown();
             }
 
             @Override
-            @ObjectiveCName("onSingleNotifierResponse:recordData:")
             public void onSingleNotifierResponse(String name, Object users) {
                 data[0] = users;
                 snapshotLatch.countDown();
