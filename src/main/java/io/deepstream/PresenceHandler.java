@@ -45,11 +45,8 @@ public class PresenceHandler {
         }
     }
 
-
-
-
     /**
-     * Removes the listener added via {@link EventHandler}
+     * Subscribes to clients login/logout events
      *
      * @param eventListener The listener that will be called with the username of the client
      *                      and a boolean to indicated whether they logged in or out
@@ -63,7 +60,7 @@ public class PresenceHandler {
     }
 
     /**
-     * Removes the listener added via {@link EventHandler}
+     * Removes the listener added via {@link PresenceHandler}
      *
      * @param eventListener The listener that will be called with the username of the client
      *                      and a boolean to indicated whether they logged in or out
