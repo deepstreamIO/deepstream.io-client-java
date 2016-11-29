@@ -98,7 +98,7 @@ public class PresenceHandler {
         this.emitter.off(Topic.PRESENCE.toString(), eventListener);
         if (this.emitter.hasListeners(Topic.PRESENCE.toString())) {
             this.ackTimeoutRegistry.add( Topic.PRESENCE,  Actions.UNSUBSCRIBE, Topic.PRESENCE.name(), this.subscriptionTimeout );
-            this.connection.send(MessageBuilder.getMsg(Topic.PRESENCE, Actions.UNSUBSCRIBE, Actions.SUBSCRIBE.name()));
+            this.connection.send(MessageBuilder.getMsg(Topic.PRESENCE, Actions.UNSUBSCRIBE, Actions.UNSUBSCRIBE.toString()));
         }
     }
 
