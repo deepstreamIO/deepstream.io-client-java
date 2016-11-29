@@ -1,7 +1,10 @@
 package io.deepstream;
 
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 
 public class PresenceHandler {
 
@@ -11,6 +14,7 @@ public class PresenceHandler {
     private final IConnection connection;
     private final DeepstreamClientAbstract client;
     private final UtilAckTimeoutRegistry ackTimeoutRegistry;
+    private final UtilSingleNotifier notifier;
 
     PresenceHandler(DeepstreamConfig deepstreamConfig, final IConnection connection, DeepstreamClientAbstract client) {
         this.subscriptionTimeout = deepstreamConfig.getSubscriptionTimeout();
@@ -19,6 +23,7 @@ public class PresenceHandler {
         this.emitter = new UtilEmitter();
         this.deepstreamConfig = deepstreamConfig;
         this.ackTimeoutRegistry = client.getAckTimeoutRegistry();
+        this.notifier = new UtilSingleNotifier(client, connection, Topic.PRESENCE, Actions.QUERY, subscriptionTimeout);
 
         new UtilResubscribeNotifier(this.client, new UtilResubscribeNotifier.UtilResubscribeListener() {
             @Override
@@ -36,13 +41,39 @@ public class PresenceHandler {
      * @param  presenceListener The presenceListener that will be called with an arraylist
      *                          of connected clients
      */
-    public void getAll( PresenceListener presenceListener ) {
-        if (this.emitter.hasListeners(Actions.QUERY.toString())) {
-            this.emitter.on(Actions.QUERY, presenceListener);
-            this.connection.send(MessageBuilder.getMsg(Topic.PRESENCE, Actions.QUERY, Actions.QUERY.toString()));
-        } else {
-            this.emitter.on(Actions.QUERY, presenceListener);
+    public void getAll( PresenceListener presenceListener ) throws DeepstreamError {
+
+        final Object[] data = new Object[1];
+        final DeepstreamError[] deepstreamException = new DeepstreamError[1];
+
+        final CountDownLatch snapshotLatch = new CountDownLatch(1);
+
+        notifier.request(Actions.QUERY.toString(), new UtilSingleNotifier.UtilSingleNotifierCallback() {
+            @Override
+            @ObjectiveCName("onSingleNotifierError:error:")
+            public void onSingleNotifierError(String name, DeepstreamError error) {
+                deepstreamException[0] = error;
+                snapshotLatch.countDown();
+            }
+
+            @Override
+            @ObjectiveCName("onSingleNotifierResponse:recordData:")
+            public void onSingleNotifierResponse(String name, Object users) {
+                data[0] = users;
+                snapshotLatch.countDown();
+            }
+        });
+
+        try {
+            snapshotLatch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+
+        if (deepstreamException[0] != null) {
+            throw deepstreamException[0];
+        }
+        presenceListener.onClients( (String[]) data[0] );
     }
 
     /**
@@ -89,7 +120,7 @@ public class PresenceHandler {
             this.broadcastEvent( Topic.PRESENCE.toString(), message.data[0], false );
         }
         else if( message.action == Actions.QUERY ) {
-            this.broadcastEvent( Actions.QUERY.toString(), message.data );
+            this.notifier.recieve(Actions.QUERY.toString(), null, message.data);
         }
         else {
             this.client.onError( Topic.PRESENCE, Event.UNSOLICITED_MESSAGE, message.action.name() );
@@ -100,10 +131,10 @@ public class PresenceHandler {
         java.util.List<Object> listeners = this.emitter.listeners( eventName );
         for( Object listener : listeners ) {
             if( args != null ) {
-                if( listener instanceof PresenceListener )
-                    ((PresenceListener) listener).onClients( args );
+                if ((boolean) args[1])
+                    ((PresenceEventListener) listener).onClientLogin((String) args[0]);
                 else
-                    ((PresenceEventListener) listener).onEvent((String) args[0], (boolean) args[1]);
+                    ((PresenceEventListener) listener).onClientLogout((String) args[0]);
             }
         }
     }

@@ -11,5 +11,5 @@ public interface PresenceListener {
      *
      * @param args An array of client usernames who are currently logged in
      */
-    void onClients( Object... args );
+    void onClients( String[] args );
 }
