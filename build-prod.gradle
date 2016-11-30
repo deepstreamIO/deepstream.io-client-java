@@ -55,6 +55,7 @@ j2objcConfig {
     translateArgs "--strip-gwt-incompatible"
     translateArgs "--prefixes", "${projectDir}/prefixes.properties"
     translateArgs "--doc-comments"
+    translateArgs "--swift-friendly"
 
     extraObjcCompilerArgs '-fobjc-arc', '-fembed-bitcode'
     finalConfigure() // Must be last call to configuration
