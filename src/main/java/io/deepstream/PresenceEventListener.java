@@ -2,8 +2,8 @@ package io.deepstream;
 
 
 /**
- * An PresenceEventListener is notified when subscribed to client presence events. You can add an PresenceListener
- * via {@link PresenceHandler#subscribe(PresenceEventListener)}
+ * An PresenceEventListener is notified when subscribed to client presence events. You can add
+ * a PresenceEventListener via {@link PresenceHandler#subscribe(PresenceEventListener)}
  */
 public interface PresenceEventListener {
     /**

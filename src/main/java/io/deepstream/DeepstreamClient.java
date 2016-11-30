@@ -34,7 +34,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      */
     public final RpcHandler rpc;
     /**
-     * The entry point for presence, both querying for clients via {@link PresenceHandler#getAll(PresenceListener)}
+     * The entry point for presence, both querying for clients via {@link PresenceHandler#getAll()}
      * and subscribing/unsubscribing to login events via {@link PresenceHandler#subscribe(PresenceEventListener)} and
      * {@link PresenceHandler#unsubscribe(PresenceEventListener)}
      */
