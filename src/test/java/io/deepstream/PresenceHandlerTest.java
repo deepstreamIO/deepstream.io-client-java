@@ -7,7 +7,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Properties;
+import java.util.StringTokenizer;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -18,13 +20,11 @@ public class PresenceHandlerTest {
     DeepstreamClientMock deepstreamClientMock;
     ConnectionMock connectionMock;
     PresenceHandler presenceHandler;
-    PresenceListener queryCallback;
     PresenceEventListener presenceCallback;
     DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler;
 
     @Before
     public void setUp() throws URISyntaxException, InvalidDeepstreamConfig {
-        queryCallback = mock( PresenceListener.class );
         presenceCallback = mock( PresenceEventListener.class );
         this.connectionMock = new ConnectionMock();
         this.deepstreamRuntimeErrorHandler = mock( DeepstreamRuntimeErrorHandler.class );
@@ -62,9 +62,9 @@ public class PresenceHandlerTest {
                 ));
             }
         }).start();
-        presenceHandler.getAll( queryCallback );
+        ArrayList<String> clients = presenceHandler.getAll();
         Assert.assertEquals( TestUtil.replaceSeperators("U|Q|Q+"), connectionMock.lastSentMessage );
-        verify( queryCallback, times(1) ).onClients( new String[]{} );
+        Assert.assertEquals( new ArrayList<>(), clients );
     }
 
     @Test
@@ -85,9 +85,11 @@ public class PresenceHandlerTest {
                 ));
             }
         }).start();
-        presenceHandler.getAll( queryCallback );
+        ArrayList<String> clients = presenceHandler.getAll();
         Assert.assertEquals( TestUtil.replaceSeperators("U|Q|Q+"), connectionMock.lastSentMessage );
-        verify( queryCallback, times(1) ).onClients( new String[]{ "Bart", "Homer" } );
+        ArrayList<String> expectedClients = new ArrayList<>();
+        expectedClients.add("Bart"); expectedClients.add("Homer");
+        Assert.assertEquals( expectedClients, clients );
     }
 
     @Test

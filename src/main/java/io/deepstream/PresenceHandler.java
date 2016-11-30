@@ -4,6 +4,7 @@ package io.deepstream;
 import com.google.j2objc.annotations.ObjectiveCName;
 
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 public class PresenceHandler {
@@ -38,12 +39,12 @@ public class PresenceHandler {
     /**
      * Queries for clients logged into deepstream
      *
-     * @param  presenceListener The presenceListener that will be called with an arraylist
-     *                          of connected clients
+     * @return List<String> a list of currently connected clients
+     * @throws DeepstreamError
      */
-    public void getAll( PresenceListener presenceListener ) throws DeepstreamError {
+    public ArrayList<String> getAll() throws DeepstreamError {
 
-        final Object[] data = new Object[1];
+        final ArrayList<String>[] data = new ArrayList[1];
         final DeepstreamError[] deepstreamException = new DeepstreamError[1];
 
         final CountDownLatch snapshotLatch = new CountDownLatch(1);
@@ -57,7 +58,7 @@ public class PresenceHandler {
 
             @Override
             public void onSingleNotifierResponse(String name, Object users) {
-                data[0] = users;
+                data[0] = new ArrayList<String>( Arrays.asList( (String[]) users ) );
                 snapshotLatch.countDown();
             }
         });
@@ -71,7 +72,7 @@ public class PresenceHandler {
         if (deepstreamException[0] != null) {
             throw deepstreamException[0];
         }
-        presenceListener.onClients( (String[]) data[0] );
+        return  data[0];
     }
 
     /**
