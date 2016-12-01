@@ -7,14 +7,14 @@ package io.deepstream;
  */
 public interface PresenceEventListener {
     /**
-     * Called with a the username of a client who logged in
+     * Called with the username of a client who logged in
      *
      * @param username the username of the client who logged in
      */
     void onClientLogin( String username );
 
     /**
-     * Called with a the username of a client who logged out
+     * Called with the username of a client who logged out
      *
      * @param username the username of the client who logged out
      */

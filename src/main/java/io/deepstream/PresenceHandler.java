@@ -29,8 +29,8 @@ public class PresenceHandler {
         new UtilResubscribeNotifier(this.client, new UtilResubscribeNotifier.UtilResubscribeListener() {
             @Override
             public void resubscribe() {
-                if( emitter.listeners(Topic.PRESENCE.name()).size() != 0 ) {
-                    connection.sendMsg(Topic.PRESENCE, Actions.SUBSCRIBE, new String[]{Actions.SUBSCRIBE.name()});
+                if( emitter.listeners(Topic.PRESENCE.toString()).size() != 0 ) {
+                    connection.sendMsg(Topic.PRESENCE, Actions.SUBSCRIBE, new String[]{Actions.SUBSCRIBE.toString()});
                 }
             }
         });
@@ -98,14 +98,14 @@ public class PresenceHandler {
     public void unsubscribe( PresenceEventListener eventListener ) {
         this.emitter.off(Topic.PRESENCE.toString(), eventListener);
         if (this.emitter.hasListeners(Topic.PRESENCE.toString())) {
-            this.ackTimeoutRegistry.add( Topic.PRESENCE,  Actions.UNSUBSCRIBE, Topic.PRESENCE.name(), this.subscriptionTimeout );
+            this.ackTimeoutRegistry.add( Topic.PRESENCE,  Actions.UNSUBSCRIBE, Topic.PRESENCE.toString(), this.subscriptionTimeout );
             this.connection.send(MessageBuilder.getMsg(Topic.PRESENCE, Actions.UNSUBSCRIBE, Actions.UNSUBSCRIBE.toString()));
         }
     }
 
 
     protected void handle( Message message ) {
-        if( message.action == Actions.ERROR && message.data[0].equals(Event.MESSAGE_DENIED.name()) ) {
+        if( message.action == Actions.ERROR && message.data[0].equals(Event.MESSAGE_DENIED.toString()) ) {
             this.ackTimeoutRegistry.clear( message );
             this.client.onError( Topic.PRESENCE, Event.MESSAGE_DENIED, message.data[1] );
         }
@@ -122,7 +122,7 @@ public class PresenceHandler {
             this.notifier.recieve(Actions.QUERY.toString(), null, message.data);
         }
         else {
-            this.client.onError( Topic.PRESENCE, Event.UNSOLICITED_MESSAGE, message.action.name() );
+            this.client.onError( Topic.PRESENCE, Event.UNSOLICITED_MESSAGE, message.action.toString() );
         }
     }
 
