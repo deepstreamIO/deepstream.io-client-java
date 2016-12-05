@@ -60,7 +60,7 @@ class UtilJSONPath {
             }
         }
 
-        if( value != null && token != null ) {
+        if( token != null ) {
             updateValue(value, parent, token);
         }
 

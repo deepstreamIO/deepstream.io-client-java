@@ -99,7 +99,7 @@ class MessageParser {
             return parseObject( value.substring( 1 ) );
         }
         else if( Types.getType( type ) == Types.UNDEFINED ) {
-            // Undefined isn't a thing in Java..
+            return null;
         }
 
         client.onError( Topic.ERROR, Event.MESSAGE_PARSE_ERROR, "UNKNOWN_TYPE (" + value + ")" );

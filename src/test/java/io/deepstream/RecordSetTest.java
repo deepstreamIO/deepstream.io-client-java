@@ -1,6 +1,7 @@
 package io.deepstream;
 
 
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import org.junit.After;
 import org.junit.Assert;
@@ -71,5 +72,12 @@ public class RecordSetTest {
     @Test
     public void deletesValueWhenSendingUndefined() throws DeepstreamRecordDestroyedException {
         //TODO
+    }
+
+    @Test
+    public void deletesValueWhenReceivingUndefined() {
+        record.set( "firstname", "Alex" );
+        record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|P|testRecord|2|firstname|U+" ), deepstreamClientMock ) );
+        Assert.assertTrue( record.get( "firstname" ).isJsonNull() );
     }
 }

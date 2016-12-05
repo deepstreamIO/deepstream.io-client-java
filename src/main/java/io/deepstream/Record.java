@@ -454,11 +454,15 @@ public class Record {
 
         JsonElement data;
         if( message.action == Actions.PATCH ) {
-            data = gson.toJsonTree( MessageParser.convertTyped( message.data[ 3 ], client ) );
+            String rawData = (String) MessageParser.convertTyped( message.data[ 3 ], client );
+            if( rawData == null ) {
+                data = null;
+            } else {
+                data = gson.toJsonTree( rawData );
+            }
         } else {
             data = gson.fromJson( message.data[ 2 ], JsonElement.class );
         }
-
 
         if (this.version != -1 && this.version + 1 != newVersion) {
             if( message.action == Actions.PATCH ) {
