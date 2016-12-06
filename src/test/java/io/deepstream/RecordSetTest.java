@@ -72,8 +72,10 @@ public class RecordSetTest {
     }
 
     @Test
-    public void deletesValueWhenSendingUndefined() throws DeepstreamRecordDestroyedException {
-        //TODO
+    public void sendsPatchForNestedUpdate() {
+        record.set( "address[0].street", "randomStreet" );
+        Assert.assertEquals( connectionMock.lastSentMessage, TestUtil.replaceSeperators( "R|P|testRecord|1|address[0].street|SrandomStreet+" ) );
+        Assert.assertEquals( record.get( "address[ 0 ].street" ).getAsString(), "randomStreet" );
     }
 
     @Test
@@ -96,12 +98,20 @@ public class RecordSetTest {
     }
 
     @Test
-    public void deletesNestedArrayValueWhenReceivingUndefined() {
+    public void deletesArrayValueWhenReceivingUndefined() {
         record.set( "firstname", "Alex" );
         JsonArray drinks = new JsonArray();
         drinks.add( "beer" ); drinks.add( "coffee" );
         record.set( "drinks", drinks );
         record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|P|testRecord|3|drinks[ 0 ]|U+" ), deepstreamClientMock ) );
         Assert.assertEquals( record.get( "drinks[ 0 ]" ).getAsString(), "coffee" );
+    }
+
+    @Test
+    public void deletesNestedArrayValueWhenReceivingUndefined() {
+        record.set( "address[0].street", "Alex" );
+        record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|P|testRecord|2|address[ 0 ].street|U+" ), deepstreamClientMock ) );
+        Object o = record.get( "address[ 0 ].street" );
+        Assert.assertTrue( record.get( "address[ 0 ].street" ).isJsonNull()  );
     }
 }

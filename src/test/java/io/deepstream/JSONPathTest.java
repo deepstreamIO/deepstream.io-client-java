@@ -164,7 +164,20 @@ public class JSONPathTest {
     };
 
     @Test
-    public void deletesSimpleValuesFromArrays() {
+    public void deletesObjectValuesFromArrays() {
+        JsonObject expected = new JsonObject();
+        expected.addProperty( "street", "secondstreet" );
+        expected.addProperty( "postCode",2002 );
+        Assert.assertEquals( expected, jsonPath.get( "pastAddresses[1]" ) );
+
+        jsonPath.delete( "pastAddresses[1]" );
+        Assert.assertFalse(
+                jsonPath.get( "pastAddresses" ).getAsJsonArray().contains( expected )
+        );
+    };
+
+    @Test
+    public void deletesObjectValueFromArray() {
         JsonObject expected = new JsonObject();
         expected.addProperty( "street", "secondstreet" );
         expected.addProperty( "postCode",2002 );

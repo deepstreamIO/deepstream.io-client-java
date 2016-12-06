@@ -43,6 +43,8 @@ class UtilJSONPath {
                 }
             } catch( IndexOutOfBoundsException e ) {
                 return null;
+            } catch( NullPointerException e ) {
+                return null;
             }
         }
         return traverser;
