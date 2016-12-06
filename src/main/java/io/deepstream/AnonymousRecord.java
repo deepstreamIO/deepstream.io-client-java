@@ -73,13 +73,13 @@ public class AnonymousRecord {
     }
 
     /**
-     * Proxies to the actual{@link Record#set(Object)} method. It is valid
+     * Proxies to the actual{@link Record#set(JsonElement)} method. It is valid
      * to call get prior to setName - if no record exists,
      * the method returns null
      * @return The AnonymousRecord
      */
     @ObjectiveCName("set:")
-    public AnonymousRecord set( Object data ) throws AnonymousRecordUninitialized {
+    public AnonymousRecord set( JsonElement data ) throws AnonymousRecordUninitialized {
         return this.set( null, data );
     }
 

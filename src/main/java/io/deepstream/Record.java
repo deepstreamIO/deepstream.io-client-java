@@ -220,7 +220,7 @@ public class Record {
      * @see Record#set(String, Object)
      */ 
     @ObjectiveCName("set:")
-    public Record set( Object value ) throws DeepstreamRecordDestroyedException {
+    public Record set( JsonElement value ) throws DeepstreamRecordDestroyedException {
         return this.set( null, value, false );
     }
 
@@ -453,9 +453,11 @@ public class Record {
         int newVersion = Integer.parseInt(message.data[1]);
 
         JsonElement data;
+        boolean delete = false;
         if( message.action == Actions.PATCH ) {
-            String rawData = (String) MessageParser.convertTyped( message.data[ 3 ], client );
-            if( rawData == null ) {
+            Object rawData = MessageParser.convertTyped( message.data[ 3 ], client );
+            if( rawData == Types.UNDEFINED ) {
+                delete = true;
                 data = null;
             } else {
                 data = gson.toJsonTree( rawData );
@@ -485,7 +487,11 @@ public class Record {
 
         this.version = newVersion;
         if( Actions.PATCH == message.action ) {
-            path.set( message.data[ 2 ], data );
+            if( delete ) {
+                path.delete( message.data[ 2 ] );
+            } else {
+                path.set(message.data[2], data);
+            }
         } else {
             this.data = data;
             this.path.setCoreElement( data );

@@ -1,86 +1,134 @@
 package io.deepstream;
 
+import com.google.gson.*;
 import com.google.j2objc.annotations.ObjectiveCName;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
-import com.google.gson.JsonObject;
 
 import java.util.Iterator;
 import java.util.Objects;
 
 class UtilJSONPath {
     private JsonElement coreElement;
+    private Gson gson = new Gson();
 
     @ObjectiveCName("init:")
     public UtilJSONPath(JsonElement e){
         this.coreElement = e;
     }
 
-    @ObjectiveCName("iterateThrough:path:value:")
-    private static JsonElement iterateThrough (JsonElement element, String path, JsonElement value) {
+    /**
+     * Traverses through the json element tree for retrieving values
+     *
+     * @param element The element to traverse through
+     * @param path The path to find
+     * @return The element indicated by the path
+     */
+    private static JsonElement getIterateThrough(JsonElement element, String path) {
         String[] st = path.split( "\\." );
-        JsonElement parent = null;
         JsonElement traverser = element;
+        String token = null;
+
+        for( int i=0; i < st.length; i++ ) {
+            token = st[i];
+
+            try {
+                if (isArray(token)) {
+                    String prefix = getTokenPrefix(token);
+                    int index = Integer.parseInt( getIndex( token ) );
+
+                    traverser = traverser.getAsJsonObject().get(prefix).getAsJsonArray().get(index);
+                } else if (traverser.isJsonObject()) {
+                    traverser = traverser.getAsJsonObject().get(token);
+                } else if (traverser.isJsonArray()) {
+                    break;
+                }
+            } catch( IndexOutOfBoundsException e ) {
+                return null;
+            }
+        }
+        return traverser;
+    }
+
+    @ObjectiveCName("iterateThrough:path:value:")
+    private static JsonElement setIterateThrough (JsonElement element, String path, JsonElement value, boolean delete) {
+        String[] st = path.split( "\\." );
+        JsonElement traverser = element;
+        JsonElement parent = null;
         String token = null;
 
         for( int i=0; i<st.length; i++ ) {
             token = st[ i ];
-
             parent = traverser;
 
-            try {
-                if (isArray(token)) {
-                    traverser = getArrayElement(traverser, token);
-                    token = getIndex( token );
-                } else if( traverser.isJsonObject() ){
-                    traverser = traverser.getAsJsonObject().get(token);
-                } else if( traverser.isJsonArray() ){
-                    break;
+            if (isArray(token)) {
+                String prefix = getTokenPrefix(token);
+                token = getIndex( token );
+                int index = Integer.parseInt( token );
+                JsonObject parentObject = traverser.getAsJsonObject();
+
+                if( parentObject.get(prefix) == null ) {
+                    parentObject.add( prefix, initialiseArray(index) );
                 }
-            } catch( NullPointerException e ) {
-                if( value != null ) {
-                    if (isArray(token)) {
-                        int index = Integer.parseInt(getIndex(token));
-                        String prefix = getTokenPrefix(token);
-                        JsonArray array = new JsonArray();
-
-                        for (int j = 0; j < index; j++) {
-                            array.add(JsonNull.INSTANCE);
-                        }
-
-                        JsonElement temp = new JsonObject();
-                        array.add(temp);
-
-                        traverser.getAsJsonObject().add(prefix, array);
-                        traverser = array.get(index);
-                    }
+                try {
+                    parentObject.get( prefix ).getAsJsonArray().get( index );
+                } catch( IndexOutOfBoundsException e ) {
+                    extendArray( parentObject.get( prefix ).getAsJsonArray(), index );
                 }
+                parent = parentObject.get( prefix );
+                traverser = parentObject.get( prefix ).getAsJsonArray().get( index );//traverser.getAsJsonObject().get( prefix );
+            } else if( traverser.isJsonObject() ){
+                traverser = traverser.getAsJsonObject().get(token);
+            } else if( traverser.isJsonArray() ){
+                break;
             }
         }
 
-        if( token != null ) {
-            updateValue(value, parent, token);
+        if( token != null && (value != null || delete) ) {
+            updateValue(value, parent, token, delete);
         }
-
         return traverser;
     }
 
+    private static JsonArray initialiseArray(int size) {
+        JsonArray array = new JsonArray();
+        for (int j = 0; j < size; j++) {
+            array.add(JsonNull.INSTANCE);
+        }
+        JsonElement temp = new JsonObject();
+        array.add(temp);
+        return array;
+    }
+
+    private static void extendArray(JsonArray array, int size) {
+        for (int j = array.size(); j < size; j++) {
+            array.add(JsonNull.INSTANCE);
+        }
+        JsonElement temp = new JsonObject();
+        array.add(temp);
+    }
+
     @ObjectiveCName("updateValue:parent:token:")
-    private static void updateValue(JsonElement value, JsonElement parent, String token) {
+    private static void updateValue(JsonElement value, JsonElement parent, String token, boolean delete) {
         if( parent.isJsonObject() ) {
             JsonObject object = (JsonObject) parent;
-            object.add( token, value );
+            if( delete ) {
+                object.remove( token );
+            } else {
+                object.add( token, value );
+            }
         }
         else if( parent.isJsonArray() ) {
             JsonArray object = (JsonArray) parent;
             int size = object.size();
             int index = Integer.parseInt( token );
-            for( int i=size; i<=index; i++ ){
-                object.add( JsonNull.INSTANCE );
+
+            if( delete ) {
+                object.remove( index );
+            } else {
+                for( int i=size; i<=index; i++ ){
+                    object.add( JsonNull.INSTANCE );
+                }
+                object.set( index, value );
             }
-            object.set( index, value );
         }
     }
 
@@ -126,7 +174,7 @@ class UtilJSONPath {
         if (Objects.equals(path, "") || path == null) {
             return this.coreElement;
         } else {
-            return iterateThrough(this.coreElement, path, null);
+            return getIterateThrough(this.coreElement, path);
         }
     }
 
@@ -137,8 +185,20 @@ class UtilJSONPath {
         } else if (path == null) {
             this.coreElement = value;
         } else {
-            iterateThrough(this.coreElement, path, value);
+            setIterateThrough(this.coreElement, path, value, false);
         }
+    }
+
+    /**
+     * Deletes the value specified in the path.
+     *
+     * Traverses through the tree to find the parent object and then
+     * just removes the key
+     *
+     * @param path The path to delete
+     */
+    protected void delete(String path) {
+        setIterateThrough(this.coreElement, path, null, true);
     }
 
     public JsonElement getCoreElement() {
