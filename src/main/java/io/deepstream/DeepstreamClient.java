@@ -33,6 +33,12 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      * providing them via {@link RpcHandler#provide(String, RpcRequestedListener)}
      */
     public final RpcHandler rpc;
+    /**
+     * The entry point for presence, both querying for clients via {@link PresenceHandler#getAll()}
+     * and subscribing/unsubscribing to login events via {@link PresenceHandler#subscribe(PresenceEventListener)} and
+     * {@link PresenceHandler#unsubscribe(PresenceEventListener)}
+     */
+    public final PresenceHandler presence;
     private final Connection connection;
     private String uuid;
 
@@ -69,6 +75,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
         this.event = new EventHandler(deepstreamConfig, this.connection, this);
         this.rpc = new RpcHandler(deepstreamConfig, this.connection, this);
         this.record = new RecordHandler(deepstreamConfig, this.connection, this);
+        this.presence = new PresenceHandler(deepstreamConfig, this.connection, this);
     }
 
     /**

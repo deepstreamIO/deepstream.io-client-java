@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.deepstream.*;
 
+import java.util.ArrayList;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -43,6 +44,8 @@ public class Subscriber {
                     subscribeAnonymousRecord(client);
                     subscribeList(client);
                     makeRpc(client);
+                    subscribePresence(client);
+                    queryClients(client);
                 }
 
             } catch (Exception e) {
@@ -172,6 +175,29 @@ public class Subscriber {
                     System.out.println(String.format("Event '%s' occurred with: %s at %s", eventName, parameters.get(0).getAsString(), parameters.get(1).getAsLong()));
                 }
             });
+        }
+
+        private void subscribePresence(DeepstreamClient client) {
+            client.presence.subscribe(new PresenceEventListener() {
+                @Override
+                public void onClientLogin(String username) {
+                    System.out.println(username + " logged in");
+                }
+
+                @Override
+                public void onClientLogout(String username) {
+                    System.out.println(username + " logged out");
+                }
+            });
+        }
+
+        private void queryClients(DeepstreamClient client) throws DeepstreamError {
+            ArrayList<String> clients = client.presence.getAll();
+            System.out.print("Clients currently connected: ");
+            for (String c : clients) {
+                System.out.print( c + " " );
+            }
+            System.out.println();
         }
 
     }
