@@ -31,7 +31,7 @@ class EndpointWebsocket implements Endpoint {
       * @return {String} Url with supported protocol
       */
      private URI parseUri(String url, String defaultPath) throws URISyntaxException {
-         if (url.startsWith("http:") || !url.startsWith("https:")) {
+         if (url.startsWith("http:") || url.startsWith("https:")) {
              throw new URISyntaxException(url, "HTTP/HTTPS is not supported, please use ws or wss instead");
          }
          if (url.startsWith("//")) {
@@ -54,6 +54,7 @@ class EndpointWebsocket implements Endpoint {
     @Override
     public void close() {
         this.websocket.close();
+        this.websocket = null;
     }
 
     @Override
