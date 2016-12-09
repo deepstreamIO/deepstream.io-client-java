@@ -220,7 +220,7 @@ class Connection implements IConnection {
     void onClose() throws URISyntaxException {
         if( this.redirecting ) {
             this.redirecting = false;
-            this.createEndpoint();
+            this.endpoint = this.createEndpoint();
         }
         else if( this.deliberateClose ) {
             this.setState( ConnectionState.CLOSED );
@@ -228,7 +228,7 @@ class Connection implements IConnection {
         else {
             if(!this.originalUrl.equals(this.url)) {
                 this.url = this.originalUrl;
-                this.createEndpoint();
+                this.endpoint = this.createEndpoint();
                 return;
             }
             this.tryReconnect();
@@ -255,6 +255,7 @@ class Connection implements IConnection {
             this.url = message.data[ 0 ];
             this.redirecting = true;
             this.endpoint.close();
+            this.endpoint = null;
         }
     }
 

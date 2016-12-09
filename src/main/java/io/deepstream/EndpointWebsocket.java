@@ -1,13 +1,16 @@
 package io.deepstream;
 
+import org.java_websocket.client.DefaultSSLWebSocketClientFactory;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.drafts.Draft;
 import org.java_websocket.drafts.Draft_10;
-import org.java_websocket.drafts.Draft_75;
 import org.java_websocket.handshake.ServerHandshake;
 
+import javax.net.ssl.SSLContext;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 
 class EndpointWebsocket implements Endpoint {
 
@@ -27,22 +30,21 @@ class EndpointWebsocket implements Endpoint {
       * @param  {String} defaultPath Default path to concatenate if one doest not exist
       * @return {String} Url with supported protocol
       */
-        private URI parseUri(String url, String defaultPath ) throws URISyntaxException {
-        if( url.matches( "^http:|^https:" )) {
-            throw new URISyntaxException( url, "HTTP/HTTPS is not supported, please use ws or wss instead" );
-        }
-        if( url.matches( "^//") ) {
-            url = "ws:" + url;
-        }
-        else if( !url.matches( "^ws:|^wss:" )) {
-            url = "ws://" + url;
-        }
-        URI uri = new URI(url);
-        if( uri.getPath().equals("") ) {
-            uri = uri.resolve( defaultPath );
-        }
-        return uri;
-    }
+     private URI parseUri(String url, String defaultPath) throws URISyntaxException {
+         if (url.startsWith("http:") || url.startsWith("https:")) {
+             throw new URISyntaxException(url, "HTTP/HTTPS is not supported, please use ws or wss instead");
+         }
+         if (url.startsWith("//")) {
+             url = "ws:" + url;
+         } else if (!url.startsWith("ws:") && !url.startsWith("wss:")) {
+             url = "ws://" + url;
+         }
+         URI uri = new URI(url);
+         if (uri.getPath().isEmpty()) {
+             uri = uri.resolve(defaultPath);
+         }
+         return uri;
+     }
 
     @Override
     public void send(String message) {
@@ -52,6 +54,7 @@ class EndpointWebsocket implements Endpoint {
     @Override
     public void close() {
         this.websocket.close();
+        this.websocket = null;
     }
 
     @Override
@@ -63,6 +66,18 @@ class EndpointWebsocket implements Endpoint {
     private class WebSocket extends WebSocketClient {
         WebSocket( URI serverUri , Draft draft  ) {
             super( serverUri, draft );
+            // Set the SSL context if the socket server is using Secure WebSockets
+            if (serverUri.toString().startsWith("wss:")) {
+                SSLContext sslContext;
+                try {
+                    sslContext = SSLContext.getInstance("TLS");
+                    sslContext.init(null, null, null);
+                } catch (NoSuchAlgorithmException | KeyManagementException e) {
+                    throw new RuntimeException(e);
+                }
+                // set the SSL context to the client factory
+                this.setWebSocketFactory(new DefaultSSLWebSocketClientFactory(sslContext));
+            }
         }
 
         @Override
