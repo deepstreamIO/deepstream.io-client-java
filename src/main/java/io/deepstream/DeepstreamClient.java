@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.j2objc.annotations.ObjectiveCName;
 
 import java.net.URISyntaxException;
+import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
@@ -34,7 +35,6 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      */
     public final RpcHandler rpc;
     private final Connection connection;
-    private String uuid;
 
     /**
      * deepstream.io javascript client, defaults to using default properties
@@ -194,11 +194,9 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      * @return A unique id
      */
     public String getUid() {
-        if( uuid == null ) {
-            uuid = UUID.randomUUID().toString();
-            return uuid;
-        }
-        return uuid;
+        String date = Long.toString(new Date().getTime(), 36);
+        String random = Long.toString((long) (Math.random() * 100000000000000000L), 36);
+        return date + "-" + random;
     }
 
     /**
