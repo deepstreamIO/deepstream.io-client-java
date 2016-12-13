@@ -1,13 +1,10 @@
 plugins {
     id 'java'
-    id "com.github.samueltbrown.cucumber" version "0.9"
 }
 
 // Java compatability
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
-
-defaultTasks 'cucumber'
 
 group 'io.deepstream'
 version '1.0-SNAPSHOT'
@@ -21,6 +18,7 @@ sourceSets {
         compileClasspath += sourceSets.main.compileClasspath
     }
 }
+
 
 task apidoc(type: Javadoc) {
     options.memberLevel = JavadocMemberLevel.PUBLIC
@@ -36,19 +34,4 @@ dependencies {
 
     testCompile group: 'junit', name: 'junit', version: '4.11'
     testCompile "org.mockito:mockito-core:1.+"
-    testCompile  "info.cukes:cucumber-java:1.2.4"
-    testCompile  "info.cukes:cucumber-junit:1.2.4"
-    testCompile  "info.cukes:cucumber-picocontainer:1.2.4"
-}
-
-cucumber {
-    formats = ['pretty','json:build/cucumber.json','junit:build/cucumber.xml']
-    glueDirs = ['src/cucumber/resources/env',
-                'src/cucumber/resources/support',
-                'src/cucumber/resources/step_definitions']
-    featureDirs = ['src/cucumber/resources/features']
-    monochrome = false
-    strict = false
-    dryRun = false
-    ignoreFailures = false
 }
