@@ -90,7 +90,7 @@ public class EventHandlerTest {
                 Actions.EVENT,
                 new String[] { "myEvent" }
         ));
-        verify( callbackMock, times(1) ).onEvent( "myEvent" );
+        verify( callbackMock, times(1) ).onEvent( "myEvent", null );
     }
 
     @Test

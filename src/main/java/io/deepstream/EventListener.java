@@ -10,5 +10,5 @@ public interface EventListener {
      * @param eventName The event name that has occurred
      * @param args The arguments that the event has been triggered with
      */
-    void onEvent( String eventName, Object... args );
+    void onEvent( String eventName, Object args );
 }

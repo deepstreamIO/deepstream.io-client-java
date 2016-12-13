@@ -74,7 +74,7 @@ public class EventHandler {
      */
     public void emit( String eventName ) {
         this.connection.send( MessageBuilder.getMsg( Topic.EVENT, Actions.EVENT, eventName));
-        this.broadcastEvent(eventName);
+        this.broadcastEvent(eventName, null);
     }
 
     /**
@@ -138,7 +138,7 @@ public class EventHandler {
             if( message.data.length == 2 ) {
                 this.broadcastEvent( eventName, MessageParser.convertTyped(message.data[1], this.client) );
             } else {
-                this.broadcastEvent(eventName);
+                this.broadcastEvent(eventName, null);
             }
         }
         else if( this.listeners.get( eventName ) != null ) {
@@ -155,13 +155,13 @@ public class EventHandler {
         }
     }
 
-    private void broadcastEvent( String eventName, Object... args ) {
+    private void broadcastEvent( String eventName, Object args ) {
         List<Object> listeners = this.emitter.listeners( eventName );
         for( Object listener : listeners ) {
             if( args != null ) {
                 ((EventListener) listener).onEvent(eventName, args);
             } else {
-                ((EventListener) listener).onEvent(eventName);
+                ((EventListener) listener).onEvent(eventName, null);
             }
         }
     }

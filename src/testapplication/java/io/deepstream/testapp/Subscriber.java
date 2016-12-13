@@ -170,8 +170,8 @@ public class Subscriber {
         private void subscribeEvent(DeepstreamClient client) {
             client.event.subscribe("event/a", new EventListener() {
                 @Override
-                public void onEvent(String eventName, Object... args) {
-                    JsonArray parameters = (JsonArray) args[0];
+                public void onEvent(String eventName, Object args) {
+                    JsonArray parameters = (JsonArray) args;
                     System.out.println(String.format("Event '%s' occurred with: %s at %s", eventName, parameters.get(0).getAsString(), parameters.get(1).getAsLong()));
                 }
             });
