@@ -108,8 +108,16 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
         requests.remove( name );
     }
 
-    public void recieve(JsonArray versions, DeepstreamError error) {
-        for (JsonElement version : versions) {
+    /**
+     * Process a response for a request. This overload of the method is for cases where
+     * data from multiple messages has been merged into one deepstream message to save network
+     * traffic.
+     *
+     * @param data The data received in the message
+     * @param error Any errors from the message
+     */
+    public void recieve(JsonArray data, DeepstreamError error) {
+        for (JsonElement version : data) {
             ArrayList<UtilSingleNotifierCallback> callbacks = requests.get( version.getAsString() );
             UtilSingleNotifierCallback cb = callbacks.get(0);
             if( error != null) {

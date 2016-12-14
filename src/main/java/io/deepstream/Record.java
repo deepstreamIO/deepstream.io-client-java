@@ -246,10 +246,34 @@ public class Record {
         return this.set( path, value, false );
     }
 
+    /**
+     * Set the value for the entire record synchronously and gives acknowledgement
+     * whether there were any errors storing the record data in cache or storage.<br/>
+     * Make sure that the Object passed in can be serialised to a JsonElement, otherwise it will
+     * throw a {@link IllegalStateException}. Best way to guarantee this is by setting Json friendly objects,
+     * such as {@link Map}. Since this is a root the object should also not be a primitive.
+     *
+     * @see Record#set(String, Object)
+     */
     public RecordSetResult setWithAck(Object value) {
         return this.setWithAck(null, value);
     }
 
+    /**
+     * Set the value for a specific path in your Record data synchronously and gives acknowledgement
+     * whether there were any errors storing the record data in cache or storage.<br/>
+     * Make sure that the Object passed in can be serialised to a JsonElement, otherwise it will
+     * throw a {@link IllegalStateException}.<br/>
+     * The best way to guarantee this is by setting Json friendly objects,
+     * such as {@link Map}.<br/>
+     * If you path is not null, you can pass in primitives as long as the path
+     * is not null, which is the equivalent of calling {@link Record#set(Object)}.
+     *
+     * @param path The path with the JsonElement at which to set the value
+     * @param value The value to set
+     * @return The record
+     * @throws DeepstreamRecordDestroyedException Thrown if the record has been destroyed and can't perform more actions
+     */
     public RecordSetResult setWithAck(String path, Object value) {
         throwExceptionIfDestroyed( "set" );
 
