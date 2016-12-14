@@ -295,7 +295,8 @@ class Connection implements IConnection {
             }
 
             if( this.loginCallback != null ) {
-                this.loginCallback.loginSuccess( new HashMap() );
+                Object data = MessageParser.convertTyped( message.data[ 0 ], this.client );
+                this.loginCallback.loginSuccess(data);
             }
         }
     }
