@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.j2objc.annotations.ObjectiveCName;
 
 import java.util.ArrayList;
@@ -70,6 +72,20 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
         ackTimeoutRegistry.add(topic, action, name, Event.RESPONSE_TIMEOUT, this, timeoutDuration);
     }
 
+    public void request( String name, String[] data, UtilSingleNotifierCallback utilSingleNotifierCallback ) {
+        ArrayList<UtilSingleNotifierCallback> callbacks = requests.get( name );
+        if( callbacks == null ) {
+            synchronized (this) {
+                callbacks = new ArrayList<>();
+                requests.put(name, callbacks);
+                send(data);
+            }
+        }
+
+        callbacks.add( utilSingleNotifierCallback );
+        ackTimeoutRegistry.add(topic, action, name, Event.RESPONSE_TIMEOUT, this, timeoutDuration);
+    }
+
     /**
      * Process a response for a request. This has quite a flexible API since callback functions
      * differ greatly and helps maximise reuse.
@@ -92,6 +108,19 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
         requests.remove( name );
     }
 
+    public void recieve(JsonArray versions, DeepstreamError error) {
+        for (JsonElement version : versions) {
+            ArrayList<UtilSingleNotifierCallback> callbacks = requests.get( version.getAsString() );
+            UtilSingleNotifierCallback cb = callbacks.get(0);
+            if( error != null) {
+                cb.onSingleNotifierError(null, error);
+            } else {
+                cb.onSingleNotifierResponse(null, null);
+            }
+
+        }
+    }
+
     @Override
     public void resubscribe() {
         for( Object name : requests.keySet() ) {
@@ -102,6 +131,10 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
     @ObjectiveCName("send:")
     private void send( String name ) {
         connection.send( MessageBuilder.getMsg( topic, action, name ) );
+    }
+
+    private void send( String[] data ) {
+        connection.send( MessageBuilder.getMsg( topic, action, data ) );
     }
 
     @Override
