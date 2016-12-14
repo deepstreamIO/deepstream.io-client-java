@@ -124,6 +124,17 @@ public class ConnectionTest {
         verify( deepstreamClientMock, times( 1 ) ).onError( Topic.ERROR, Event.IS_CLOSED, "The client\'s connection was closed" );
     }
 
+    @Test
+    public void gettingValidAuthenticationBackWithData() throws Exception {
+        this.sendingAuthentication();
+        JsonObject data = new JsonObject();
+        data.addProperty("favouriteColour", "red");
+        endpointMock.sendMessage( MessageBuilder.getMsg(Topic.AUTH, Actions.ACK, "O" + data.toString() ) );
+
+        verifyConnectionState( ConnectionState.OPEN );
+        verify( loginCallback, times( 1 ) ).loginSuccess( data );
+    }
+
     private void verifyConnectionState( ConnectionState connectionState) {
         assertEquals( this.connection.getConnectionState(), connectionState);
         verify( this.connectionStateListenerMock, atLeastOnce() ).connectionStateChanged(connectionState);
