@@ -8,7 +8,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.net.URISyntaxException;
-import java.util.HashMap;
 
 import static junit.framework.TestCase.assertEquals;
 import static org.mockito.Mockito.*;
@@ -95,7 +94,7 @@ public class ConnectionTest {
         endpointMock.sendMessage( MessageBuilder.getMsg(Topic.AUTH, Actions.ACK) );
 
         verifyConnectionState( ConnectionState.OPEN );
-        verify( loginCallback, times( 1 ) ).loginSuccess( new HashMap() );
+        verify( loginCallback, times( 1 ) ).loginSuccess( null );
         //verify( loginCallback, times( 0 ) ).loginFailed(); //TODO: Any
     }
 

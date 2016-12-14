@@ -295,8 +295,12 @@ class Connection implements IConnection {
             }
 
             if( this.loginCallback != null ) {
-                Object data = MessageParser.convertTyped( message.data[ 0 ], this.client );
-                this.loginCallback.loginSuccess(data);
+                try {
+                    Object data = MessageParser.convertTyped(message.data[0], this.client);
+                    this.loginCallback.loginSuccess(data);
+                } catch (IndexOutOfBoundsException e) {
+                    this.loginCallback.loginSuccess(null);
+                }
             }
         }
     }
