@@ -72,6 +72,14 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
         ackTimeoutRegistry.add(topic, action, name, Event.RESPONSE_TIMEOUT, this, timeoutDuration);
     }
 
+    /**
+     * Add a request where a response may contain more than one bit of data. Commonly used with
+     * {@link UtilSingleNotifier#recieve(JsonArray, DeepstreamError)}
+     *
+     * @param name The name or version to store callbacks on
+     * @param data The data to send in the request
+     * @param utilSingleNotifierCallback The callback to call once the request is completed
+     */
     public void request( String name, String[] data, UtilSingleNotifierCallback utilSingleNotifierCallback ) {
         ArrayList<UtilSingleNotifierCallback> callbacks = requests.get( name );
         if( callbacks == null ) {
@@ -83,7 +91,6 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
         }
 
         callbacks.add( utilSingleNotifierCallback );
-        ackTimeoutRegistry.add(topic, action, name, Event.RESPONSE_TIMEOUT, this, timeoutDuration);
     }
 
     /**
@@ -113,6 +120,8 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
      * data from multiple messages has been merged into one deepstream message to save network
      * traffic.
      *
+     * Used in conjunction with {@link UtilSingleNotifier#request(String, String[], UtilSingleNotifierCallback)}
+     *
      * @param data The data received in the message
      * @param error Any errors from the message
      */
@@ -125,7 +134,6 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
             } else {
                 cb.onSingleNotifierResponse(null, null);
             }
-
         }
     }
 
