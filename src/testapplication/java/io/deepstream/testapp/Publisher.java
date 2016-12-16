@@ -32,7 +32,7 @@ public class Publisher {
                     listenEvent(client);
                     listenRecord(client);
                     provideRpc(client);
-                    setRecordWithAck(client);
+                    updateRecordWithAck("testRecord", client);
                 }
 
             } catch (Exception e) {
