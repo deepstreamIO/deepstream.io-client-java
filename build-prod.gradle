@@ -57,7 +57,7 @@ j2objcConfig {
     translateArgs "--doc-comments"
     translateArgs "--swift-friendly"
 
-    extraObjcCompilerArgs '-fobjc-arc', '-fembed-bitcode'
+    extraObjcCompilerArgs '-fobjc-arc', '-fembed-bitcode', '-Wno-nullability-completeness'
     finalConfigure() // Must be last call to configuration
 }
 
