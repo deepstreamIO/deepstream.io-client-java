@@ -2,7 +2,7 @@
 #
 # Script used by Travis CI build to prepare DeepstreamIO SDK zip package
 
-J2OBJCVersion=1.1
+J2OBJCVersion=1.2
 
 echo 'Preparing DeepstreamIO.zip for iOS Release';
 
