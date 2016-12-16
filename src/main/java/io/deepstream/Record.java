@@ -231,7 +231,7 @@ public class Record {
      * The best way to guarantee this is by setting Json friendly objects,
      * such as {@link Map}.<br/>
      * If you path is not null, you can pass in primitives as long as the path
-     * is not null, which is the equivalent of calling {@link Record#set(Object)}.
+     * is not null, which is the equivalent of calling {@link Record#set(JsonElement)}.
      *
      * @param path The path with the JsonElement at which to set the value
      * @param value The value to set
