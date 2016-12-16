@@ -137,12 +137,10 @@ class Connection implements IConnection {
         this.endpoint.send( authMessage );
     }
 
-    @ObjectiveCName("addConnectionChangeListener:")
     void addConnectionChangeListener( ConnectionStateListener connectionStateListener) {
         this.connectStateListeners.add(connectionStateListener);
     }
 
-    @ObjectiveCName("removeConnectionChangeListener:")
     void removeConnectionChangeListener( ConnectionStateListener connectionStateListener) {
         this.connectStateListeners.remove(connectionStateListener);
     }

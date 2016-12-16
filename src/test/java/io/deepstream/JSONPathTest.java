@@ -1,9 +1,7 @@
 package io.deepstream;
 
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -128,6 +126,67 @@ public class JSONPathTest {
         Assert.assertEquals(
                 expected,
                 coreElement.get( "pastAddresses" ).getAsJsonArray().get(1)
+        );
+    };
+
+    @Test
+    public void setsValuesForArrayIndexes() {
+        JsonObject newAddress = new JsonObject();
+        newAddress.addProperty( "street", "anotherStreet" );
+        newAddress.addProperty( "postCode", 300 );
+
+        jsonPath.set( "pastAddresses[2]", newAddress );
+        Assert.assertEquals(
+                newAddress,
+                coreElement.get( "pastAddresses" ).getAsJsonArray().get(2)
+        );
+    };
+
+    @Test
+    public void deletesSimpleValues() {
+        Assert.assertEquals(
+                "yasser",
+                coreElement.get( "firstname" ).getAsString()
+        );
+        jsonPath.delete( "firstname" );
+        Assert.assertTrue(
+                jsonPath.get( "firstname" ) == null
+        );
+    };
+
+    @Test
+    public void deletesNestedSimpleValues() {
+        Assert.assertEquals( "currentStreet", jsonPath.get( "address.street" ).getAsString() );
+        jsonPath.delete( "address.street" );
+        Assert.assertTrue(
+                jsonPath.get( "address.street" ) == null
+        );
+    };
+
+    @Test
+    public void deletesObjectValuesFromArrays() {
+        JsonObject expected = new JsonObject();
+        expected.addProperty( "street", "secondstreet" );
+        expected.addProperty( "postCode",2002 );
+        Assert.assertEquals( expected, jsonPath.get( "pastAddresses[1]" ) );
+
+        jsonPath.delete( "pastAddresses[1]" );
+        Assert.assertFalse(
+                jsonPath.get( "pastAddresses" ).getAsJsonArray().contains( expected )
+        );
+    };
+
+    @Test
+    public void deletesObjectValueFromArray() {
+        JsonObject expected = new JsonObject();
+        expected.addProperty( "street", "secondstreet" );
+        expected.addProperty( "postCode",2002 );
+        Object o = jsonPath.get("pastAddresses[1]");
+        Assert.assertEquals( expected, jsonPath.get( "pastAddresses[1]" ) );
+
+        jsonPath.delete( "pastAddresses[1]" );
+        Assert.assertFalse(
+                jsonPath.get( "pastAddresses" ).getAsJsonArray().contains( expected )
         );
     };
 
