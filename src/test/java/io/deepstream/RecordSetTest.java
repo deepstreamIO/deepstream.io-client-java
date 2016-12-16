@@ -87,8 +87,8 @@ public class RecordSetTest {
                 record.onMessage( new Message(
                         "raw",
                         Topic.RECORD,
-                        Actions.WRITE_SUCCESS,
-                        new String[]{ "testRecord", "O[2]", "L" }
+                        Actions.WRITE_ACKNOWLEDGEMENT,
+                        new String[]{ "testRecord", "[2]", "L" }
                 ));
             }
         }).start();
@@ -112,8 +112,8 @@ public class RecordSetTest {
                 record.onMessage( new Message(
                         "raw",
                         Topic.RECORD,
-                        Actions.WRITE_SUCCESS,
-                        new String[]{ "testRecord", "O[2]", "L" }
+                        Actions.WRITE_ACKNOWLEDGEMENT,
+                        new String[]{ "testRecord", "[2]", "L" }
                 ));
             }
         }).start();
@@ -135,8 +135,8 @@ public class RecordSetTest {
                 record.onMessage( new Message(
                         "raw",
                         Topic.RECORD,
-                        Actions.WRITE_SUCCESS,
-                        new String[]{ "testRecord", "O[2]", "SStorage write error" }
+                        Actions.WRITE_ACKNOWLEDGEMENT,
+                        new String[]{ "testRecord", "[2]", "SStorage write error" }
                 ));
             }
         }).start();
@@ -160,8 +160,8 @@ public class RecordSetTest {
                 record.onMessage( new Message(
                         "raw",
                         Topic.RECORD,
-                        Actions.WRITE_SUCCESS,
-                        new String[]{ "testRecord", "O[2]", "SCache write error" }
+                        Actions.WRITE_ACKNOWLEDGEMENT,
+                        new String[]{ "testRecord", "[2]", "SCache write error" }
                 ));
             }
         }).start();

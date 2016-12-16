@@ -501,7 +501,7 @@ public class Record {
             onRead( message );
         } else if( message.action == Actions.READ || message.action == Actions.UPDATE || message.action == Actions.PATCH ) {
             applyUpdate(message);
-        } else if( message.action == Actions.WRITE_SUCCESS ) {
+        } else if( message.action == Actions.WRITE_ACKNOWLEDGEMENT ) {
             handleWriteAcknowledgement(message);
         } else if (message.action == Actions.SUBSCRIPTION_HAS_PROVIDER) {
             updateHasProvider(message);
@@ -514,7 +514,7 @@ public class Record {
 
     private void handleWriteAcknowledgement(Message message) {
         String val = String.valueOf(message.data[1]);
-        Object versions = MessageParser.convertTyped( val, this.client);
+        Object versions = gson.fromJson( val, JsonArray.class );
         Object error = MessageParser.convertTyped(message.data[ 2 ], this.client);
         if( error != null ) {
             this.recordSetNotifier.recieve((JsonArray) versions, new DeepstreamError((String) error));

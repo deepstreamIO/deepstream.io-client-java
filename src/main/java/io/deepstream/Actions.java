@@ -145,7 +145,7 @@ public enum Actions {
     /**
      * Used when requiring write acknowledgements when setting records
      */
-    WRITE_SUCCESS( "WS" );
+    WRITE_ACKNOWLEDGEMENT( "WA" );
 
     private static final Map<String,Actions> lookup  = new HashMap<>();
 

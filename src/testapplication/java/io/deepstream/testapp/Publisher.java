@@ -32,6 +32,7 @@ public class Publisher {
                     listenEvent(client);
                     listenRecord(client);
                     provideRpc(client);
+                    setRecordWithAck(client);
                 }
 
             } catch (Exception e) {
@@ -81,6 +82,17 @@ public class Publisher {
                     //System.out.println( "Updating record " + subscription + " " + record.get() );
                 }
             }, 1, 5, TimeUnit.SECONDS);
+        }
+
+        private void updateRecordWithAck(String recordName, DeepstreamClient client) {
+            Record record = client.record.getRecord(recordName);
+            RecordSetResult result = record.setWithAck("pastAddresses[ 0 ].number", 23);
+            String error = result.getResult();
+            if( error == null ) {
+                System.out.println("Record set successfully");
+            } else {
+                System.out.println("Record wasn't able to be set, error: " + error);
+            }
         }
 
         private void listenEvent(final DeepstreamClient client) {
