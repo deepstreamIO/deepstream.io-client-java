@@ -1,10 +1,7 @@
 package io.deepstream;
 
-import com.google.j2objc.annotations.ObjectiveCName;
-
 import com.google.gson.JsonElement;
-
-import java.util.Map;
+import com.google.j2objc.annotations.ObjectiveCName;
 
 /**
  * A result of a login, indicating if it was successful or not and
@@ -22,7 +19,7 @@ public class LoginResult {
      * @param userData Optional data that is specific to the user and returned on succesfuly authentication
      */
     @ObjectiveCName("init:userData:")
-    LoginResult(boolean loggedIn, Map userData) {
+    LoginResult(boolean loggedIn, Object userData) {
         this.loggedIn = loggedIn;
         this.errorEvent = null;
         this.data = userData;

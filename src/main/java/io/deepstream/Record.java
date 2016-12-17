@@ -223,7 +223,7 @@ public class Record {
      * @see Record#set(String, Object)
      */ 
     @ObjectiveCName("set:")
-    public Record set( Object value ) throws DeepstreamRecordDestroyedException {
+    public Record set( JsonElement value ) throws DeepstreamRecordDestroyedException {
         return this.set( null, value, false );
     }
 
@@ -234,7 +234,7 @@ public class Record {
      * The best way to guarantee this is by setting Json friendly objects,
      * such as {@link Map}.<br/>
      * If you path is not null, you can pass in primitives as long as the path
-     * is not null, which is the equivalent of calling {@link Record#set(Object)}.
+     * is not null, which is the equivalent of calling {@link Record#set(JsonElement)}.
      *
      * @param path The path with the JsonElement at which to set the value
      * @param value The value to set
@@ -548,12 +548,18 @@ public class Record {
         int newVersion = Integer.parseInt(message.data[1]);
 
         JsonElement data;
+        boolean delete = false;
         if( message.action == Actions.PATCH ) {
-            data = gson.toJsonTree( MessageParser.convertTyped( message.data[ 3 ], client ) );
+            Object rawData = MessageParser.convertTyped( message.data[ 3 ], client );
+            if( rawData == Types.UNDEFINED ) {
+                delete = true;
+                data = null;
+            } else {
+                data = gson.toJsonTree( rawData );
+            }
         } else {
             data = gson.fromJson( message.data[ 2 ], JsonElement.class );
         }
-
 
         if (this.version != -1 && this.version + 1 != newVersion) {
             if( message.action == Actions.PATCH ) {
@@ -576,7 +582,11 @@ public class Record {
 
         this.version = newVersion;
         if( Actions.PATCH == message.action ) {
-            path.set( message.data[ 2 ], data );
+            if( delete ) {
+                path.delete( message.data[ 2 ] );
+            } else {
+                path.set(message.data[2], data);
+            }
         } else {
             this.data = data;
             this.path.setCoreElement( data );

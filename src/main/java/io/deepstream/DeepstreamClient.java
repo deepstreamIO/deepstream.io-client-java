@@ -1,14 +1,12 @@
 package io.deepstream;
 
 import com.google.gson.JsonElement;
-
 import com.google.j2objc.annotations.ObjectiveCName;
 
 import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
-import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -51,6 +49,15 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
     @ObjectiveCName("init:")
     public DeepstreamClient(final String url) throws URISyntaxException {
         this(url, new DeepstreamConfig());
+    }
+
+    /**
+     * deepstream.io javascript client
+     *
+     * @throws URISyntaxException Thrown if the url in incorrect
+     */
+    public DeepstreamClient(final String url, Map options) throws URISyntaxException, InvalidDeepstreamConfig {
+        this(url, new DeepstreamConfig(options));
     }
 
     /**
@@ -132,7 +139,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
         this.connection.authenticate(authParams, new LoginCallback() {
             @Override
             @ObjectiveCName("loginSuccess:")
-            public void loginSuccess(Map userData) {
+            public void loginSuccess(Object userData) {
                 loginResult[0] = new LoginResult(true, userData);
                 loggedInLatch.countDown();
             }
@@ -218,7 +225,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
          * @param userData Optional data that is specific to the user and returned on succesfuly authentication
          */
         @ObjectiveCName("loginSuccess:")
-        void loginSuccess(Map userData);
+        void loginSuccess(Object userData);
 
         /**
          * Called when {@link DeepstreamClient#login(JsonElement)} is unsuccessful

@@ -1,5 +1,6 @@
 package io.deepstream;
 
+import com.google.gson.Gson;
 import com.google.j2objc.annotations.ObjectiveCName;
 
 import com.google.gson.JsonElement;
@@ -19,6 +20,7 @@ public class List {
     private final Record record;
     private final ArrayList<ListChangedListener> listChangedListeners;
     private final ArrayList<ListEntryChangedListener> listEntryChangedListeners;
+    private final Gson gson;
 
     /**
      * Constructor is not public since it is created via {@link RecordHandler#getList(String)}
@@ -33,6 +35,7 @@ public class List {
         this.recordListeners = new List.RecordListeners( this, this.record );
         this.listChangedListeners = new ArrayList<>();
         this.listEntryChangedListeners = new ArrayList<>();
+        this.gson = new Gson();
     }
 
     /**
@@ -296,7 +299,7 @@ public class List {
     @ObjectiveCName("updateList:")
     private void updateList(Collection entries) {
         Map<String, ArrayList<Integer>> oldStructure = this.beforeChange();
-        this.record.set( entries );
+        this.record.set( gson.toJsonTree(entries) );
         this.afterChange( oldStructure );
     }
 

@@ -8,7 +8,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.net.URISyntaxException;
-import java.util.HashMap;
 
 import static junit.framework.TestCase.assertEquals;
 import static org.mockito.Mockito.*;
@@ -95,7 +94,7 @@ public class ConnectionTest {
         endpointMock.sendMessage( MessageBuilder.getMsg(Topic.AUTH, Actions.ACK) );
 
         verifyConnectionState( ConnectionState.OPEN );
-        verify( loginCallback, times( 1 ) ).loginSuccess( new HashMap() );
+        verify( loginCallback, times( 1 ) ).loginSuccess( null );
         //verify( loginCallback, times( 0 ) ).loginFailed(); //TODO: Any
     }
 
@@ -122,6 +121,17 @@ public class ConnectionTest {
 
         connection.authenticate( authParams, loginCallback );
         verify( deepstreamClientMock, times( 1 ) ).onError( Topic.ERROR, Event.IS_CLOSED, "The client\'s connection was closed" );
+    }
+
+    @Test
+    public void gettingValidAuthenticationBackWithData() throws Exception {
+        this.sendingAuthentication();
+        JsonObject data = new JsonObject();
+        data.addProperty("favouriteColour", "red");
+        endpointMock.sendMessage( MessageBuilder.getMsg(Topic.AUTH, Actions.ACK, "O" + data.toString() ) );
+
+        verifyConnectionState( ConnectionState.OPEN );
+        verify( loginCallback, times( 1 ) ).loginSuccess( data );
     }
 
     private void verifyConnectionState( ConnectionState connectionState) {

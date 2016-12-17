@@ -6,6 +6,8 @@ import com.google.gson.JsonObject;
 import io.deepstream.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -20,10 +22,7 @@ public class Subscriber {
 
         SubscriberApplication() throws InvalidDeepstreamConfig {
             try {
-                JsonObject authData = new JsonObject();
-                authData.addProperty("username", "Yasser");
-
-                Properties config = new Properties();
+                Map config = new HashMap<String,Object>();
                 config.put(ConfigOptions.SUBSCRIPTION_TIMEOUT.toString(), 500);
                 config.put(ConfigOptions.RECORD_READ_ACK_TIMEOUT.toString(), 500);
                 config.put(ConfigOptions.RECORD_READ_TIMEOUT.toString(), 500);
@@ -32,7 +31,7 @@ public class Subscriber {
                 subscribeConnectionChanges(client);
                 subscribeRuntimeErrors(client);
 
-                LoginResult loginResult = client.login(authData);
+                LoginResult loginResult = client.login();
                 if (!loginResult.loggedIn()) {
                     System.err.println("Failed to login " + loginResult.getErrorEvent());
                 } else {
@@ -55,31 +54,21 @@ public class Subscriber {
         }
 
         private void hasRecord(final DeepstreamClient client) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        boolean hasResult = client.record.has("record/has");
-                        System.out.println(String.format("Has result: %s", hasResult));
-                    } catch (DeepstreamError deepstreamError) {
-                        System.err.println(String.format("Has did not work because: %s", deepstreamError.getMessage()));
-                    }
-                }
-            }).start();
+            try {
+                boolean hasResult = client.record.has("record/has");
+                System.out.println(String.format("Has result: %s", hasResult));
+            } catch (DeepstreamError deepstreamError) {
+                System.err.println(String.format("Has did not work because: %s", deepstreamError.getMessage()));
+            }
         }
 
         private void makeSnapshot(final DeepstreamClient client, final String recordName) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        JsonElement snapshotResult = client.record.snapshot(recordName);
-                        System.err.println(String.format("Snapshot result: %s", snapshotResult));
-                    } catch (DeepstreamError deepstreamError) {
-                        System.err.println(String.format("Snapshot did not work because: %s", deepstreamError.getMessage()));
-                    }
-                }
-            }).start();
+            try {
+                JsonElement snapshotResult = client.record.snapshot(recordName);
+                System.err.println(String.format("Snapshot result: %s", snapshotResult));
+            } catch (DeepstreamError deepstreamError) {
+                System.err.println(String.format("Snapshot did not work because: %s", deepstreamError.getMessage()));
+            }
         }
 
         private void makeRpc(final DeepstreamClient client) {
@@ -120,41 +109,33 @@ public class Subscriber {
         }
 
         private void subscribeList(final DeepstreamClient client) {
-            new Thread(new Runnable() {
+            List list = client.record.getList("list/a");
+            list.subscribe(new ListChangedListener() {
                 @Override
-                public void run() {
-                    List list = client.record.getList("list/a");
-                    list.subscribe(new ListChangedListener() {
-                        @Override
-                        public void onListChanged(String listName, java.util.List entries) {
-                            System.out.println(String.format("List %s entries changed to %s", listName, entries));
-                        }
-                    });
-                    list.subscribe(new ListEntryChangedListener() {
-                        @Override
-                        public void onEntryAdded(String listName, String entry, int position) {
-                            System.out.println(String.format("List %s entry %s added at %i", listName, entry, position));
-                        }
-
-                        @Override
-                        public void onEntryRemoved(String listName, String entry, int position) {
-                            System.out.println(String.format("List %s entry %s removed from %i", listName, entry, position));
-                        }
-
-                        @Override
-                        public void onEntryMoved(String listName, String entry, int position) {
-                            System.out.println(String.format("List %s entry %s moved to %i", listName, entry, position));
-                        }
-                    });
-                    System.out.println(String.format("List '%s' initial state: ", list.name(), list.getEntries()));
+                public void onListChanged(String listName, java.util.List entries) {
+                    System.out.println(String.format("List %s entries changed to %s", listName, entries));
                 }
-            }).start();
+            });
+            list.subscribe(new ListEntryChangedListener() {
+                @Override
+                public void onEntryAdded(String listName, String entry, int position) {
+                    System.out.println(String.format("List %s entry %s added at %i", listName, entry, position));
+                }
+
+                @Override
+                public void onEntryRemoved(String listName, String entry, int position) {
+                    System.out.println(String.format("List %s entry %s removed from %i", listName, entry, position));
+                }
+
+                @Override
+                public void onEntryMoved(String listName, String entry, int position) {
+                    System.out.println(String.format("List %s entry %s moved to %i", listName, entry, position));
+                }
+            });
+            System.out.println(String.format("List '%s' initial state: ", list.name(), list.getEntries()));
         }
 
         private void subscribeRecord(final DeepstreamClient client, final String recordName) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
                     Record record = client.record.getRecord(recordName);
                     record.subscribe(new RecordChangedCallback() {
                         @Override
@@ -163,8 +144,6 @@ public class Subscriber {
                         }
                     });
                     System.out.println(String.format("Record '%s' initial state: ", record.name(), record.get()));
-                }
-            }).start();
         }
 
         private void subscribeEvent(DeepstreamClient client) {

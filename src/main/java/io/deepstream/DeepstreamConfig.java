@@ -2,19 +2,29 @@ package io.deepstream;
 
 import com.google.j2objc.annotations.ObjectiveCName;
 
+import java.util.Map;
 import java.util.Properties;
 
 class DeepstreamConfig {
-    final private Properties properties;
+    private Properties properties;
 
     DeepstreamConfig() {
         properties = new Properties();
     }
 
+    DeepstreamConfig(Map map) throws InvalidDeepstreamConfig {
+        this.properties = new Properties();
+        properties.putAll(map);
+        this.validateProperties();
+    }
+
     @ObjectiveCName("init:")
     DeepstreamConfig( Properties properties ) throws InvalidDeepstreamConfig {
         this.properties = properties;
+        this.validateProperties();
+    }
 
+    private void validateProperties() throws InvalidDeepstreamConfig {
         try {
             this.getPath();
             this.getEndpointType();
@@ -31,7 +41,6 @@ class DeepstreamConfig {
         } catch( Exception e ) {
             throw new InvalidDeepstreamConfig();
         }
-
     }
 
     String getPath() {

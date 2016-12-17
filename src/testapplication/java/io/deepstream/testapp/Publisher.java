@@ -17,14 +17,11 @@ public class Publisher {
         PublisherApplication() throws InvalidDeepstreamConfig {
 
             try {
-                JsonObject authData = new JsonObject();
-                authData.addProperty("username", "Publisher");
-
                 DeepstreamClient client = new DeepstreamClient("localhost:6020");
                 subscribeConnectionChanges(client);
                 subscribeRuntimeErrors(client);
 
-                LoginResult loginResult = client.login(authData);
+                LoginResult loginResult = client.login();
                 if (!loginResult.loggedIn()) {
                     System.err.println("Provider Failed to login " + loginResult.getErrorEvent());
                 } else {

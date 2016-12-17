@@ -4,6 +4,7 @@ import com.google.j2objc.annotations.ObjectiveCName;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.sun.istack.internal.NotNull;
 
 import java.net.URISyntaxException;
 import java.util.*;
@@ -94,7 +95,12 @@ class Connection implements IConnection {
     @ObjectiveCName("authenticate:loginCallback:")
     void authenticate(JsonElement authParameters, DeepstreamClient.LoginCallback loginCallback) {
         this.loginCallback = loginCallback;
-        this.authParameters = authParameters;
+
+        if(this.authParameters != null) {
+            this.authParameters = authParameters;
+        } else {
+            this.authParameters = new JsonObject();
+        }
 
         if( this.tooManyAuthAttempts || this.challengeDenied ) {
             this.client.onError( Topic.ERROR, Event.IS_CLOSED, "The client\'s connection was closed" );
@@ -137,12 +143,10 @@ class Connection implements IConnection {
         this.endpoint.send( authMessage );
     }
 
-    @ObjectiveCName("addConnectionChangeListener:")
     void addConnectionChangeListener( ConnectionStateListener connectionStateListener) {
         this.connectStateListeners.add(connectionStateListener);
     }
 
-    @ObjectiveCName("removeConnectionChangeListener:")
     void removeConnectionChangeListener( ConnectionStateListener connectionStateListener) {
         this.connectStateListeners.remove(connectionStateListener);
     }
@@ -295,7 +299,12 @@ class Connection implements IConnection {
             }
 
             if( this.loginCallback != null ) {
-                this.loginCallback.loginSuccess( new HashMap() );
+                try {
+                    Object data = MessageParser.convertTyped(message.data[0], this.client);
+                    this.loginCallback.loginSuccess(data);
+                } catch (IndexOutOfBoundsException e) {
+                    this.loginCallback.loginSuccess(null);
+                }
             }
         }
     }
