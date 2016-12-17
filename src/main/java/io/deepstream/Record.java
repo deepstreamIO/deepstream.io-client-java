@@ -286,8 +286,8 @@ public class Record {
             return new RecordSetResult(null);
         }
 
-        RecordSetResult[] result = new RecordSetResult[1];
-        Map<String,JsonElement> oldValues = beginChange();
+        final RecordSetResult[] result = new RecordSetResult[1];
+        final Map<String,JsonElement> oldValues = beginChange();
         this.path.set( path, element );
         this.data = this.path.getCoreElement();
 
