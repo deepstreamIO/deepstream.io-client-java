@@ -17,14 +17,11 @@ public class Publisher {
         PublisherApplication() throws InvalidDeepstreamConfig {
 
             try {
-                JsonObject authData = new JsonObject();
-                authData.addProperty("username", "Publisher");
-
                 DeepstreamClient client = new DeepstreamClient("localhost:6020");
                 subscribeConnectionChanges(client);
                 subscribeRuntimeErrors(client);
 
-                LoginResult loginResult = client.login(authData);
+                LoginResult loginResult = client.login();
                 if (!loginResult.loggedIn()) {
                     System.err.println("Provider Failed to login " + loginResult.getErrorEvent());
                 } else {
@@ -122,7 +119,7 @@ public class Publisher {
                             double random = Math.random();
                             if (random < 0.2) {
                                 response.reject();
-                            } else if (random < 0.7) {
+                        } else if (random < 0.7) {
                                 response.send(numbers.get(0).getAsDouble() + numbers.get(1).getAsDouble());
                             } else {
                                 response.error("This intentionally randomly failed");

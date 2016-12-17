@@ -5,6 +5,7 @@ import com.google.j2objc.annotations.ObjectiveCName;
 
 import java.net.URISyntaxException;
 import java.util.Date;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 
@@ -48,6 +49,15 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
     @ObjectiveCName("init:")
     public DeepstreamClient(final String url) throws URISyntaxException {
         this(url, new DeepstreamConfig());
+    }
+
+    /**
+     * deepstream.io javascript client
+     *
+     * @throws URISyntaxException Thrown if the url in incorrect
+     */
+    public DeepstreamClient(final String url, Map options) throws URISyntaxException, InvalidDeepstreamConfig {
+        this(url, new DeepstreamConfig(options));
     }
 
     /**
