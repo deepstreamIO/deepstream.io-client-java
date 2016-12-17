@@ -3,6 +3,8 @@ package io.deepstream;
 import com.google.j2objc.annotations.ObjectiveCName;
 
 import com.google.gson.JsonElement;
+import com.sun.istack.internal.NotNull;
+import com.sun.istack.internal.Nullable;
 
 import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -42,6 +44,7 @@ public class AnonymousRecord {
      *
      * @return the name of the record being represented
      */
+    @Nullable
     public String name() {
         if (this.record != null) {
             return this.record.name();
@@ -56,6 +59,7 @@ public class AnonymousRecord {
      * @return The AnonymousRecord
      */
     @ObjectiveCName("addRecordNameChangedListener:")
+    @NotNull
     public AnonymousRecord addRecordNameChangedListener(AnonymousRecordNameChangedListener anonymousRecordNameChangedCallback ) {
         this.anonymousRecordNameChangedCallbacks.add( anonymousRecordNameChangedCallback );
         return this;
@@ -67,19 +71,21 @@ public class AnonymousRecord {
      * @return The AnonymousRecord
      */
     @ObjectiveCName("removeRecordNameChangedCallback:")
+    @NotNull
     public AnonymousRecord removeRecordNameChangedCallback(AnonymousRecordNameChangedListener anonymousRecordNameChangedCallback ) {
         this.anonymousRecordNameChangedCallbacks.remove( anonymousRecordNameChangedCallback );
         return this;
     }
 
     /**
-     * Proxies to the actual{@link Record#set(Object)} method. It is valid
+     * Proxies to the actual{@link Record#set(JsonElement)} method. It is valid
      * to call get prior to setName - if no record exists,
      * the method returns null
      * @return The AnonymousRecord
      */
     @ObjectiveCName("set:")
-    public AnonymousRecord set( Object data ) throws AnonymousRecordUninitialized {
+    @NotNull
+    public AnonymousRecord set( JsonElement data ) throws AnonymousRecordUninitialized {
         return this.set( null, data );
     }
 
@@ -90,6 +96,7 @@ public class AnonymousRecord {
      * @return The AnonymousRecord
      */
     @ObjectiveCName("set:Object:")
+    @Nullable
     public AnonymousRecord set( String path, Object data ) throws AnonymousRecordUninitialized {
         if( this.record == null ) {
             throw new AnonymousRecordUninitialized( "set" );
@@ -130,6 +137,7 @@ public class AnonymousRecord {
      * the method returns null
      * @return The JsonElement
      */
+    @NotNull
     public JsonElement get() {
         if( this.record == null ) {
             return null;
@@ -145,6 +153,7 @@ public class AnonymousRecord {
      * @return The JsonElement
      */
     @ObjectiveCName("get:")
+    @Nullable
     public JsonElement get(String path ) {
         if( this.record == null ) {
             return null;
@@ -158,6 +167,7 @@ public class AnonymousRecord {
      * @return The AnonymousRecord
      */
     @ObjectiveCName("subscribe:")
+    @NotNull
     public AnonymousRecord subscribe( RecordChangedCallback recordChangedCallback ) {
         this.subscriptions.add( new Subscription( recordChangedCallback ) );
 
@@ -177,6 +187,7 @@ public class AnonymousRecord {
      * @return The AnonymousRecord
      */
     @ObjectiveCName("subscribe:recordPathChangedCallback:")
+    @NotNull
     public AnonymousRecord subscribe( String path, RecordPathChangedCallback recordPathChangedCallback ) {
         this.subscriptions.add( new Subscription( path, recordPathChangedCallback ) );
 
@@ -193,6 +204,7 @@ public class AnonymousRecord {
      * @return The AnonymousRecord
      */
     @ObjectiveCName("unsubscribe:")
+    @NotNull
     public AnonymousRecord unsubscribe( RecordChangedCallback recordChangedCallback ) {
         for( Subscription subscription : subscriptions ) {
             if( subscription.recordChangedCallback == recordChangedCallback ) {
@@ -215,6 +227,7 @@ public class AnonymousRecord {
      * @return The AnonymousRecord
      */
     @ObjectiveCName("unsubscribe:recordPathChangedCallback:")
+    @NotNull
     public AnonymousRecord unsubscribe( String path, RecordPathChangedCallback recordPathChangedCallback ) {
         for( Subscription subscription : subscriptions ) {
             if( subscription.path.equals( path ) && subscription.recordPathChangedCallback == recordPathChangedCallback ) {
@@ -236,6 +249,7 @@ public class AnonymousRecord {
      * @return The AnonymousRecord
      */
     @ObjectiveCName("addRecordEventsListener:")
+    @NotNull
     public AnonymousRecord addRecordEventsListener(RecordEventsListener recordEventListener ) {
         this.subscriptions.add( new Subscription( recordEventListener ) );
 

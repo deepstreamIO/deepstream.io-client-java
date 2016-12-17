@@ -1,7 +1,10 @@
 package io.deepstream;
 
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -69,7 +72,46 @@ public class RecordSetTest {
     }
 
     @Test
-    public void deletesValueWhenSendingUndefined() throws DeepstreamRecordDestroyedException {
-        //TODO
+    public void sendsPatchForNestedUpdate() {
+        record.set( "address[0].street", "randomStreet" );
+        Assert.assertEquals( connectionMock.lastSentMessage, TestUtil.replaceSeperators( "R|P|testRecord|1|address[0].street|SrandomStreet+" ) );
+        Assert.assertEquals( record.get( "address[ 0 ].street" ).getAsString(), "randomStreet" );
+    }
+
+    @Test
+    public void deletesValueWhenReceivingUndefined() {
+        record.set( "firstname", "Alex" );
+        record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|P|testRecord|2|firstname|U+" ), deepstreamClientMock ) );
+        Object o = record.get("firstname");
+        Assert.assertTrue( record.get( "firstname" ).isJsonNull() );
+    }
+
+    @Test
+    public void deletesNestedObjectValueWhenReceivingUndefined() {
+        record.set( "firstname", "Alex" );
+        JsonObject drinks = new JsonObject();
+        drinks.addProperty( "beer", "pilsner" );
+        drinks.addProperty( "coffee", "flat white" );
+        record.set( "drinks", drinks );
+        record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|P|testRecord|3|drinks.beer|U+" ), deepstreamClientMock ) );
+        Assert.assertTrue( record.get( "drinks.beer" ).isJsonNull() );
+    }
+
+    @Test
+    public void deletesArrayValueWhenReceivingUndefined() {
+        record.set( "firstname", "Alex" );
+        JsonArray drinks = new JsonArray();
+        drinks.add( "beer" ); drinks.add( "coffee" );
+        record.set( "drinks", drinks );
+        record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|P|testRecord|3|drinks[ 0 ]|U+" ), deepstreamClientMock ) );
+        Assert.assertEquals( record.get( "drinks[ 0 ]" ).getAsString(), "coffee" );
+    }
+
+    @Test
+    public void deletesNestedArrayValueWhenReceivingUndefined() {
+        record.set( "address[0].street", "Alex" );
+        record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|P|testRecord|2|address[ 0 ].street|U+" ), deepstreamClientMock ) );
+        Object o = record.get( "address[ 0 ].street" );
+        Assert.assertTrue( record.get( "address[ 0 ].street" ).isJsonNull()  );
     }
 }

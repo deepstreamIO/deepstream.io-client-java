@@ -1,6 +1,7 @@
 package io.deepstream;
 
 import com.google.j2objc.annotations.ObjectiveCName;
+import com.sun.istack.internal.NotNull;
 
 import java.util.EnumSet;
 import java.util.HashMap;
