@@ -52,7 +52,8 @@ echo '//
 #define DeepstreamIO_h
 
 // J2ObjC requirement for Java Runtime Environment
-#import "JreEmulation.h"\n' >> $DS_TMP_DIR/src/DeepstreamIO.h
+#import "JreEmulation.h"
+#import "java/util/ArrayList.h"\n' >> $DS_TMP_DIR/src/DeepstreamIO.h
 
 pushd $TRAVIS_BUILD_DIR/build/j2objcOutputs/src/main/objc
 for f in *.h; do
