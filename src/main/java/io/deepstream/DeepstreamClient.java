@@ -85,6 +85,22 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
         this.presence = new PresenceHandler(deepstreamConfig, this.connection, this);
     }
 
+    public RecordHandler getRecordHandler() {
+        return this.record;
+    }
+
+    public EventHandler getEventHandler() {
+        return this.event;
+    }
+
+    public RpcHandler getRpcHandler() {
+        return this.rpc;
+    }
+
+    public PresenceHandler getPresenceHandler() {
+        return this.presence;
+    }
+
     /**
      * Adds a {@link DeepstreamRuntimeErrorHandler} that will catch all RuntimeErrors such as AckTimeouts and allow
      * the user to gracefully handle them.

@@ -20,7 +20,7 @@ public class Publisher {
                 DeepstreamClient client = new DeepstreamClient("localhost:6020");
                 subscribeConnectionChanges(client);
                 subscribeRuntimeErrors(client);
-
+                
                 LoginResult loginResult = client.login();
                 if (!loginResult.loggedIn()) {
                     System.err.println("Provider Failed to login " + loginResult.getErrorEvent());
