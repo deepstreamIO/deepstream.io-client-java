@@ -16,6 +16,7 @@ DS_HEADERS="$DS_SRC/main/objc/"
 DS_IOS_LIB="$TRAVIS_BUILD_DIR/build/j2objcOutputs/lib/iosRelease/libdeepstream.io-client-java-j2objc.a"
 DS_OSX_LIB="$TRAVIS_BUILD_DIR/build/j2objcOutputs/lib/x86_64Release/libdeepstream.io-client-java-j2objc.a"
 DS_LICENSE="$TRAVIS_BUILD_DIR/LICENSE"
+DS_SWIFT_EXTENSIONS="$TRAVIS_BUILD_DIR/swift"
 
 J2OBJC_ROOT="$TRAVIS_BUILD_DIR/j2objcDist/j2objc-$J2OBJCVersion"
 J2OBJC_INCLUDE_HEADERS="$J2OBJC_ROOT/include/"
@@ -37,6 +38,7 @@ cp $DS_LICENSE $DS_TMP_DIR
 cp -r $DS_SRC $DS_TMP_DIR/src
 cp $DS_IOS_LIB $DS_TMP_DIR/lib/iosRelease
 cp $DS_OSX_LIB $DS_TMP_DIR/lib/x86_64Release
+cp -a $DS_SWIFT_EXTENSIONS $DS_TMP_DIR/
 
 # Create DeepstreamIO.h
 touch $DS_TMP_DIR/src/DeepstreamIO.h
