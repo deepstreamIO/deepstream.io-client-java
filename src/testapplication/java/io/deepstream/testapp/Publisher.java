@@ -109,16 +109,14 @@ public class Publisher {
             return scheduledFuture;
         }
 
-        private ScheduledFuture updateList(final String subscription, DeepstreamClient client) {
+        private ScheduledFuture updateList(final String subscription, final DeepstreamClient client) {
             final List list = client.record.getList(subscription);
             list.setEntries( new String[] {} );
-            final int[] count = {0};
             ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(1);
             ScheduledFuture scheduledFuture = executor.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
-                    count[0]++;
-                    list.addEntry( "entry-" + count[0] );
+                    list.addEntry( client.getUid() );
                 }
             }, 1, 5, TimeUnit.SECONDS);
             return scheduledFuture;

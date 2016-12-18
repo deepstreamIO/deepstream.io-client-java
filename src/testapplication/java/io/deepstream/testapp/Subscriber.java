@@ -112,7 +112,7 @@ public class Subscriber {
             list.subscribe(new ListChangedListener() {
                 @Override
                 public void onListChanged(String listName, String[] entries) {
-                    System.out.println(String.format("List %s entries changed to %s", listName, Arrays.asList(entries)));
+                    System.out.println(String.format("List %s entries changed to %s", listName, Arrays.toString(entries)));
                 }
             });
             list.subscribe(new ListEntryChangedListener() {
@@ -131,7 +131,7 @@ public class Subscriber {
                     System.out.println(String.format("List %s entry %s moved", listName, entry));
                 }
             });
-            System.out.println(String.format("List '%s' initial state: %s", list.name(), Arrays.asList(list.getEntries())));
+            System.out.println(String.format("List '%s' initial state: %s", list.name(), Arrays.toString(list.getEntries())));
         }
 
         private void subscribeRecord(final DeepstreamClient client, final String recordName) {
@@ -171,11 +171,7 @@ public class Subscriber {
 
         private void queryClients(DeepstreamClient client) throws DeepstreamError {
             String[] clients = client.presence.getAll();
-            System.out.print("Clients currently connected: ");
-            for (String c : clients) {
-                System.out.print(c + " ");
-            }
-            System.out.println();
+            System.out.println(String.format("Clients currently connected: ", Arrays.toString(clients)));
         }
 
     }
