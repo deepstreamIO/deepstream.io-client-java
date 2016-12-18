@@ -28,6 +28,7 @@ public class Publisher {
                     System.out.println("Provider Login Success");
                     listenEvent(client);
                     listenRecord(client);
+                    listenList(client);
                     provideRpc(client);
                     updateRecordWithAck("testRecord", client);
                 }
@@ -36,6 +37,32 @@ public class Publisher {
                 e.printStackTrace();
             }
 
+        }
+
+        private void listenList(final DeepstreamClient client) {
+            final ScheduledFuture[] scheduledFuture = new ScheduledFuture[1];
+            client.record.listen("list/.*", new ListenListener() {
+                @Override
+                public boolean onSubscriptionForPatternAdded(final String subscription) {
+                    System.out.println(String.format("List %s just subscribed.", subscription));
+
+                    ExecutorService executor = Executors.newSingleThreadExecutor();
+                    executor.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateList(subscription, client);
+                        }
+                    });
+
+                    return true;
+                }
+
+                @Override
+                public void onSubscriptionForPatternRemoved(String subscription) {
+                    System.out.println(String.format("List %s just unsubscribed.", subscription));
+                    scheduledFuture[0].cancel(false);
+                }
+            });
         }
 
         private void listenRecord(final DeepstreamClient client) {
@@ -49,7 +76,7 @@ public class Publisher {
                     executor.execute(new Runnable() {
                         @Override
                         public void run() {
-                            updateRecord(subscription, client, scheduledFuture[0]);
+                            updateRecord(subscription, client);
                         }
                     });
 
@@ -64,11 +91,11 @@ public class Publisher {
             });
         }
 
-        private void updateRecord(final String subscription, DeepstreamClient client, ScheduledFuture scheduledFuture) {
+        private ScheduledFuture updateRecord(final String subscription, DeepstreamClient client) {
             final Record record = client.record.getRecord(subscription);
             final int[] count = {0};
             ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(1);
-            scheduledFuture = executor.scheduleAtFixedRate(new Runnable() {
+            ScheduledFuture scheduledFuture = executor.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
                     JsonObject data = new JsonObject();
@@ -79,6 +106,22 @@ public class Publisher {
                     //System.out.println( "Updating record " + subscription + " " + record.get() );
                 }
             }, 1, 5, TimeUnit.SECONDS);
+            return scheduledFuture;
+        }
+
+        private ScheduledFuture updateList(final String subscription, DeepstreamClient client) {
+            final List list = client.record.getList(subscription);
+            list.setEntries( new String[] {} );
+            final int[] count = {0};
+            ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(1);
+            ScheduledFuture scheduledFuture = executor.scheduleAtFixedRate(new Runnable() {
+                @Override
+                public void run() {
+                    count[0]++;
+                    list.addEntry( "entry-" + count[0] );
+                }
+            }, 1, 5, TimeUnit.SECONDS);
+            return scheduledFuture;
         }
 
         private void updateRecordWithAck(String recordName, DeepstreamClient client) {

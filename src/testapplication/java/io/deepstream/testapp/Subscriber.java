@@ -4,11 +4,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.deepstream.*;
+import io.deepstream.EventListener;
+import io.deepstream.List;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -112,27 +111,27 @@ public class Subscriber {
             List list = client.record.getList("list/a");
             list.subscribe(new ListChangedListener() {
                 @Override
-                public void onListChanged(String listName, java.util.List entries) {
-                    System.out.println(String.format("List %s entries changed to %s", listName, entries));
+                public void onListChanged(String listName, String[] entries) {
+                    System.out.println(String.format("List %s entries changed to %s", listName, Arrays.asList(entries)));
                 }
             });
             list.subscribe(new ListEntryChangedListener() {
                 @Override
                 public void onEntryAdded(String listName, String entry, int position) {
-                    System.out.println(String.format("List %s entry %s added at %i", listName, entry, position));
+                    System.out.println(String.format("List %s entry %s added", listName, entry));
                 }
 
                 @Override
                 public void onEntryRemoved(String listName, String entry, int position) {
-                    System.out.println(String.format("List %s entry %s removed from %i", listName, entry, position));
+                    System.out.println(String.format("List %s entry %s removed", listName, entry));
                 }
 
                 @Override
                 public void onEntryMoved(String listName, String entry, int position) {
-                    System.out.println(String.format("List %s entry %s moved to %i", listName, entry, position));
+                    System.out.println(String.format("List %s entry %s moved", listName, entry));
                 }
             });
-            System.out.println(String.format("List '%s' initial state: ", list.name(), list.getEntries()));
+            System.out.println(String.format("List '%s' initial state: %s", list.name(), Arrays.asList(list.getEntries())));
         }
 
         private void subscribeRecord(final DeepstreamClient client, final String recordName) {
@@ -171,7 +170,7 @@ public class Subscriber {
         }
 
         private void queryClients(DeepstreamClient client) throws DeepstreamError {
-            ArrayList<String> clients = client.presence.getAll();
+            String[] clients = client.presence.getAll();
             System.out.print("Clients currently connected: ");
             for (String c : clients) {
                 System.out.print(c + " ");

@@ -42,9 +42,9 @@ public class PresenceHandler {
      * @return List<String> a list of currently connected clients
      * @throws DeepstreamError
      */
-    public ArrayList<String> getAll() throws DeepstreamError {
+    public String[] getAll() throws DeepstreamError {
 
-        final ArrayList<String>[] data = new ArrayList[1];
+        final Object[] data = new Object[1];
         final DeepstreamError[] deepstreamException = new DeepstreamError[1];
 
         final CountDownLatch snapshotLatch = new CountDownLatch(1);
@@ -58,7 +58,7 @@ public class PresenceHandler {
 
             @Override
             public void onSingleNotifierResponse(String name, Object users) {
-                data[0] = new ArrayList<String>( Arrays.asList( (String[]) users ) );
+                data[0] = users;
                 snapshotLatch.countDown();
             }
         });
@@ -72,7 +72,7 @@ public class PresenceHandler {
         if (deepstreamException[0] != null) {
             throw deepstreamException[0];
         }
-        return  data[0];
+        return (String[]) data[0];
     }
 
     /**

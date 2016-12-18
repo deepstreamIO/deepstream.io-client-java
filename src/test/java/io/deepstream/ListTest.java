@@ -65,11 +65,9 @@ public class ListTest {
 
     @Test
     public void initialState() {
-        ArrayList<String> content = new ArrayList<>();
-        content.add( "entryA" );
-        content.add( "entryB" );
+        String[] content = { "entryA", "entryB" };
 
-        Assert.assertEquals( list.getEntries(), content );
+        Assert.assertArrayEquals( list.getEntries(), content );
         //verify( listChangedListener, times( 1 ) ).onListChanged( listName, content );
         Assert.assertTrue( list.isReady() );
         Assert.assertFalse( list.isDestroyed() );
@@ -82,14 +80,11 @@ public class ListTest {
 
         reset( listChangedListener );
 
-        ArrayList<String> content = new ArrayList<>();
-        content.add( "entryA" );
-        content.add( "entryB" );
-        content.add( "entryC" );
+        String[] content = { "entryA", "entryB", "entryC" };
 
         list.addEntry( "entryC" );
 
-        Assert.assertEquals( list.getEntries(), content );
+        Assert.assertArrayEquals( list.getEntries(), content );
         verify( listChangedListener, times( 1 ) ).onListChanged( listName, content );
 
         Assert.assertEquals( connectionMock.lastSentMessage, TestUtil.replaceSeperators( "R|U|someList|2|[\"entryA\",\"entryB\",\"entryC\"]+" ) );
@@ -101,13 +96,11 @@ public class ListTest {
 
         reset( listChangedListener );
 
-        ArrayList<String> content = new ArrayList<>();
-        content.add( "entryA" );
-        content.add( "entryC" );
+        String[] content = { "entryA", "entryC" };
 
         list.removeEntry( "entryB" );
 
-        Assert.assertEquals( content, list.getEntries() );
+        Assert.assertArrayEquals( content, list.getEntries() );
         verify( listChangedListener, times( 1 ) ).onListChanged( listName, content );
 
         Assert.assertEquals( connectionMock.lastSentMessage, TestUtil.replaceSeperators( "R|U|someList|3|[\"entryA\",\"entryC\"]+" ) );
@@ -119,14 +112,10 @@ public class ListTest {
 
         reset( listChangedListener );
 
-        ArrayList<String> content = new ArrayList<>();
-        content.add( "entryA" );
-        content.add( "entryD" );
-        content.add( "entryC" );
-
+        String[] content = { "entryA", "entryD", "entryC" };
         list.addEntry( "entryD", 1 );
 
-        Assert.assertEquals( content, list.getEntries() );
+        Assert.assertArrayEquals( content, list.getEntries() );
         verify( listChangedListener, times( 1 ) ).onListChanged( listName, content );
 
         Assert.assertEquals( connectionMock.lastSentMessage, TestUtil.replaceSeperators( "R|U|someList|4|[\"entryA\",\"entryD\",\"entryC\"]+" ) );
@@ -138,13 +127,11 @@ public class ListTest {
 
         reset( listChangedListener );
 
-        ArrayList<String> content = new ArrayList<>();
-        content.add( "entryA" );
-        content.add( "entryC" );
+        String[] content = { "entryA", "entryC" };
 
         list.removeEntry( "entryD", 1 );
 
-        Assert.assertEquals( content, list.getEntries() );
+        Assert.assertArrayEquals( content, list.getEntries() );
         verify( listChangedListener, times( 1 ) ).onListChanged( listName, content );
 
         Assert.assertEquals( connectionMock.lastSentMessage, TestUtil.replaceSeperators( "R|U|someList|5|[\"entryA\",\"entryC\"]+" ) );
@@ -156,13 +143,10 @@ public class ListTest {
 
         reset( listChangedListener );
 
-        ArrayList<String> content = new ArrayList<>();
-        content.add( "u" );
-        content.add( "v" );
-
+        String[] content = { "u", "v" };
         list.setEntries( content );
 
-        Assert.assertEquals( content, list.getEntries() );
+        Assert.assertArrayEquals( content, list.getEntries() );
         verify( listChangedListener, times( 1 ) ).onListChanged( listName, content );
 
         Assert.assertEquals( connectionMock.lastSentMessage, TestUtil.replaceSeperators( "R|U|someList|6|[\"u\",\"v\"]+" ) );
@@ -174,13 +158,11 @@ public class ListTest {
 
         reset( listChangedListener );
 
-        ArrayList<String> content = new ArrayList<>();
-        content.add( "x" );
-        content.add( "y" );
+        String[] content = { "x", "y" };
 
         recordHandler.handle( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|someList|7|[\"x\",\"y\"]" ), deepstreamClientMock ) );
 
-        Assert.assertEquals( content, list.getEntries() );
+        Assert.assertArrayEquals( content, list.getEntries() );
         verify( listChangedListener, times( 1 ) ).onListChanged( listName, content );
     }
 
@@ -190,7 +172,7 @@ public class ListTest {
 
         reset( listChangedListener );
 
-        ArrayList<String> content = new ArrayList<>();
+        String[] content = new String[] {};
         list.setEntries( content );
 
         Assert.assertEquals( connectionMock.lastSentMessage, TestUtil.replaceSeperators( "R|U|someList|8|[]+" ) );
@@ -206,7 +188,7 @@ public class ListTest {
 
         list.unsubscribe( listChangedListener );
 
-        ArrayList<String> content = new ArrayList<>();
+        String[] content = new String[] {};
         list.setEntries( content );
 
         verify( listChangedListener, times( 0 ) ).onListChanged( listName, content );
