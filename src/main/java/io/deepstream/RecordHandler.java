@@ -167,7 +167,7 @@ public class RecordHandler {
      * @param name The name of the record which state to retrieve
      */
     @ObjectiveCName("snapshot:")
-    public JsonElement snapshot(String name) throws DeepstreamError {
+    public SnapshotResult snapshot(String name) {
         final JsonElement[] data = new JsonElement[1];
         final DeepstreamError[] deepstreamException = new DeepstreamError[1];
 
@@ -201,11 +201,7 @@ public class RecordHandler {
             }
         }
 
-        if (deepstreamException[0] != null) {
-            throw deepstreamException[0];
-        }
-
-        return data[0];
+        return new SnapshotResult(data[0], deepstreamException[0]);
     }
 
     /**
@@ -217,7 +213,7 @@ public class RecordHandler {
      * @param name The name of the record to check
      */
     @ObjectiveCName("has:")
-    public boolean has(String name) throws DeepstreamError {
+    public HasResult has(String name) {
         final DeepstreamError[] deepstreamException = new DeepstreamError[1];
         final boolean[] hasRecord = new boolean[1];
 
@@ -250,11 +246,7 @@ public class RecordHandler {
             }
         }
 
-        if (deepstreamException[0] != null) {
-            throw deepstreamException[0];
-        }
-
-        return hasRecord[0];
+        return new HasResult(hasRecord[0], deepstreamException[0]);
     }
 
 

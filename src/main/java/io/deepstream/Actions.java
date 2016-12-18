@@ -24,7 +24,7 @@ public enum Actions {
      */
     PONG( "PO" ),
     /**
-     * An acknowledgement from serer
+     * An acknowledgement from server
      */
     ACK( "A" ),
     /**

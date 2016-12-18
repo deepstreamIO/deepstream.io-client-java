@@ -2,7 +2,6 @@ package io.deepstream.testapp;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import io.deepstream.*;
 import io.deepstream.EventListener;
 import io.deepstream.List;
@@ -53,20 +52,20 @@ public class Subscriber {
         }
 
         private void hasRecord(final DeepstreamClient client) {
-            try {
-                boolean hasResult = client.record.has("record/has");
-                System.out.println(String.format("Has result: %s", hasResult));
-            } catch (DeepstreamError deepstreamError) {
-                System.err.println(String.format("Has did not work because: %s", deepstreamError.getMessage()));
+            HasResult hasResult = client.record.has("record/has");
+            if(hasResult.hasError()) {
+                System.err.println(String.format("Has did not work because: %s", hasResult.getError().getMessage()));
+            } else {
+                System.out.println(String.format("Has result: %s", hasResult.getResult()));
             }
         }
 
         private void makeSnapshot(final DeepstreamClient client, final String recordName) {
-            try {
-                JsonElement snapshotResult = client.record.snapshot(recordName);
-                System.err.println(String.format("Snapshot result: %s", snapshotResult));
-            } catch (DeepstreamError deepstreamError) {
-                System.err.println(String.format("Snapshot did not work because: %s", deepstreamError.getMessage()));
+            SnapshotResult snapshotResult = client.record.snapshot(recordName);
+            if(snapshotResult.hasError()) {
+                System.err.println(String.format("Snapshot did not work because: %s", snapshotResult.getError().getMessage()));
+            } else {
+                System.out.println(String.format("Snapshot result: %s", snapshotResult.getData()));
             }
         }
 
