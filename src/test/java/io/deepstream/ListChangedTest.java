@@ -98,13 +98,8 @@ public class ListChangedTest {
 
     @Test
     public void entryMoved() {
-        ArrayList entries = new ArrayList();
-        entries.add( "a" );
-        entries.add( "b" );
-        entries.add( "e" );
-        entries.add( "d" );
-        entries.add( "c" );
 
+        String[] entries = new String[] {"a", "b", "e", "d", "c"};
         list.setEntries( entries );
 
         verify( listEntryChangedListener, times( 0 ) ).onEntryAdded( anyString(), anyString(), anyInt() );
@@ -138,12 +133,7 @@ public class ListChangedTest {
 
     @Test
     public void notifiesWhenSecondInstanceOfSameItemIsRemoved() {
-        ArrayList entries = new ArrayList();
-        entries.add( "a" );
-        entries.add( "d" );
-        entries.add( "b" );
-        entries.add( "c" );
-
+        String[] entries = new String[] {"a", "d", "b", "c"};
         list.setEntries( entries );
 
         verify( listEntryChangedListener, times( 0 ) ).onEntryAdded( anyString(), anyString(), anyInt() );
@@ -158,13 +148,7 @@ public class ListChangedTest {
     //TODO
     //@Test
     public void notifiesTheListenerForAnAddMoveCombination() {
-        ArrayList entries = new ArrayList();
-        entries.add( "a" );
-        entries.add( "b" );
-        entries.add( "c" );
-        entries.add( "c" );
-        entries.add( "d" );
-        entries.add( "e" );
+        String[] entries = new String[] {"a", "b", "c", "c", "d", "e"};
 
         list.setEntries( entries );
 
@@ -178,10 +162,7 @@ public class ListChangedTest {
 
     @Test
     public void notifiesTheListenerForAnAddMoveRemoveCombination() {
-        ArrayList entries = new ArrayList();
-        entries.add( "c" );
-        entries.add( "b" );
-        entries.add( "f" );
+        String[] entries = new String[] {"c", "b", "f"};
 
         list.setEntries( entries );
 
