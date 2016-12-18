@@ -62,9 +62,9 @@ public class PresenceHandlerTest {
                 ));
             }
         }).start();
-        ArrayList<String> clients = presenceHandler.getAll();
+        String[] clients = presenceHandler.getAll();
         Assert.assertEquals( TestUtil.replaceSeperators("U|Q|Q+"), connectionMock.lastSentMessage );
-        Assert.assertEquals( new ArrayList<>(), clients );
+        Assert.assertArrayEquals( new String[] {}, clients );
     }
 
     @Test
@@ -85,11 +85,10 @@ public class PresenceHandlerTest {
                 ));
             }
         }).start();
-        ArrayList<String> clients = presenceHandler.getAll();
+        String[] clients = presenceHandler.getAll();
         Assert.assertEquals( TestUtil.replaceSeperators("U|Q|Q+"), connectionMock.lastSentMessage );
-        ArrayList<String> expectedClients = new ArrayList<>();
-        expectedClients.add("Bart"); expectedClients.add("Homer");
-        Assert.assertEquals( expectedClients, clients );
+        String[] expectedClients = new String[] { "Bart", "Homer" };
+        Assert.assertArrayEquals( expectedClients, clients );
     }
 
     @Test

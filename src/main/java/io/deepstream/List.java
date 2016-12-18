@@ -5,10 +5,7 @@ import com.google.j2objc.annotations.ObjectiveCName;
 
 import com.google.gson.JsonElement;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * A List is a specialised Record that contains
@@ -103,12 +100,26 @@ public class List {
      * @return A List containing all the recordNames
      */
     @SuppressWarnings("unchecked")
-    public java.util.List<String> getEntries() {
-        java.util.List<String>  entries;
+    public String[] getEntries() {
+        String[] entries = {};
         try {
-            entries = (java.util.List<String>) this.record.get( java.util.List.class );
+            entries = this.record.get( String[].class );
         } catch( Exception ex ) {
-            entries = new ArrayList<>();
+        }
+        return entries;
+    }
+
+    /**
+     * Returns the array of list entries or an
+     * empty array if the list hasn't been populated yet.
+     * @return A List containing all the recordNames
+     */
+    private ArrayList getEntriesArrayList() {
+        ArrayList<String> entries = null;
+        try {
+            entries = this.record.get( ArrayList.class );
+        } catch( Exception ex ) {
+            entries = new ArrayList<String>();
         }
         return entries;
     }
@@ -119,7 +130,7 @@ public class List {
      * @return The list
      */
     @ObjectiveCName("setEntries:")
-    public List setEntries(java.util.List<String> entries) {
+    public List setEntries(String[] entries) {
         this.updateList(entries);
         return this;
     }
@@ -131,9 +142,9 @@ public class List {
      */
     @ObjectiveCName("removeEntry:")
     public List removeEntry( String entry ) {
-        Collection entries = this.getEntries();
+        java.util.List entries = this.getEntriesArrayList();
         while( entries.contains( entry ) ) entries.remove( entry );
-        this.updateList( entries );
+        this.updateList((String[]) entries.toArray( new String[] {} ));
         return this;
     }
 
@@ -146,12 +157,11 @@ public class List {
      */
     @ObjectiveCName("removeEntry:index:")
     public List removeEntry( String entry, int index ) {
-        java.util.List entries = this.getEntries();
+        ArrayList entries = this.getEntriesArrayList();
         if( entries.get( index ).equals( entry ) ) {
             entries.remove( index );
         }
-        this.updateList(entries);
-
+        this.updateList((String[]) entries.toArray( new String[] {} ));
         return this;
     }
 
@@ -162,9 +172,9 @@ public class List {
      */
     @ObjectiveCName("addEntry:")
     public List addEntry( String entry ) {
-        java.util.List<String> entries = this.getEntries();
+        ArrayList entries = this.getEntriesArrayList();
         entries.add( entry );
-        this.updateList( entries );
+        this.updateList((String[]) entries.toArray( new String[] {} ));
         return this;
     }
 
@@ -176,9 +186,9 @@ public class List {
      */
     @ObjectiveCName("addEntry:index:")
     public List addEntry( String entry, int index ) {
-        java.util.List<String> entries = this.getEntries();
+        java.util.List entries = this.getEntriesArrayList();
         entries.add( index, entry );
-        this.updateList( entries );
+        this.updateList((String[]) entries.toArray( new String[] {} ));
         return this;
     }
 
@@ -202,7 +212,7 @@ public class List {
      * @return true if this list contains no elements
      */
     public boolean isEmpty() {
-        return this.getEntries().size() == 0;
+        return this.getEntries().length == 0;
     }
 
     /**
@@ -297,7 +307,7 @@ public class List {
      * Useful entry point for diffing previous list and new one to get entries added, removed and moved
      */
     @ObjectiveCName("updateList:")
-    private void updateList(Collection entries) {
+    private void updateList(String[] entries) {
         Map<String, ArrayList<Integer>> oldStructure = this.beforeChange();
         this.record.set( gson.toJsonTree(entries) );
         this.afterChange( oldStructure );
@@ -354,7 +364,7 @@ public class List {
             } else {
                 for( int i=0; i<newIndexes.size(); i++ ) {
                     Integer index = newIndexes.get( i );
-                    if( oldIndexes.size() < i || !oldIndexes.get( i ).equals( newIndexes.get( i ) ) ) {
+                    if( oldIndexes.size() <= i || !oldIndexes.get( i ).equals( newIndexes.get( i ) ) ) {
                         if( oldIndexes.size() < i ) {
                             for (ListEntryChangedListener listEntryChangedListener : this.listEntryChangedListeners) {
                                 listEntryChangedListener.onEntryAdded(this.name(), entryName, index);
@@ -382,7 +392,7 @@ public class List {
      */
     private Map<String,ArrayList<Integer>> getStructure() {
         Map<String, ArrayList<Integer>> structure = new HashMap<>();
-        java.util.List<String> entries = this.getEntries();
+        java.util.List<String> entries = Arrays.asList(this.getEntries());
 
         for( int i=0; i<entries.size();i++) {
             ArrayList<Integer> list = structure.get( entries.get(i) );
