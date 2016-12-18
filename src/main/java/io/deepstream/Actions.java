@@ -1,7 +1,6 @@
 package io.deepstream;
 
 import com.google.j2objc.annotations.ObjectiveCName;
-import com.sun.istack.internal.NotNull;
 
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -142,7 +141,11 @@ public enum Actions {
     /**
      * Used to query for clients
      */
-    QUERY( "Q" );
+    QUERY( "Q" ),
+    /**
+     * Used when requiring write acknowledgements when setting records
+     */
+    WRITE_ACKNOWLEDGEMENT( "WA" );
 
     private static final Map<String,Actions> lookup  = new HashMap<>();
 

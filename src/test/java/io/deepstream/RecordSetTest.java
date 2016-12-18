@@ -114,4 +114,100 @@ public class RecordSetTest {
         Object o = record.get( "address[ 0 ].street" );
         Assert.assertTrue( record.get( "address[ 0 ].street" ).isJsonNull()  );
     }
+
+    @Test
+    public void receivesWriteAcknowledgement() {
+        sendsUpdateMessageForEntireRecord();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                record.onMessage( new Message(
+                        "raw",
+                        Topic.RECORD,
+                        Actions.WRITE_ACKNOWLEDGEMENT,
+                        new String[]{ "testRecord", "[2]", "L" }
+                ));
+            }
+        }).start();
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("newKey", "newValue");
+        RecordSetResult res = record.setWithAck( jsonObject );
+        Assert.assertNull( res.getResult() );
+    }
+
+    @Test
+    public void receivesWriteAcknowledgementWithPath() {
+        sendsUpdateMessageForEntireRecord();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                record.onMessage( new Message(
+                        "raw",
+                        Topic.RECORD,
+                        Actions.WRITE_ACKNOWLEDGEMENT,
+                        new String[]{ "testRecord", "[2]", "L" }
+                ));
+            }
+        }).start();
+        RecordSetResult res = record.setWithAck( "lastname", "Hempel" );
+        Assert.assertNull( res.getResult() );
+    }
+
+    @Test
+    public void receivesWriteAcknowledgementError() {
+        sendsUpdateMessageForEntireRecord();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                record.onMessage( new Message(
+                        "raw",
+                        Topic.RECORD,
+                        Actions.WRITE_ACKNOWLEDGEMENT,
+                        new String[]{ "testRecord", "[2]", "SStorage write error" }
+                ));
+            }
+        }).start();
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("newKey", "newValue");
+        RecordSetResult res = record.setWithAck( jsonObject );
+        Assert.assertEquals( res.getResult(), "Storage write error" );
+    }
+
+    @Test
+    public void receivesWriteAcknowledgementErrorWithPath() {
+        sendsUpdateMessageForEntireRecord();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                record.onMessage( new Message(
+                        "raw",
+                        Topic.RECORD,
+                        Actions.WRITE_ACKNOWLEDGEMENT,
+                        new String[]{ "testRecord", "[2]", "SCache write error" }
+                ));
+            }
+        }).start();
+        RecordSetResult res = record.setWithAck( "lastname", "Hempel" );
+        Assert.assertEquals( res.getResult(), "Cache write error" );
+    }
 }

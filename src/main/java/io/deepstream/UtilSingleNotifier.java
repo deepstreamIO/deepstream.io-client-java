@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.j2objc.annotations.ObjectiveCName;
 
 import java.util.ArrayList;
@@ -71,6 +73,27 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
     }
 
     /**
+     * Add a request where a response may contain more than one bit of data. Commonly used with
+     * {@link UtilSingleNotifier#recieve(JsonArray, DeepstreamError)}
+     *
+     * @param name The name or version to store callbacks on
+     * @param data The data to send in the request
+     * @param utilSingleNotifierCallback The callback to call once the request is completed
+     */
+    public void request( String name, String[] data, UtilSingleNotifierCallback utilSingleNotifierCallback ) {
+        ArrayList<UtilSingleNotifierCallback> callbacks = requests.get( name );
+        if( callbacks == null ) {
+            synchronized (this) {
+                callbacks = new ArrayList<>();
+                requests.put(name, callbacks);
+                send(data);
+            }
+        }
+
+        callbacks.add( utilSingleNotifierCallback );
+    }
+
+    /**
      * Process a response for a request. This has quite a flexible API since callback functions
      * differ greatly and helps maximise reuse.
      *
@@ -92,6 +115,28 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
         requests.remove( name );
     }
 
+    /**
+     * Process a response for a request. This overload of the method is for cases where
+     * data from multiple messages has been merged into one deepstream message to save network
+     * traffic.
+     *
+     * Used in conjunction with {@link UtilSingleNotifier#request(String, String[], UtilSingleNotifierCallback)}
+     *
+     * @param data The data received in the message
+     * @param error Any errors from the message
+     */
+    public void recieve(JsonArray data, DeepstreamError error) {
+        for (JsonElement version : data) {
+            ArrayList<UtilSingleNotifierCallback> callbacks = requests.get( version.getAsString() );
+            UtilSingleNotifierCallback cb = callbacks.get(0);
+            if( error != null) {
+                cb.onSingleNotifierError(null, error);
+            } else {
+                cb.onSingleNotifierResponse(null, null);
+            }
+        }
+    }
+
     @Override
     public void resubscribe() {
         for( Object name : requests.keySet() ) {
@@ -102,6 +147,10 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
     @ObjectiveCName("send:")
     private void send( String name ) {
         connection.send( MessageBuilder.getMsg( topic, action, name ) );
+    }
+
+    private void send( String[] data ) {
+        connection.send( MessageBuilder.getMsg( topic, action, data ) );
     }
 
     @Override

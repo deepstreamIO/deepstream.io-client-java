@@ -174,7 +174,7 @@ public class Subscriber {
             ArrayList<String> clients = client.presence.getAll();
             System.out.print("Clients currently connected: ");
             for (String c : clients) {
-                System.out.print( c + " " );
+                System.out.print(c + " ");
             }
             System.out.println();
         }
