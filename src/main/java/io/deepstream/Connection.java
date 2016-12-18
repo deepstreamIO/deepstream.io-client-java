@@ -95,7 +95,7 @@ class Connection implements IConnection {
     void authenticate(JsonElement authParameters, DeepstreamClient.LoginCallback loginCallback) {
         this.loginCallback = loginCallback;
 
-        if(this.authParameters != null) {
+        if(authParameters != null) {
             this.authParameters = authParameters;
         } else {
             this.authParameters = new JsonObject();
