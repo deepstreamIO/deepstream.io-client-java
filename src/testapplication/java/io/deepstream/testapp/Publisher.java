@@ -29,6 +29,7 @@ public class Publisher {
                     listenEvent(client);
                     listenRecord(client);
                     provideRpc(client);
+                    updateRecordWithAck("testRecord", client);
                 }
 
             } catch (Exception e) {
@@ -71,13 +72,24 @@ public class Publisher {
                 @Override
                 public void run() {
                     JsonObject data = new JsonObject();
-                    data.addProperty( "time", new Date().getTime() );
-                    data.addProperty( "id", subscription );
-                    data.addProperty( "count", count[0]++ );
-                    record.set( data );
+                    data.addProperty("time", new Date().getTime());
+                    data.addProperty("id", subscription);
+                    data.addProperty("count", count[0]++);
+                    record.set(data);
                     //System.out.println( "Updating record " + subscription + " " + record.get() );
                 }
             }, 1, 5, TimeUnit.SECONDS);
+        }
+
+        private void updateRecordWithAck(String recordName, DeepstreamClient client) {
+            Record record = client.record.getRecord(recordName);
+            RecordSetResult result = record.setWithAck("number", 23);
+            String error = result.getResult();
+            if (error == null) {
+                System.out.println("Record set successfully with ack");
+            } else {
+                System.out.println("Record wasn't able to be set, error: " + error);
+            }
         }
 
         private void listenEvent(final DeepstreamClient client) {
@@ -108,26 +120,20 @@ public class Publisher {
 
 
         private void provideRpc(final DeepstreamClient client) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    client.rpc.provide("add-numbers", new RpcRequestedListener() {
-                        @Override
-                        public void onRPCRequested(String rpcName, Object data, RpcResponse response) {
-                            System.out.println("Got an RPC request");
-                            JsonArray numbers = (JsonArray) data;
-                            double random = Math.random();
-                            if (random < 0.2) {
-                                response.reject();
-                        } else if (random < 0.7) {
-                                response.send(numbers.get(0).getAsDouble() + numbers.get(1).getAsDouble());
-                            } else {
-                                response.error("This intentionally randomly failed");
-                            }
-                        }
-                    });
+            client.rpc.provide("add-numbers", new RpcRequestedListener() {
+                public void onRPCRequested(String rpcName, Object data, RpcResponse response) {
+                    System.out.println("Got an RPC request");
+                    JsonArray numbers = (JsonArray) data;
+                    double random = Math.random();
+                    if (random < 0.2) {
+                        response.reject();
+                    } else if (random < 0.7) {
+                        response.send(numbers.get(0).getAsDouble() + numbers.get(1).getAsDouble());
+                    } else {
+                        response.error("This intentionally randomly failed");
+                    }
                 }
-            }).start();
+            });
         }
 
         private void subscribeRuntimeErrors(DeepstreamClient client) {

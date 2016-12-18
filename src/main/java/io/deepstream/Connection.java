@@ -4,7 +4,6 @@ import com.google.j2objc.annotations.ObjectiveCName;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.sun.istack.internal.NotNull;
 
 import java.net.URISyntaxException;
 import java.util.*;
@@ -96,7 +95,7 @@ class Connection implements IConnection {
     void authenticate(JsonElement authParameters, DeepstreamClient.LoginCallback loginCallback) {
         this.loginCallback = loginCallback;
 
-        if(this.authParameters != null) {
+        if(authParameters != null) {
             this.authParameters = authParameters;
         } else {
             this.authParameters = new JsonObject();

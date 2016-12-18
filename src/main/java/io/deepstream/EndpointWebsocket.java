@@ -87,7 +87,7 @@ class EndpointWebsocket implements Endpoint {
 
         @Override
         public void onMessage(String message) {
-            System.out.println(message); connection.onMessage( message );
+            connection.onMessage( message );
         }
 
         @Override
