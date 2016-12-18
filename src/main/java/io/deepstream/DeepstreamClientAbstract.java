@@ -7,10 +7,6 @@ import com.google.gson.JsonElement;
 abstract class DeepstreamClientAbstract {
     private UtilAckTimeoutRegistry utilAckTimeoutRegistry;
     private DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler;
-    private RecordHandler recordHandler;
-    private EventHandler eventHandler;
-    private RpcHandler rpcHandler;
-    private PresenceHandler presenceHandler;
 
     abstract DeepstreamClientAbstract addConnectionChangeListener(ConnectionStateListener connectionStateListener);
     abstract DeepstreamClientAbstract removeConnectionChangeListener(ConnectionStateListener connectionStateListener);
@@ -38,22 +34,6 @@ abstract class DeepstreamClientAbstract {
     @ObjectiveCName("setRuntimeErrorHandler:")
     public void setRuntimeErrorHandler(DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler) {
         this.deepstreamRuntimeErrorHandler = deepstreamRuntimeErrorHandler;
-    }
-
-    public RecordHandler getRecordHandler() {
-        return this.recordHandler;
-    }
-
-    public EventHandler getEventHandler() {
-        return this.eventHandler;
-    }
-
-    public RpcHandler getRpcHandler() {
-        return this.rpcHandler;
-    }
-
-    public PresenceHandler getPresenceHandler() {
-        return this.presenceHandler;
     }
 
     @ObjectiveCName("onError:event:msg:")
