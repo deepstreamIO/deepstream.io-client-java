@@ -103,7 +103,7 @@ public class Publisher {
                     data.addProperty("id", subscription);
                     data.addProperty("count", count[0]++);
                     record.set(data);
-                    //System.out.println( "Updating record " + subscription + " " + record.get() );
+                    System.out.println( "Setting record " + data);
                 }
             }, 1, 5, TimeUnit.SECONDS);
             return scheduledFuture;
