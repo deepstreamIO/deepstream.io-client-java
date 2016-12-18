@@ -3,7 +3,7 @@
 //  TestApp
 //
 //  Created by Akram Hussein on 18/12/2016.
-//
+//  Copyright (c) 2016 deepstreamHub GmbH. All rights reserved.
 //
 
 import Foundation
@@ -52,7 +52,7 @@ extension FloatingPoint {
 
 extension JsonElement {
     static let gson = GsonBuilder().enableComplexMapKeySerialization().create()
-    
+
     var dict : [String : Any] {
         get {
             let serialized = JsonElement.gson?.toJson(with: self)
