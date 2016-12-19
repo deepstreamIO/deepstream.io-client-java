@@ -3,15 +3,15 @@
 //  TestApp
 //
 //  Created by Akram Hussein on 18/12/2016.
-//  Copyright (c) 2016 deepstreamHub GmbH. All rights reserved.
+//
 //
 
 import Foundation
 
 // MARK: - Foundation -> GSON
 
-extension Array where Element : Any {
-    var jsonElement : JsonArray {
+public extension Array where Element : Any {
+    public var jsonElement : JsonArray {
         get {
             let data = try! JSONSerialization.data(withJSONObject: self, options: [])
             let json = String(data: data, encoding: String.Encoding.utf8)
@@ -20,8 +20,8 @@ extension Array where Element : Any {
     }
 }
 
-extension Dictionary where Key: ExpressibleByStringLiteral {
-    var jsonElement : JsonObject {
+public extension Dictionary where Key: ExpressibleByStringLiteral {
+    public var jsonElement : JsonObject {
         get {
             let data = try! JSONSerialization.data(withJSONObject: self, options: [])
             let json = String(data: data, encoding: String.Encoding.utf8)
@@ -30,8 +30,8 @@ extension Dictionary where Key: ExpressibleByStringLiteral {
     }
 }
 
-extension IntegerLiteralType {
-    var jsonElement : JsonElement {
+public extension IntegerLiteralType {
+    public var jsonElement : JsonElement {
         get {
             let data = try! JSONSerialization.data(withJSONObject: self, options: [])
             let json = String(data: data, encoding: String.Encoding.utf8)
@@ -40,8 +40,8 @@ extension IntegerLiteralType {
     }
 }
 
-extension FloatingPoint {
-    var jsonElement : JsonElement {
+public extension FloatingPoint {
+    public var jsonElement : JsonElement {
         get {
             return Gson().toJsonTree(withId: self)
         }
@@ -50,10 +50,10 @@ extension FloatingPoint {
 
 // MARK: - GSON -> Foundation
 
-extension JsonElement {
+public extension JsonElement {
     static let gson = GsonBuilder().enableComplexMapKeySerialization().create()
 
-    var dict : [String : Any] {
+    public var dict : [String : Any] {
         get {
             let serialized = JsonElement.gson?.toJson(with: self)
             let data = serialized!.data(using: .utf8)
@@ -62,8 +62,8 @@ extension JsonElement {
     }
 }
 
-extension JsonArray {
-    var array : [Any] {
+public extension JsonArray {
+    public var array : [Any] {
         get {
             let serialized = JsonElement.gson?.toJson(with: self)
             let data = serialized!.data(using: .utf8)

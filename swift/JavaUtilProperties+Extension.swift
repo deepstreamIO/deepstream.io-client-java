@@ -8,8 +8,8 @@
 
 import Foundation
 
-extension Dictionary where Key: ExpressibleByStringLiteral, Value: Any {
-    var toProperties : JavaUtilProperties {
+public extension Dictionary where Key: ExpressibleByStringLiteral, Value: Any {
+    public var toProperties : JavaUtilProperties {
         get {
             let properties = JavaUtilProperties()
             self.forEach { (key, value) in
