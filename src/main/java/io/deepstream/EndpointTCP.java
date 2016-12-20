@@ -93,7 +93,7 @@ class EndpointTCP implements Endpoint {
         }).start();
     }
 
-     @ObjectiveCName("onError:")
+    @ObjectiveCName("onError:")
     private void onError( Exception e ) {
         String message;
 

@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.google.j2objc.annotations.ObjectiveCName;
 
 import java.util.*;
@@ -277,7 +278,19 @@ public class Record {
     public RecordSetResult setWithAck(String path, Object value) {
         throwExceptionIfDestroyed( "set" );
 
-        JsonElement element = gson.toJsonTree( value );
+        JsonElement element;
+        if( value instanceof String ) {
+            element = new JsonPrimitive((String) value);
+        }
+        else if( value instanceof Number ) {
+            element = new JsonPrimitive((Number) value);
+        }
+        else if( value instanceof Boolean ) {
+            element = new JsonPrimitive((Boolean) value);
+        } else {
+            element = gson.toJsonTree( value );
+        }
+
         JsonElement object = this.path.get( path );
 
         if( object != null && object.equals( value ) ) {
@@ -836,7 +849,19 @@ public class Record {
     private Record set(String path, Object value, boolean force ) throws DeepstreamRecordDestroyedException {
         throwExceptionIfDestroyed( "set" );
 
-        JsonElement element = gson.toJsonTree( value );
+        JsonElement element;
+        if( value instanceof String ) {
+            element = new JsonPrimitive((String) value);
+        }
+        else if( value instanceof Number ) {
+            element = new JsonPrimitive((Number) value);
+        }
+        else if( value instanceof Boolean ) {
+            element = new JsonPrimitive((Boolean) value);
+        } else {
+            element = gson.toJsonTree( value );
+        }
+
         JsonElement object = this.path.get( path );
 
         if( !force ) {
