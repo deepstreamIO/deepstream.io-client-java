@@ -1,6 +1,6 @@
 //
 //  GSON+Types.swift
-//  TestApp
+//  DeepstreamIO
 //
 //  Created by Akram Hussein on 18/12/2016.
 //
