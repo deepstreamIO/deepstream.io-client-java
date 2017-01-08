@@ -85,18 +85,41 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
         this.presence = new PresenceHandler(deepstreamConfig, this.connection, this);
     }
 
+    /**
+     * Gets the {@link RecordHandler} used for data-sync in deepstream. Through records and lists {@link RecordHandler#getRecord(String)},
+     * {@link RecordHandler#getList(String)}, as well as provider functionality such as {@link RecordHandler#listen(String, ListenListener)}
+     * and single requests like {@link RecordHandler#snapshot(String)}
+     *
+     * @return the {@link RecordHandler}
+     */
     public RecordHandler getRecordHandler() {
         return this.record;
     }
 
+    /**
+     * Gets the {@link EventHandler} used for events in deepstream. Through subscribing and emitting events
+     * {@link EventHandler#subscribe(String, EventListener)}, {@link EventHandler#emit(String)}, as well as provider
+     * functionality such as {@link EventHandler#listen(String, ListenListener)}
+     *
+     * @return the {@link EventHandler}
+     */
     public EventHandler getEventHandler() {
         return this.event;
     }
 
+    /**
+     * Gets the {@link RpcHandler} used for rpcs in deepstream. Used for both requesting them via {@link RpcHandler#make(String, Object)} and
+     * providing them via {@link RpcHandler#provide(String, RpcRequestedListener)}
+     */
     public RpcHandler getRpcHandler() {
         return this.rpc;
     }
 
+    /**
+     * Gets the {@link PresenceHandler} for presence functionality in deepstream. Both querying for clients via {@link PresenceHandler#getAll()}
+     * and subscribing/unsubscribing to login events via {@link PresenceHandler#subscribe(PresenceEventListener)} and
+     * {@link PresenceHandler#unsubscribe(PresenceEventListener)}
+     */
     public PresenceHandler getPresenceHandler() {
         return this.presence;
     }
