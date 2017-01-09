@@ -13,6 +13,7 @@ import java.util.*;
  * of convinience methods for interacting with them.
  */
 public class List {
+
     private final RecordListeners recordListeners;
     private final Record record;
     private final ArrayList<ListChangedListener> listChangedListeners;
@@ -28,7 +29,6 @@ public class List {
     @ObjectiveCName("init:name:")
     List(RecordHandler recordHandler, String name) {
         this.record = recordHandler.getRecord( name );
-
         this.recordListeners = new List.RecordListeners( this, this.record );
         this.listChangedListeners = new ArrayList<>();
         this.listEntryChangedListeners = new ArrayList<>();
@@ -59,6 +59,7 @@ public class List {
      *
      * @return -1 if not loaded, otherwise the local version number
      */
+    @ObjectiveCName("version")
     public int version() {
         return this.record.version();
     }
@@ -269,7 +270,7 @@ public class List {
      * @param listEntryChangedListener The listener to add
      * @return The list
      */
-    @ObjectiveCName("subscribeWithListEntryChangedListener:")
+    @ObjectiveCName("subscribeToListEntryChange:")
     public List subscribe(ListEntryChangedListener listEntryChangedListener) {
         this.listEntryChangedListeners.add(listEntryChangedListener);
 
@@ -285,7 +286,7 @@ public class List {
      * @param listEntryChangedListener The listener to remove
      * @return The list
      */
-    @ObjectiveCName("unsubscribeWithListEntryChangedListener:")
+    @ObjectiveCName("unsubscribeToListEntryChange:")
     public List unsubscribe(ListEntryChangedListener listEntryChangedListener) {
         this.listEntryChangedListeners.remove(listEntryChangedListener);
 
@@ -331,7 +332,6 @@ public class List {
      * Compares the structure of the list after a change to its previous structure and notifies
      * any add / move / remove listener. Won't do anything if no listeners are attached.
      */
-    @ObjectiveCName("afterChange:")
     private void afterChange( Map<String,ArrayList<Integer>> oldStructure ) {
         if( oldStructure == null ) {
             return;

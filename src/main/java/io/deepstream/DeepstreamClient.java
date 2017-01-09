@@ -56,6 +56,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      *
      * @throws URISyntaxException Thrown if the url in incorrect
      */
+    @ObjectiveCName("init:options:")
     public DeepstreamClient(final String url, Map options) throws URISyntaxException, InvalidDeepstreamConfig {
         this(url, new DeepstreamConfig(options));
     }
@@ -142,6 +143,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      *
      * @return The login result
      */
+    @ObjectiveCName("login")
     public LoginResult login() {
         return this.login(null);
     }
@@ -215,7 +217,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      * @param connectionStateListener The listener to add
      * @return The deepstream client
      */
-    @ObjectiveCName("addConnectionChangeListener:")
+    @ObjectiveCName("addConnectionChangedListener:")
     public DeepstreamClient addConnectionChangeListener( ConnectionStateListener connectionStateListener) {
         this.connection.addConnectionChangeListener(connectionStateListener);
         return this;
@@ -226,7 +228,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      * @param connectionStateListener The listener to remove
      * @return The deepstream client
      */
-    @ObjectiveCName("removeConnectionChangeListener:")
+    @ObjectiveCName("removeConnectionChangedListener:")
     public DeepstreamClient removeConnectionChangeListener( ConnectionStateListener connectionStateListener) {
         this.connection.removeConnectionChangeListener(connectionStateListener);
         return this;

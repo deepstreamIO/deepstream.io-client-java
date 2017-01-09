@@ -8,12 +8,15 @@ abstract class DeepstreamClientAbstract {
     private UtilAckTimeoutRegistry utilAckTimeoutRegistry;
     private DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler;
 
+    @ObjectiveCName("addConnectionChangeListener:")
     abstract DeepstreamClientAbstract addConnectionChangeListener(ConnectionStateListener connectionStateListener);
+    @ObjectiveCName("removeConnectionChangeListener:")
     abstract DeepstreamClientAbstract removeConnectionChangeListener(ConnectionStateListener connectionStateListener);
     abstract ConnectionState getConnectionState();
 
     abstract LoginResult login();
 
+    @ObjectiveCName("login:")
     abstract LoginResult login(JsonElement data);
     abstract DeepstreamClientAbstract close();
     abstract String getUid();

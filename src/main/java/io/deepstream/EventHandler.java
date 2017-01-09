@@ -1,5 +1,7 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.ObjectiveCName;
+
 import java.util.*;
 import java.util.List;
 
@@ -45,6 +47,7 @@ public class EventHandler {
      * @param eventName     The event name
      * @param eventListener The eventListener
      */
+    @ObjectiveCName("subscribe:eventListener:")
     public void subscribe( String eventName, EventListener eventListener ) {
         if (this.emitter.hasListeners(eventName)) {
             this.subscriptions.add( eventName );
@@ -60,6 +63,7 @@ public class EventHandler {
      * @param eventName     The event name
      * @param eventListener The listener that was previous added
      */
+    @ObjectiveCName("unsubscribe:eventListener:")
     public void unsubscribe( String eventName, EventListener eventListener ) {
         this.subscriptions.remove( eventName );
         this.emitter.off(eventName, eventListener);
@@ -72,6 +76,7 @@ public class EventHandler {
     /**
      * @see EventHandler
      */
+    @ObjectiveCName("emit:")
     public void emit( String eventName ) {
         this.connection.send( MessageBuilder.getMsg( Topic.EVENT, Actions.EVENT, eventName));
         this.broadcastEvent(eventName, null);
@@ -83,6 +88,7 @@ public class EventHandler {
      * @param eventName the event name
      * @param data the data to serialise and send with the event
      */
+    @ObjectiveCName("emit:data:")
     public void emit( String eventName, Object data ) {
         this.connection.send( MessageBuilder.getMsg( Topic.EVENT, Actions.EVENT, eventName, MessageBuilder.typed( data)));
         this.broadcastEvent(eventName, data);
@@ -97,6 +103,7 @@ public class EventHandler {
      * @param listenListener The listener to inform the client when a subscription
      *                       has been found or removed
      */
+    @ObjectiveCName("listen:listenListener:")
     public void listen(String pattern, ListenListener listenListener ) {
         if( this.listeners.get( pattern ) != null ) {
             this.client.onError( Topic.EVENT, Event.LISTENER_EXISTS, pattern );
@@ -114,6 +121,7 @@ public class EventHandler {
      * the provider as the active provider and allow another provider to take its place
      * @param pattern The pattern that has been previously listened to
      */
+    @ObjectiveCName("unlisten:")
     public void unlisten( String pattern ) {
         UtilListener listener = this.listeners.get( pattern );
         if( listener != null ) {
