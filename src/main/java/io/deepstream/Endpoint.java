@@ -3,8 +3,7 @@ package io.deepstream;
 import com.google.j2objc.annotations.ObjectiveCName;
 
 /**
- * The interface required for any connection endpoints. Currently we support {@link EndpointType#WEBSOCKET}
- * and {@link EndpointType#TCP} but will be dropping TCP in upcoming releases.
+ * The interface required for any connection endpoints. Currently we support websockets
  */
 interface Endpoint {
     /**

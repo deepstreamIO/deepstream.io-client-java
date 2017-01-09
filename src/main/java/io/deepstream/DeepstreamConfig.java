@@ -27,7 +27,6 @@ class DeepstreamConfig {
     private void validateProperties() throws InvalidDeepstreamConfig {
         try {
             this.getPath();
-            this.getEndpointType();
             this.getReconnectIntervalIncrement();
             this.getMaxReconnectAttempts();
             this.getRpcAckTimeout();
@@ -45,10 +44,6 @@ class DeepstreamConfig {
 
     String getPath() {
         return getOption(ConfigOptions.PATH, "/deepstream");
-    }
-
-    EndpointType getEndpointType() {
-        return EndpointType.getEndpointType(getOption(ConfigOptions.ENDPOINT_TYPE, EndpointType.WEBSOCKET.toString()));
     }
 
     int getReconnectIntervalIncrement() {
