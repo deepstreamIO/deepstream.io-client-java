@@ -207,7 +207,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      * @return The deepstream client
      */
     public DeepstreamClient close() {
-        this.connection.close();
+        this.connection.close(false);
         return this;
     }
 

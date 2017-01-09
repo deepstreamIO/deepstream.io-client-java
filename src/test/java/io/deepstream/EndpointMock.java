@@ -55,4 +55,9 @@ public class EndpointMock implements Endpoint {
     public void open() {
 
     }
+
+    @Override
+    public void forceClose() {
+
+    }
 }
