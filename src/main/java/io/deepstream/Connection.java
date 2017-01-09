@@ -154,10 +154,12 @@ class Connection implements IConnection {
         return this.connectionState;
     }
 
-    public void close() {
-
+    public void close(boolean forceClose) {
         this.deliberateClose = true;
-        if( this.endpoint != null ) {
+
+        if(forceClose && endpoint != null) {
+            endpoint.forceClose();
+        } else if(this.endpoint != null) {
             endpoint.close();
             endpoint = null;
         }
@@ -261,7 +263,7 @@ class Connection implements IConnection {
         }
         else if( message.action == Actions.REJECTION ) {
             this.challengeDenied = true;
-            this.close();
+            this.close(false);
         }
         else if( message.action == Actions.REDIRECT ) {
             this.url = message.data[ 0 ];
@@ -351,7 +353,7 @@ class Connection implements IConnection {
 
         } else {
             this.clearReconnect();
-            this.close();
+            this.close(true);
         }
     }
 

@@ -22,4 +22,9 @@ interface Endpoint {
      * Open the connection
      */
     void open();
+
+    /**
+     * Forces the connection to be closed
+     */
+    void forceClose();
 }

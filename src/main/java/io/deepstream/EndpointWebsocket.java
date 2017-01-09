@@ -58,6 +58,11 @@ class EndpointWebsocket implements Endpoint {
     }
 
     @Override
+    public void forceClose() {
+        this.websocket.getConnection().closeConnection(1, "Force close");
+    }
+
+    @Override
     public void open() {
         this.websocket = new WebSocket( this.originalURI, new Draft_10() );
         this.websocket.connect();
