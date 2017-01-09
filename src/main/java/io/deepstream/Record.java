@@ -117,6 +117,7 @@ public class Record {
      * Return the record version. This is solely used within a {@link RecordMergeStrategy}.
      * @return -1 if not loaded, otherwise the local version number
      */
+    @ObjectiveCName("version")
     public int version() {
         return this.version;
     }
@@ -167,7 +168,7 @@ public class Record {
      * @param mergeStrategy The custom merge strategy to use
      * @return The record
      */
-    @ObjectiveCName("setMergeStrategyWithRecordMergeStrategy:")
+    @ObjectiveCName("setCustomMergeStrategy:")
     public Record setMergeStrategy(RecordMergeStrategy mergeStrategy) {
         this.mergeStrategy = mergeStrategy;
         return this;
@@ -256,6 +257,7 @@ public class Record {
      *
      * @see Record#set(String, Object)
      */
+    @ObjectiveCName("setWithAck:")
     public RecordSetResult setWithAck(Object value) {
         return this.setWithAck(null, value);
     }
@@ -267,14 +269,15 @@ public class Record {
      * throw a {@link IllegalStateException}.<br/>
      * The best way to guarantee this is by setting Json friendly objects,
      * such as {@link Map}.<br/>
-     * If you path is not null, you can pass in primitives as long as the path
-     * is not null, which is the equivalent of calling {@link Record#set(Object)}.
+     * If your path is not null, you can pass in primitives, which is the
+     * equivalent of calling {@link Record#set(String, Object)}.
      *
      * @param path The path with the JsonElement at which to set the value
      * @param value The value to set
      * @return The record
      * @throws DeepstreamRecordDestroyedException Thrown if the record has been destroyed and can't perform more actions
      */
+    @ObjectiveCName("setWithAck:value:")
     public RecordSetResult setWithAck(String path, Object value) {
         throwExceptionIfDestroyed( "set" );
 
@@ -467,6 +470,7 @@ public class Record {
      * @return The record
      * @throws DeepstreamRecordDestroyedException Thrown if the record has been destroyed and can't perform more actions
      */
+    @ObjectiveCName("delete")
     public Record delete() throws DeepstreamRecordDestroyedException {
         throwExceptionIfDestroyed( "delete" );
 
@@ -893,29 +897,35 @@ public class Record {
         this.usages++;
     }
 
+    @ObjectiveCName("RecordRemoteUpdateHandler")
     interface RecordRemoteUpdateHandler {
         /**
          * Called before a remote update is applied to the current data
          */
+        @ObjectiveCName("beforeRecordUpdate")
         void beforeRecordUpdate();
         /**
          * Called after a remote update is applied to the current data
          */
+        @ObjectiveCName("afterRecordUpdate")
         void afterRecordUpdate();
     }
 
+    @ObjectiveCName("RecordDestroyPendingListener")
     interface RecordDestroyPendingListener {
         /**
          * Called whenever the client is about to send the server a {@link Record#discard()} or {@link Record#delete()} event.<br/>
          * This should not be required to be implemented
          * @param recordName The name of the record being destroyed
          */
+        @ObjectiveCName("onDestroyPending:")
         void onDestroyPending(String recordName);
     }
 
     /**
      * A listener that notifies the user whenever the record state is ready.
      */
+    @ObjectiveCName("RecordReadyListener")
     interface RecordReadyListener {
         /**
          * Called when the record is loaded from the server
@@ -923,6 +933,7 @@ public class Record {
          * @param recordName The name of the record which is now ready
          * @param record     The record which is now ready / loaded from server
          */
+        @ObjectiveCName("onRecordReady:record:")
         void onRecordReady(String recordName, Record record);
     }
 }

@@ -322,17 +322,8 @@ class Connection implements IConnection {
     }
 
     private Endpoint createEndpoint() throws URISyntaxException {
-        Endpoint endpoint;
-
-        if (options.getEndpointType().equals(EndpointType.TCP)) {
-            endpoint = new EndpointTCP( url, options, this );
-        } else if (options.getEndpointType().equals(EndpointType.WEBSOCKET)) {
-            endpoint = new EndpointWebsocket( url, options, this );
-            endpoint.open();
-        } else {
-            throw new URISyntaxException("This isn't actually a URI Sytnax Exception", "A second string");
-        }
-
+        Endpoint endpoint = new EndpointWebsocket( url, options, this );
+        endpoint.open();
         return endpoint;
     }
 

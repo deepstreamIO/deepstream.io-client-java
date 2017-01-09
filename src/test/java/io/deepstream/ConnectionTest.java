@@ -39,7 +39,7 @@ public class ConnectionTest {
 
     @After
     public void tearDown() {
-
+        this.loginCallback = null;
     }
 
     @Test
@@ -95,7 +95,6 @@ public class ConnectionTest {
 
         verifyConnectionState( ConnectionState.OPEN );
         verify( loginCallback, times( 1 ) ).loginSuccess( null );
-        //verify( loginCallback, times( 0 ) ).loginFailed(); //TODO: Any
     }
 
     @Test
@@ -105,8 +104,7 @@ public class ConnectionTest {
         endpointMock.sendMessage( MessageBuilder.getMsg(Topic.AUTH, Actions.ERROR, Event.NOT_AUTHENTICATED.toString(), "SFail" ));
 
         verifyConnectionState( ConnectionState.AWAITING_AUTHENTICATION );
-        //verify( loginCallback, times( 1 ) ).loginSuccess(); //TODO: Any
-        verify( loginCallback, times( 1 ) ).loginFailed(  Event.NOT_AUTHENTICATED, "Fail" );
+        verify( loginCallback, times( 1 ) ).loginFailed( Event.NOT_AUTHENTICATED, "Fail" );
     }
 
     @Test

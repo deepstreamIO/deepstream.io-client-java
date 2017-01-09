@@ -239,6 +239,7 @@ public class RpcHandler {
     /**
      * The callback for an rpc that has been requested by the client
      */
+    @ObjectiveCName("RpcResponseCallback")
     interface RpcResponseCallback {
         /**
          * Called when the rpc was completed successfully by another client that has provided the rpc via

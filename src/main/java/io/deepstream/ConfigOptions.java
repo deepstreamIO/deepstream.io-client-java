@@ -15,11 +15,6 @@ public enum ConfigOptions {
      */
     PATH("path"),
     /**
-     * A {@link EndpointType}, currently either TCP or Websockets
-     * Defaults to Websocket
-     */
-    ENDPOINT_TYPE("endpointType"),
-    /**
      * Specifies the number of milliseconds by which the time until the next reconnection attempt will be incremented
      * after every unsuccessful attempt.
      * E.g.for 1500: if the connection is lost,the client will attempt to reconnect immediately, if that fails it will

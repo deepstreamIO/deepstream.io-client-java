@@ -3,8 +3,6 @@ package io.deepstream;
 
 import com.google.j2objc.annotations.ObjectiveCName;
 
-import java.util.*;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 public class PresenceHandler {
@@ -81,6 +79,7 @@ public class PresenceHandler {
      * @param eventListener The listener that will be called with the username of the client
      *                      and a boolean to indicated whether they logged in or out
      */
+    @ObjectiveCName("subscribe:")
     public void subscribe( PresenceEventListener eventListener ) {
         if (this.emitter.hasListeners(Topic.PRESENCE.toString())) {
             this.ackTimeoutRegistry.add( Topic.PRESENCE, Actions.SUBSCRIBE, Topic.PRESENCE.toString(), this.subscriptionTimeout );
@@ -95,6 +94,7 @@ public class PresenceHandler {
      * @param eventListener The listener that will be called with the username of the client
      *                      and a boolean to indicated whether they logged in or out
      */
+    @ObjectiveCName("unsubscribe:")
     public void unsubscribe( PresenceEventListener eventListener ) {
         this.emitter.off(Topic.PRESENCE.toString(), eventListener);
         if (this.emitter.hasListeners(Topic.PRESENCE.toString())) {

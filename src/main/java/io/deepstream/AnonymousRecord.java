@@ -116,6 +116,7 @@ public class AnonymousRecord {
      * not exist it will throw a {@link AnonymousRecordUninitialized} exception
      * @return The AnonymousRecord
      */
+    @ObjectiveCName("delete")
     public AnonymousRecord delete() throws AnonymousRecordUninitialized {
         if( this.record == null ) {
             throw new AnonymousRecordUninitialized( "delete" );
@@ -338,6 +339,7 @@ public class AnonymousRecord {
     /**
      * A class that contains subscriptions to remove/add when changing the underlying record
      */
+    @ObjectiveCName("AnonymousRecordSubscription")
     private class Subscription {
         String path;
         RecordChangedCallback recordChangedCallback;
