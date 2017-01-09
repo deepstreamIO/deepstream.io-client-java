@@ -59,7 +59,7 @@ class EndpointWebsocket implements Endpoint {
 
     @Override
     public void forceClose() {
-        this.websocket.getConnection().closeConnection(1, "Force close");
+        this.websocket.getConnection().closeConnection(1, "Forcing connection close due to network loss");
     }
 
     @Override
