@@ -352,6 +352,11 @@ class Connection implements IConnection {
         } else {
             this.clearReconnect();
             this.close();
+            try {
+                this.onClose();
+            } catch( Exception e ) {
+                e.printStackTrace();
+            }
         }
     }
 
