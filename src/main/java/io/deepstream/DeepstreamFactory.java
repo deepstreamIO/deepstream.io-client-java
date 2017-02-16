@@ -3,7 +3,6 @@ package io.deepstream;
 import com.google.j2objc.annotations.ObjectiveCName;
 
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -17,12 +16,14 @@ import java.util.Properties;
 public class DeepstreamFactory {
     private static DeepstreamFactory ourInstance = new DeepstreamFactory();
     Map<String, DeepstreamClient> clients;
+    String lastUrl;
 
     /**
      * DeepstreamFactory is a map of all url connections created
      */
     private DeepstreamFactory() {
         this.clients = new HashMap();
+        this.lastUrl = null;
     }
 
     public static DeepstreamFactory getInstance() {
@@ -37,12 +38,10 @@ public class DeepstreamFactory {
      * @return A deepstream client
      */
     public DeepstreamClient getClient() {
-        ArrayList keySet = (ArrayList) this.clients.keySet();
-        if (keySet.size() == 0) {
+        if (this.lastUrl == null) {
             return null;
-        } else {
-            return this.clients.get(keySet.get(keySet.size() - 1));
         }
+        return this.clients.get(this.lastUrl);
     }
 
     /**
@@ -56,6 +55,7 @@ public class DeepstreamFactory {
     @ObjectiveCName("getClient:")
     public DeepstreamClient getClient(String url) throws URISyntaxException {
         DeepstreamClient client = this.clients.get(url);
+        this.lastUrl = url;
         if (clientDoesNotExist(client)) {
             client = new DeepstreamClient(url);
             this.clients.put(url, client);
