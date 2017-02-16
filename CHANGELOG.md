@@ -1,4 +1,4 @@
-## [2.0.0] - 2016.11.21
+## [2.0.0] - 2017.02.16
 
 ### Features
 - Presence functionality. Now able to query for clients and subscribe to presence events. Documentation is [here](https://deepstream.io/docs/client-java/PresenceHandler) and PR [#41](https://github.com/deepstreamIO/deepstream.io-client-java/pull/41).
