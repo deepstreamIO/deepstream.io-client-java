@@ -20,10 +20,6 @@ sourceSets {
 
 defaultTasks 'build'
 
-// Java compatability
-sourceCompatibility = 1.7
-targetCompatibility = 1.7
-
 repositories {
     jcenter()
 }
@@ -41,6 +37,9 @@ dependencies {
 
     testCompile group: 'junit', name: 'junit', version: '4.11'
     testCompile "org.mockito:mockito-core:1.+"
+
+    sourceCompatibility = 1.7
+    targetCompatibility = 1.7
 }
 
 j2objcConfig {
@@ -62,7 +61,7 @@ j2objcConfig {
 }
 
 group 'io.deepstream'
-version '2.0.2'
+version '2.0.3'
 
 
 publishing {
@@ -71,12 +70,13 @@ publishing {
             from components.java
             groupId 'io.deepstream'
             artifactId 'deepstream.io-client-java'
-            version '2.0.2'
+            version '2.0.3'
         }
     }
 }
 
 bintray {
+
     user = System.getenv('BINTRAY_USER')
     key = System.getenv('BINTRAY_KEY')
 
@@ -103,7 +103,7 @@ bintray {
 
         //Optional version descriptor
         version {
-            name = '2.0.2'
+            name = '2.0.3'
             released = new Date()
             gpg {
                 sign = true
