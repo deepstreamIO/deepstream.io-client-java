@@ -274,7 +274,7 @@ public class List {
     public List subscribe(ListEntryChangedListener listEntryChangedListener) {
         this.listEntryChangedListeners.add(listEntryChangedListener);
 
-        if( this.listEntryChangedListeners.size() == 0 ) {
+        if( this.listEntryChangedListeners.size() == 1 ) {
             this.record.subscribe( this.recordListeners );
         }
 
@@ -322,7 +322,7 @@ public class List {
      * by an incoming message from the server or by the client
      */
     private Map<String,ArrayList<Integer>> beforeChange() {
-        if( this.listChangedListeners.isEmpty() ) {
+        if( this.listChangedListeners.isEmpty() && this.listEntryChangedListeners.isEmpty() ) {
             return null;
         }
         return this.getStructure();
