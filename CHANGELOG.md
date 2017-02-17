@@ -1,3 +1,9 @@
+## [2.0.1] - 2017.02.17
+
+### Fixes
+- Factory: fix incorrect cast of keyset to arraylist (#64)
+- List: fix ListEntryChanged listener not called
+
 ## [2.0.0] - 2017.02.16
 
 ### Features
