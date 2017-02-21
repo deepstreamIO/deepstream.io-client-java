@@ -25,6 +25,10 @@ public enum Event {
      */
     ACK_TIMEOUT,
     /**
+     * Indicates the credentials provided were incorrect
+     */
+    INVALID_AUTH_DATA,
+    /**
      * To indicate a record read from deepstream has timed out
      */
     RESPONSE_TIMEOUT,
