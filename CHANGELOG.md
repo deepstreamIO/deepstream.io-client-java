@@ -1,3 +1,9 @@
+## [2.0.5] - 2017.03.07
+
+### Fixes
+- Endpoint: don't throw error when ssl == null
+- Event: add INVALID_AUTH_DATA enum
+
 ## [2.0.1] - 2017.02.17
 
 ### Fixes
