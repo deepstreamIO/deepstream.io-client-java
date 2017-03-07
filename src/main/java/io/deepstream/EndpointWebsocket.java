@@ -105,6 +105,9 @@ class EndpointWebsocket implements Endpoint {
 
         @Override
         public void onError(Exception ex) {
+            if (ex instanceof NullPointerException && ex.getMessage().equals("ssl == null")) {
+                return;
+            }
             connection.onError( ex.getMessage() );
         }
     }
