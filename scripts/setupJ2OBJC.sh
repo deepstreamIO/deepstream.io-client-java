@@ -1,4 +1,4 @@
-J2OBJCVersion=1.1
+J2OBJCVersion=1.2
 
 # Paths and Stuff
 DIRECTORY=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd );
@@ -10,7 +10,7 @@ J2OBJC_ROOT=$TRAVIS_BUILD_DIR/j2objcDist
 # Create local.properties for gradlew
 echo '# J2OBJC Start' >> $DIRECTORY/../local.properties;
 echo j2objc.home=$J2OBJC_ROOT/j2objc-$J2OBJCVersion >> $DIRECTORY/../local.properties
-if [[ "$TRAVIS_OS_NAME" == "osx" && "$OSTYPE" == "darwin"* ]]; then
+if [[ "$TRAVIS_OS_NAME" == "osx" || "$OSTYPE" == "darwin"* ]]; then
 	echo 'Wooho! Mac! j2objc compilation!';
 else
 	echo 'Only transpiling will occur';
