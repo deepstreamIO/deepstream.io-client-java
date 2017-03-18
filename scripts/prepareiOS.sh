@@ -57,7 +57,7 @@ echo '//
 #import "JreEmulation.h"
 #import "java/util/ArrayList.h"
 #import "java/util/Properties.h"
-#import "java/net/URI.h\n' >> $DS_TMP_DIR/src/DeepstreamIO.h
+#import "java/net/URI.h"\n' >> $DS_TMP_DIR/src/DeepstreamIO.h
 
 pushd $TRAVIS_BUILD_DIR/build/j2objcOutputs/src/main/objc
 for f in *.h; do
