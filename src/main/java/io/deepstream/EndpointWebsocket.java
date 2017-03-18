@@ -92,9 +92,3 @@ class EndpointWebsocket implements Endpoint {
         }
     }
 }
-
-/*-[
-class EndpointWebsocket implements Endpoint {
-
-}
--*/;

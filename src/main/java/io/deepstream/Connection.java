@@ -22,6 +22,7 @@ class Connection implements IConnection {
     private final String originalUrl;
     private final ArrayList<ConnectionStateListener> connectStateListeners;
     private final DeepstreamConfig options;
+    private final EndpointFactory endpointFactory;
     private Endpoint endpoint;
     private boolean tooManyAuthAttempts;
     private boolean challengeDenied;
@@ -41,18 +42,19 @@ class Connection implements IConnection {
     private ExecutorService presenceThread;
 
     /**
-     * Creates an endpoint and passed it to {@link Connection#Connection(String, DeepstreamConfig, DeepstreamClient, Endpoint)}
+     * Creates an endpoint and passed it to {@link Connection#Connection(String, DeepstreamConfig, DeepstreamClient, EndpointFactory, Endpoint)}
      *
-     * @see Connection#Connection(String, DeepstreamConfig, DeepstreamClient, Endpoint)
+     * @see Connection#Connection(String, DeepstreamConfig, DeepstreamClient, EndpointFactory, Endpoint)
      *
      * @param url The endpoint url
      * @param options The options used to initialise the deepstream client
+     * @param endpointFactory The factory to create endpoints
      * @param client The deepstream client
      * @throws URISyntaxException An exception if an invalid url is passed in
      */
     @ObjectiveCName("init:options:client:")
-    Connection(final String url, final DeepstreamConfig options, DeepstreamClient client) throws URISyntaxException {
-        this( url, options, client, null );
+    Connection(final String url, final DeepstreamConfig options, DeepstreamClient client, EndpointFactory endpointFactory) throws URISyntaxException {
+        this( url, options, client, endpointFactory, null );
         this.endpoint = createEndpoint();
     }
 
@@ -65,6 +67,11 @@ class Connection implements IConnection {
      */
     @ObjectiveCName("init:options:client:endpoint:")
     Connection(final String url, final DeepstreamConfig options, DeepstreamClient client, Endpoint endpoint) {
+        this( url, options, client, null, endpoint);
+    }
+
+
+    public Connection(String url, DeepstreamConfig options, DeepstreamClient client, EndpointFactory endpointFactory, Endpoint endpoint) {
         this.client = client;
         this.connectStateListeners = new ArrayList<>();
         this.originalUrl = url;
@@ -79,6 +86,7 @@ class Connection implements IConnection {
         this.reconnectionAttempt = 0;
         this.options = options;
         this.endpoint = endpoint;
+        this.endpointFactory = endpointFactory;
 
         this.recordThread = Executors.newSingleThreadExecutor();
         this.eventThread = Executors.newSingleThreadExecutor();
@@ -349,14 +357,8 @@ class Connection implements IConnection {
 
 
     private Endpoint createEndpoint() throws URISyntaxException {
-        Endpoint endpoint;
-        URI uri = parseUri(url, options.getPath());
-        try {
-            endpoint = createIOSEndpoint(uri, this);
-        } catch(UnsatisfiedLinkError  e) {
-            endpoint = new EndpointWebsocket( uri, this );
-        }
-
+        URI uri = parseUri(url, this.options.getPath());
+        Endpoint endpoint = this.endpointFactory.createEndpoint(uri, this);
         endpoint.open();
         return endpoint;
     }
