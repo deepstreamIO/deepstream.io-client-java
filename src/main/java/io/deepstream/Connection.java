@@ -355,7 +355,6 @@ class Connection implements IConnection {
         return uri;
     }
 
-
     private Endpoint createEndpoint() throws URISyntaxException {
         URI uri = parseUri(url, this.options.getPath());
         Endpoint endpoint = this.endpointFactory.createEndpoint(uri, this);
