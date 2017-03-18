@@ -1,6 +1,5 @@
 package io.deepstream;
 
-import com.google.j2objc.annotations.J2ObjCIncompatible;
 import org.java_websocket.client.DefaultSSLWebSocketClientFactory;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.drafts.Draft;
@@ -13,15 +12,13 @@ import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 
-
-@J2ObjCIncompatible
-class EndpointWebsocket implements Endpoint {
+class JavaEndpointWebsocket implements Endpoint {
 
     private final URI uri;
     private WebSocket websocket;
     private final Connection connection;
 
-    EndpointWebsocket(URI uri, Connection connection ) throws URISyntaxException {
+    JavaEndpointWebsocket(URI uri, Connection connection ) throws URISyntaxException {
         this.uri = uri;
         this.connection = connection;
     }

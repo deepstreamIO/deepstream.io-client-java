@@ -52,7 +52,6 @@ class Connection implements IConnection {
      * @param client The deepstream client
      * @throws URISyntaxException An exception if an invalid url is passed in
      */
-    @ObjectiveCName("init:options:client:")
     Connection(final String url, final DeepstreamConfig options, DeepstreamClient client, EndpointFactory endpointFactory) throws URISyntaxException {
         this( url, options, client, endpointFactory, null );
         this.endpoint = createEndpoint();
@@ -63,9 +62,8 @@ class Connection implements IConnection {
      * and messages
      * @param url The endpoint url* @param options The options used to initialise the deepstream client
      * @param client The deepstream client
-     * @param endpoint The endpoint, whether TCP, Websocket, mock or anything else
+     * @param endpoint The endpoint, whether Websocket, mock or anything else
      */
-    @ObjectiveCName("init:options:client:endpoint:")
     Connection(final String url, final DeepstreamConfig options, DeepstreamClient client, Endpoint endpoint) {
         this( url, options, client, null, endpoint);
     }
