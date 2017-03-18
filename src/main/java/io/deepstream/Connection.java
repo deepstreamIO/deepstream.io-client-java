@@ -363,9 +363,6 @@ class Connection implements IConnection {
         return endpoint;
     }
 
-    private native Endpoint createIOSEndpoint(URI uri, Connection connection) /*-[
-    ]-*/;
-
     private void tryReconnect() {
         if( this.reconnectTimeout != null ) {
             return;
