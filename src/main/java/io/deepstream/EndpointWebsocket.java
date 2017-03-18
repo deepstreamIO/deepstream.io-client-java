@@ -14,7 +14,6 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 
 
-@J2ObjCIncompatible
 class EndpointWebsocket implements Endpoint {
 
     private final URI uri;
@@ -92,9 +91,3 @@ class EndpointWebsocket implements Endpoint {
         }
     }
 }
-
-/*-[
-class EndpointWebsocket implements Endpoint {
-
-}
--*/;
