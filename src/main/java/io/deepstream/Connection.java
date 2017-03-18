@@ -5,6 +5,7 @@ import com.google.j2objc.annotations.ObjectiveCName;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.List;
@@ -323,11 +324,45 @@ class Connection implements IConnection {
         }
     }
 
+    /**
+     * Take the url passed when creating the client and ensure the correct
+     * protocol is provided
+     * @param  {String} url Url passed in by client
+     * @param  {String} defaultPath Default path to concatenate if one doest not exist
+     * @return {String} Url with supported protocol
+     */
+    private URI parseUri(String url, String defaultPath) throws URISyntaxException {
+        if (url.startsWith("http:") || url.startsWith("https:")) {
+            throw new URISyntaxException(url, "HTTP/HTTPS is not supported, please use ws or wss instead");
+        }
+        if (url.startsWith("//")) {
+            url = "ws:" + url;
+        } else if (!url.startsWith("ws:") && !url.startsWith("wss:")) {
+            url = "ws://" + url;
+        }
+        URI uri = new URI(url);
+        if (uri.getPath().isEmpty()) {
+            uri = uri.resolve(defaultPath);
+        }
+        return uri;
+    }
+
+
     private Endpoint createEndpoint() throws URISyntaxException {
-        Endpoint endpoint = new EndpointWebsocket( url, options, this );
+        Endpoint endpoint;
+        URI uri = parseUri(url, options.getPath());
+        try {
+            endpoint = createIOSEndpoint(uri, this);
+        } catch(UnsatisfiedLinkError  e) {
+            endpoint = new EndpointWebsocket( uri, this );
+        }
+
         endpoint.open();
         return endpoint;
     }
+
+    private native Endpoint createIOSEndpoint(URI uri, Connection connection) /*-[
+    ]-*/;
 
     private void tryReconnect() {
         if( this.reconnectTimeout != null ) {

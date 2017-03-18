@@ -1,5 +1,6 @@
 package io.deepstream;
 
+import com.google.j2objc.annotations.J2ObjCIncompatible;
 import org.java_websocket.client.DefaultSSLWebSocketClientFactory;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.drafts.Draft;
@@ -12,39 +13,18 @@ import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 
+
+@J2ObjCIncompatible
 class EndpointWebsocket implements Endpoint {
 
-    private final URI originalURI;
+    private final URI uri;
     private WebSocket websocket;
     private final Connection connection;
 
-    EndpointWebsocket(String url, DeepstreamConfig deepstreamConfig, Connection connection ) throws URISyntaxException {
-        this.originalURI = parseUri( url, deepstreamConfig.getPath() );
+    EndpointWebsocket(URI uri, Connection connection ) throws URISyntaxException {
+        this.uri = uri;
         this.connection = connection;
     }
-
-     /**
-      * Take the url passed when creating the client and ensure the correct
-      * protocol is provided
-      * @param  {String} url Url passed in by client
-      * @param  {String} defaultPath Default path to concatenate if one doest not exist
-      * @return {String} Url with supported protocol
-      */
-     private URI parseUri(String url, String defaultPath) throws URISyntaxException {
-         if (url.startsWith("http:") || url.startsWith("https:")) {
-             throw new URISyntaxException(url, "HTTP/HTTPS is not supported, please use ws or wss instead");
-         }
-         if (url.startsWith("//")) {
-             url = "ws:" + url;
-         } else if (!url.startsWith("ws:") && !url.startsWith("wss:")) {
-             url = "ws://" + url;
-         }
-         URI uri = new URI(url);
-         if (uri.getPath().isEmpty()) {
-             uri = uri.resolve(defaultPath);
-         }
-         return uri;
-     }
 
     @Override
     public void send(String message) {
@@ -64,7 +44,7 @@ class EndpointWebsocket implements Endpoint {
 
     @Override
     public void open() {
-        this.websocket = new WebSocket( this.originalURI, new Draft_10() );
+        this.websocket = new WebSocket( this.uri, new Draft_10() );
         this.websocket.connect();
     }
 
@@ -112,3 +92,9 @@ class EndpointWebsocket implements Endpoint {
         }
     }
 }
+
+/*-[
+class EndpointWebsocket implements Endpoint {
+
+}
+-*/;
