@@ -74,6 +74,39 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
     /**
      * deepstream.io java client
      * @param url URL to connect to. The protocol can be omited, e.g. <host>:<port>
+     * @param endpointFactory An EndpointFactory that returns an Endpoint
+     * @throws URISyntaxException Thrown if the url in incorrect
+     */
+    @ObjectiveCName("init:endpointFactory:")
+    public DeepstreamClient(final String url, EndpointFactory endpointFactory) throws URISyntaxException, InvalidDeepstreamConfig{
+        this(url, new DeepstreamConfig(), endpointFactory);
+    }
+
+    /**
+     * deepstream.io java client
+     * @param url URL to connect to. The protocol can be omited, e.g. <host>:<port>
+     * @param endpointFactory An EndpointFactory that returns an Endpoint
+     * @throws URISyntaxException Thrown if the url in incorrect
+     */
+    @ObjectiveCName("init:options:endpointFactory:")
+    public DeepstreamClient(final String url, Properties options, EndpointFactory endpointFactory) throws URISyntaxException, InvalidDeepstreamConfig {
+        this(url, new DeepstreamConfig(options), endpointFactory);
+    }
+
+    /**
+     * deepstream.io java client
+     * @param url URL to connect to. The protocol can be omited, e.g. <host>:<port>
+     * @param endpointFactory An EndpointFactory that returns an Endpoint
+     * @throws URISyntaxException Thrown if the url in incorrect
+     */
+    @ObjectiveCName("init:properties:endpointFactory:")
+    public DeepstreamClient(final String url, Map options, EndpointFactory endpointFactory) throws URISyntaxException, InvalidDeepstreamConfig {
+        this(url, new DeepstreamConfig(options), endpointFactory);
+    }
+
+    /**
+     * deepstream.io java client
+     * @param url URL to connect to. The protocol can be omited, e.g. <host>:<port>
      * @param deepstreamConfig A map of options that extend the ones specified in DefaultConfig.properties
      * @throws URISyntaxException Thrown if the url in incorrect
      */
@@ -90,7 +123,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      * @throws URISyntaxException Thrown if the url in incorrect
      */
     @ObjectiveCName("init:deepstreamConfig:endpointFactory:")
-    DeepstreamClient(final String url, DeepstreamConfig deepstreamConfig, EndpointFactory endpointFactory) throws URISyntaxException {
+    public DeepstreamClient(final String url, DeepstreamConfig deepstreamConfig, EndpointFactory endpointFactory) throws URISyntaxException {
         this.connection = new Connection(url, deepstreamConfig, this, endpointFactory);
         this.event = new EventHandler(deepstreamConfig, this.connection, this);
         this.rpc = new RpcHandler(deepstreamConfig, this.connection, this);
