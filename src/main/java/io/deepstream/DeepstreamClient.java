@@ -79,12 +79,24 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      */
     @ObjectiveCName("init:deepstreamConfig:")
     private DeepstreamClient(final String url, DeepstreamConfig deepstreamConfig) throws URISyntaxException {
-        this.connection = new Connection(url, deepstreamConfig, this);
+        this(url, deepstreamConfig, new JavaEndpointFactory());
+    }
+
+    /**
+     * deepstream.io java client
+     * @param url URL to connect to. The protocol can be omited, e.g. <host>:<port>
+     * @param deepstreamConfig A map of options that extend the ones specified in DefaultConfig.properties
+     * @throws URISyntaxException Thrown if the url in incorrect
+     */
+    @ObjectiveCName("init:deepstreamConfig:")
+    DeepstreamClient(final String url, DeepstreamConfig deepstreamConfig, EndpointFactory endpointFactory) throws URISyntaxException {
+        this.connection = new Connection(url, deepstreamConfig, this, endpointFactory);
         this.event = new EventHandler(deepstreamConfig, this.connection, this);
         this.rpc = new RpcHandler(deepstreamConfig, this.connection, this);
         this.record = new RecordHandler(deepstreamConfig, this.connection, this);
         this.presence = new PresenceHandler(deepstreamConfig, this.connection, this);
     }
+
 
     /**
      * Gets the {@link RecordHandler} used for data-sync in deepstream. Through records and lists {@link RecordHandler#getRecord(String)},

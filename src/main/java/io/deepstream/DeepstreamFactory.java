@@ -57,7 +57,7 @@ public class DeepstreamFactory {
         DeepstreamClient client = this.clients.get(url);
         this.lastUrl = url;
         if (clientDoesNotExist(client)) {
-            client = new DeepstreamClient(url);
+            client = new DeepstreamClient(url,  new DeepstreamConfig(), new JavaEndpointFactory());
             this.clients.put(url, client);
         }
         return client;
@@ -77,7 +77,7 @@ public class DeepstreamFactory {
     public DeepstreamClient getClient(String url, Properties options) throws URISyntaxException, InvalidDeepstreamConfig {
         DeepstreamClient client = this.clients.get(url);
         if (clientDoesNotExist(client)) {
-            client = new DeepstreamClient(url, options);
+            client = new DeepstreamClient(url, new DeepstreamConfig(options), new JavaEndpointFactory());
             this.clients.put(url, client);
         }
         return client;
