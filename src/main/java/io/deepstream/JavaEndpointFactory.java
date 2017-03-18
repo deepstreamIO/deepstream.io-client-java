@@ -7,6 +7,6 @@ class JavaEndpointFactory implements EndpointFactory {
 
     @Override
     public Endpoint createEndpoint(URI uri, Connection connection) throws URISyntaxException {
-        return new EndpointWebsocket(uri, connection);
+        return new JavaEndpointWebsocket(uri, connection);
     }
 }
