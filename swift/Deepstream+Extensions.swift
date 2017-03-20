@@ -161,7 +161,7 @@ public final class IOSDeepstreamFactory {
      * @return A deepstream client
      * @throws URISyntaxException An error if the url syntax is invalid
      */
-    public func getClient(_ url: String, callback: (DeepstreamClient?) -> Void) {
+    public func getClient(_ url: String, callback: @escaping (DeepstreamClient?) -> Void) {
         self.lastUrl = url
 
         DispatchQueue.main.async {
@@ -186,7 +186,7 @@ public final class IOSDeepstreamFactory {
      * @throws URISyntaxException      An error if the url syntax is invalid
      * @throws InvalidDeepstreamConfig An exception if any of the options are invalid
      */
-    public func getClient(_ url: String, options: JavaUtilProperties, callback: (DeepstreamClient?) -> Void) {
+    public func getClient(_ url: String, options: JavaUtilProperties, callback: @escaping (DeepstreamClient?) -> Void) {
         self.lastUrl = url
 
         DispatchQueue.main.async {
