@@ -21,3 +21,6 @@ local.properties
 
 # Mac
 .DS_Store
+
+DeepstreamIO.zip
+DeepstreamIO/
