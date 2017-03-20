@@ -161,17 +161,19 @@ public final class IOSDeepstreamFactory {
      * @return A deepstream client
      * @throws URISyntaxException An error if the url syntax is invalid
      */
-    public func getClient(_ url: String) -> DeepstreamClient? {
+    public func getClient(_ url: String, callback: (DeepstreamClient?) -> Void) {
         self.lastUrl = url
 
-        // Check if client exists and not in closed/error state
-        guard let c = self.clients[url], self.clientNotAvailable(client: c) else {
-            let client = DeepstreamClient(url, endpointFactory: IOSEndpointWebsocketFactory())
-            self.clients[url] = client
-            return client
-        }
+        DispatchQueue.main.async {
+            // Check if client exists and not in closed/error state
+            guard let c = self.clients[url], self.clientNotAvailable(client: c) else {
+                let client = DeepstreamClient(url, endpointFactory: IOSEndpointWebsocketFactory())
+                self.clients[url] = client
+                return callback(client)
+            }
 
-        return c
+            callback(c)
+        }
     }
 
     /**
@@ -184,17 +186,19 @@ public final class IOSDeepstreamFactory {
      * @throws URISyntaxException      An error if the url syntax is invalid
      * @throws InvalidDeepstreamConfig An exception if any of the options are invalid
      */
-    public func getClient(_ url: String, options: JavaUtilProperties) -> DeepstreamClient? {
+    public func getClient(_ url: String, options: JavaUtilProperties, callback: (DeepstreamClient?) -> Void) {
         self.lastUrl = url
 
-        // Check if client exists and not in closed/error state
-        guard let c = self.clients[url], self.clientNotAvailable(client: c) else {
-            let client = DeepstreamClient(url, options: options, endpointFactory: IOSEndpointWebsocketFactory())
-            self.clients[url] = client
-            return client
-        }
+        DispatchQueue.main.async {
+            // Check if client exists and not in closed/error state
+            guard let c = self.clients[url], self.clientNotAvailable(client: c) else {
+                let client = DeepstreamClient(url, options: options, endpointFactory: IOSEndpointWebsocketFactory())
+                self.clients[url] = client
+                return callback(client)
+            }
 
-        return c
+            callback(c)
+        }
     }
 
     private func clientNotAvailable(client: DeepstreamClient) -> Bool {
