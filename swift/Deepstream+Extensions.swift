@@ -164,7 +164,7 @@ public final class IOSDeepstreamFactory {
     public func getClient(_ url: String, callback: @escaping (DeepstreamClient?) -> Void) {
         self.lastUrl = url
 
-        DispatchQueue.main.async {
+        DispatchQueue.global().async {
             // Check if client exists and not in closed/error state
             guard let c = self.clients[url], self.clientNotAvailable(client: c) else {
                 let client = DeepstreamClient(url, endpointFactory: IOSEndpointWebsocketFactory())
@@ -189,7 +189,7 @@ public final class IOSDeepstreamFactory {
     public func getClient(_ url: String, options: JavaUtilProperties, callback: @escaping (DeepstreamClient?) -> Void) {
         self.lastUrl = url
 
-        DispatchQueue.main.async {
+        DispatchQueue.global().async {
             // Check if client exists and not in closed/error state
             guard let c = self.clients[url], self.clientNotAvailable(client: c) else {
                 let client = DeepstreamClient(url, options: options, endpointFactory: IOSEndpointWebsocketFactory())
