@@ -225,8 +225,6 @@ public final class IOSEndpointWebsocket : NSObject, Endpoint {
                 print("Websocket: websocketDidDisconnect")
                 if (error != nil) {
                     print("Websocket: \(error?.localizedDescription)")
-                    self.connection.onError("error")
-                    return
                 }
                 self.connection.onClose()
             }
