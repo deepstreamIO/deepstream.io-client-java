@@ -353,16 +353,12 @@ class Connection implements IConnection {
         return uri;
     }
 
-
     private Endpoint createEndpoint() throws URISyntaxException {
         URI uri = parseUri(url, this.options.getPath());
         Endpoint endpoint = this.endpointFactory.createEndpoint(uri, this);
         endpoint.open();
         return endpoint;
     }
-
-    private native Endpoint createIOSEndpoint(URI uri, Connection connection) /*-[
-    ]-*/;
 
     private void tryReconnect() {
         if( this.reconnectTimeout != null ) {

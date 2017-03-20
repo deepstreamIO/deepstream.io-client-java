@@ -3,7 +3,7 @@
 //  DeepstreamIO
 //
 //  Created by Akram Hussein on 18/12/2016.
-//
+//  Copyright (c) 2017 deepstreamHub GmbH. All rights reserved.
 //
 
 import Foundation
