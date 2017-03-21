@@ -141,16 +141,18 @@ public final class IOSDeepstreamFactory {
      * @return A deepstream client
      */
 
-    public func getClient() -> DeepstreamClient? {
-        guard let lastUrl = self.lastUrl else {
-            return nil
-        }
+    public func getClient(callback: @escaping (DeepstreamClient?) -> Void) {
+        DispatchQueue.global().async {
+            guard let lastUrl = self.lastUrl else {
+                return callback(nil)
+            }
 
-        guard let client = self.clients[lastUrl] else {
-            return nil
-        }
+            guard let client = self.clients[lastUrl] else {
+                return callback(nil)
+            }
 
-        return client
+            callback(client)
+        }
     }
 
     /**
