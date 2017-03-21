@@ -210,7 +210,7 @@ public final class IOSDeepstreamFactory {
 
 // MARK: - IOSEndpointWebsocket
 
-public final class IOSEndpointWebsocket : NSObject, Endpoint {
+private final class IOSEndpointWebsocket : NSObject, Endpoint {
 
     private let uri : JavaNetURI!
     public let connection : Connection!
@@ -264,7 +264,7 @@ public final class IOSEndpointWebsocket : NSObject, Endpoint {
 
 // MARK: - IOSEndpointWebsocketFactory
 
-public final class IOSEndpointWebsocketFactory : NSObject, EndpointFactory {
+private final class IOSEndpointWebsocketFactory : NSObject, EndpointFactory {
     public func createEndpoint(_ uri: JavaNetURI!, connection: Connection!) -> Endpoint! {
         return IOSEndpointWebsocket(uri: uri, connection: connection)
     }
