@@ -136,8 +136,10 @@ public final class IOSDeepstreamFactory {
     /**
      * Returns the last client that was created. This is useful for most applications that
      * only require a single connection. The first time a client is connected however it has to be
-     * via {@link DeepstreamFactory#getClient(String)} or {@link DeepstreamFactory#getClient(String, Properties)}
+     * via {@link IOSDeepstreamFactory#getClient(String, (DeepstreamClient?) -> Void))} 
+     * or {@link IOSDeepstreamFactory#getClient(String, Properties, (DeepstreamClient?) -> Void))}
      *
+     * @param callback A function that will be called with the client as an argument
      * @return A deepstream client
      */
 
@@ -156,16 +158,17 @@ public final class IOSDeepstreamFactory {
     }
 
     /**
-     * Returns a client that was previous created via the same url using this method or {@link DeepstreamFactory#getClient(String, Properties)}.
+     * Returns a client that was previous created via the same url using this
+     * method or {@link IOSDeepstreamFactory#getClient(String, Properties, (DeepstreamClient?) -> Void)}.
      * If one wasn't created, it creates it first and stores it for future reference.
      *
      * @param url The url to connect to, also the key used to retrieve in future calls
+     * @param callback A function that will be called with the client as an argument
      * @return A deepstream client
      * @throws URISyntaxException An error if the url syntax is invalid
      */
     public func getClient(_ url: String, callback: @escaping (DeepstreamClient?) -> Void) {
         self.lastUrl = url
-
         DispatchQueue.global().async {
             // Check if client exists and not in closed/error state
             guard let c = self.clients[url], self.clientNotAvailable(client: c) else {
@@ -179,18 +182,20 @@ public final class IOSDeepstreamFactory {
     }
 
     /**
-     * Returns a client that was previous created via the same url using this method or {@link DeepstreamFactory#getClient(String)}.
+     * Finds a client that was previous created via the same url using this
+     * method or {@link IOSDeepstreamFactory#getClient(String, (DeepstreamClient?) -> Void)} and executes
+     * callback .
      * If one wasn't created, it creates it first and stores it for future reference.
      *
-     * @param url     The url to connect to, also the key used to retrieve in future calls
-     * @param options The options to use within the deepstream connection
+     * @param url      The url to connect to, also the key used to retrieve in future calls
+     * @param options  The options to use within the deepstream connection
+     * @param callback A function that will be called with the client as an argument
      * @return A deepstream client
      * @throws URISyntaxException      An error if the url syntax is invalid
      * @throws InvalidDeepstreamConfig An exception if any of the options are invalid
      */
     public func getClient(_ url: String, options: JavaUtilProperties, callback: @escaping (DeepstreamClient?) -> Void) {
         self.lastUrl = url
-
         DispatchQueue.global().async {
             // Check if client exists and not in closed/error state
             guard let c = self.clients[url], self.clientNotAvailable(client: c) else {
