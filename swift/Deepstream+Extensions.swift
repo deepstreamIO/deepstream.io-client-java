@@ -100,8 +100,65 @@ public extension JsonElement {
         get {
             let serialized = JsonElement.gson?.toJson(with: self)
             let data = serialized!.data(using: .utf8)
-            return try! JSONSerialization.jsonObject(with: data!, options: []) as! [String : Any]
+            let jsonDict = try! JSONSerialization.jsonObject(with: data!, options: []) as! [String : Any]
+            return deepDeserializeDict(data: jsonDict)
         }
+    }
+
+    private func isJSONPrimitive(data : Any) -> Bool {
+        return (data is String) || (data is Int) || (data is Double)
+    }
+
+    private func deserialize(data : Any) -> String {
+        let dataSerial = try! JSONSerialization.data(withJSONObject: data, options: [])
+        return String(data: dataSerial, encoding: String.Encoding.utf8)!
+    }
+
+    private func isJSONArray(_ jsonString : String) -> Bool {
+        return jsonString[jsonString.startIndex] == "[" ? true : false
+    }
+
+    private func makeJsonArray(_ jsonString : String) -> JsonArray {
+        return Gson().fromJson(with: jsonString, with: JsonArray_class_()) as! JsonArray
+    }
+
+    private func makeJsonObject(_ jsonString : String) -> JsonObject {
+        return Gson().fromJson(with: jsonString, with: JsonObject_class_()) as! JsonObject
+    }
+
+    private func deepDeserializeArray(data: [Any]) -> [Any] {
+        var dataDeserialize = [Any]()
+        for element in data {
+            if (!isJSONPrimitive(data: element) && JSONSerialization.isValidJSONObject(element)) {
+                let jsonString = deserialize(data: element)
+                if isJSONArray(jsonString) {
+                    dataDeserialize.append(deepDeserializeArray(data: makeJsonArray(jsonString).array))
+                } else {
+                    dataDeserialize.append(deepDeserializeDict(data: makeJsonObject(jsonString).dict))
+                }
+            } else {
+                dataDeserialize.append(element)
+            }
+        }
+        return dataDeserialize
+    }
+
+    private func deepDeserializeDict(data: [String : Any]) -> [String : Any] {
+        var dataDeserialize = [String : Any]()
+        for key in Array(data.keys) {
+            let value = data[key] as Any
+            var newValue : Any = value as Any
+            if (!isJSONPrimitive(data: value) && JSONSerialization.isValidJSONObject(value)) {
+                let jsonString = deserialize(data: value)
+                if isJSONArray(jsonString) {
+                    newValue = deepDeserializeArray(data: makeJsonArray(jsonString).array)
+                } else {
+                    newValue = deepDeserializeDict(data: makeJsonObject(jsonString).dict)
+                }
+            }
+            dataDeserialize[key] = newValue
+        }
+        return dataDeserialize
     }
 }
 
@@ -136,7 +193,7 @@ public final class IOSDeepstreamFactory {
     /**
      * Returns the last client that was created. This is useful for most applications that
      * only require a single connection. The first time a client is connected however it has to be
-     * via {@link IOSDeepstreamFactory#getClient(String, (DeepstreamClient?) -> Void))} 
+     * via {@link IOSDeepstreamFactory#getClient(String, (DeepstreamClient?) -> Void))}
      * or {@link IOSDeepstreamFactory#getClient(String, Properties, (DeepstreamClient?) -> Void))}
      *
      * @param callback A function that will be called with the client as an argument
