@@ -143,6 +143,15 @@ public class JSONPathTest {
     };
 
     @Test
+    public void createsNonExistentPathWhenSetting() {
+        jsonPath.set("nested.property.created", gson.toJsonTree("some value"));
+        Assert.assertEquals(
+                "some value",
+                jsonPath.get("nested.property.created").getAsString()
+        );
+    }
+
+    @Test
     public void deletesSimpleValues() {
         Assert.assertEquals(
                 "yasser",
