@@ -74,8 +74,14 @@ class UtilJSONPath {
                 }
                 parent = parentObject.get( prefix );
                 traverser = parentObject.get( prefix ).getAsJsonArray().get( index );//traverser.getAsJsonObject().get( prefix );
-            } else if( traverser.isJsonObject() ){
+            } else if( traverser.isJsonObject() ) {
+                JsonElement property = traverser.getAsJsonObject().get(token);
+                if (property == null) {
+                    traverser.getAsJsonObject().add(token, new JsonObject());
+                }
+                parent = traverser.getAsJsonObject();
                 traverser = traverser.getAsJsonObject().get(token);
+
             } else if( traverser.isJsonArray() ){
                 break;
             }
