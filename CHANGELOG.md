@@ -1,3 +1,8 @@
+## [2.0.6] - 2017.03.31
+
+### Fixes
+- JSONPath: create new properties while setting nested values
+
 ## [2.0.5] - 2017.03.07
 
 ### Fixes
