@@ -318,8 +318,15 @@ public class Record {
             data = new String[]{ this.name(), newVersion, path, MessageBuilder.typed(value), config.toString() };
         }
 
+        Actions action;
+        if (path == null) {
+            action = Actions.UPDATE;
+        } else {
+            action = Actions.PATCH;
+        }
+
         final CountDownLatch snapshotLatch = new CountDownLatch(1);
-        this.recordSetNotifier.request(newVersion, data, new UtilSingleNotifier.UtilSingleNotifierCallback() {
+        this.recordSetNotifier.request(newVersion, action, data, new UtilSingleNotifier.UtilSingleNotifierCallback() {
             @Override
             public void onSingleNotifierError(String name, DeepstreamError error) {
                 result[0] = new RecordSetResult( error.getMessage() );
