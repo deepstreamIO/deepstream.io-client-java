@@ -61,7 +61,7 @@ j2objcConfig {
 }
 
 group 'io.deepstream'
-version '2.0.6'
+version '2.0.7'
 
 
 publishing {
@@ -70,7 +70,7 @@ publishing {
             from components.java
             groupId 'io.deepstream'
             artifactId 'deepstream.io-client-java'
-            version '2.0.6'
+            version '2.0.7'
         }
     }
 }
@@ -103,7 +103,7 @@ bintray {
 
         //Optional version descriptor
         version {
-            name = '2.0.6'
+            name = '2.0.7'
             released = new Date()
             gpg {
                 sign = true

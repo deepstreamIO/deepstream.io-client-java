@@ -1,3 +1,8 @@
+## [2.0.7] - 2017.04.05
+
+### Fixes
+- Send proper patch and update messages during `setWithAck`
+
 ## [2.0.6] - 2017.03.31
 
 ### Fixes
