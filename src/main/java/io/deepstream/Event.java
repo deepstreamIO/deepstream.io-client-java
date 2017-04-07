@@ -84,7 +84,11 @@ public enum Event {
     /**
      * To indicate the client has attempted to perform an action they are not permissioned too
      */
-    MESSAGE_DENIED;
+    MESSAGE_DENIED,
+    /**
+     * To indicate multi subscriptions
+     */
+    MULTIPLE_SUBSCRIPTIONS;
 
     @ObjectiveCName("getEvent:")
     static Event getEvent(String event ) {
