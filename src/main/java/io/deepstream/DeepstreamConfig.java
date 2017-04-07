@@ -37,6 +37,7 @@ class DeepstreamConfig {
             this.getRecordReadAckTimeout();
             this.getRecordReadTimeout();
             this.getRecordDeleteTimeout();
+            this.getRecordMergeStrategy();
         } catch( Exception e ) {
             throw new InvalidDeepstreamConfig();
         }
@@ -88,6 +89,10 @@ class DeepstreamConfig {
 
     int getRecordDeleteTimeout() {
         return Integer.parseInt(getOption(ConfigOptions.RECORD_DELETE_TIMEOUT, "3000"));
+    }
+    
+    MergeStrategy getRecordMergeStrategy() {
+        return MergeStrategy.valueOf(getOption(ConfigOptions.RECORD_MERGE_STRATEGY, "REMOTE_WINS"));
     }
 
     @ObjectiveCName("getOption:defaultValue:")

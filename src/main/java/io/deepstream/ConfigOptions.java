@@ -67,7 +67,12 @@ public enum ConfigOptions {
      * The number of milliseconds from the moment record.delete() is called until an error is thrown since no delete ack
      * message has been received. Please take into account that the deletion is only complete after the record has been deleted from both cache and storage.
      */
-    RECORD_DELETE_TIMEOUT("recordDeleteTimeout");
+    RECORD_DELETE_TIMEOUT("recordDeleteTimeout"),
+
+    /**
+     * The merge strategy
+     */
+    RECORD_MERGE_STRATEGY("recordMergeStrategy");
 
     private String configOption;
 

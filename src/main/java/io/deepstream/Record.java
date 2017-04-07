@@ -66,7 +66,8 @@ public class Record {
         this.isReady = false;
         this.isDestroyed = false;
         this.hasProvider = false;
-
+        this.mergeStrategy = this.deepstreamConfig.getRecordMergeStrategy() != null ?
+                RecordMergeStrategies.INSTANCE.getMergeStrategy(this.deepstreamConfig.getRecordMergeStrategy()) : null ;
         this.recordEventsListeners = new ArrayList<>();
         this.onceRecordReadyListeners = new ArrayList<>();
         this.recordDestroyPendingListeners = new ArrayList<>();
