@@ -509,7 +509,9 @@ public class Record {
         if( this.isReady ) {
             recordReadyListener.onRecordReady( this.name, this );
         } else {
-            this.onceRecordReadyListeners.add( recordReadyListener );
+            synchronized (this) {
+                this.onceRecordReadyListeners.add( recordReadyListener );
+            }
         }
         return this;
     }

@@ -59,13 +59,17 @@ public class RecordHandler {
         Record record = records.get( name );
         if( record == null ) {
             synchronized (this) {
-                record = new Record(name, new HashMap(), connection, deepstreamConfig, client);
-                records.put(name, record);
-                record.addRecordEventsListener(recordHandlerListeners);
-                record.addRecordDestroyPendingListener(recordHandlerListeners);
-                record.start();
+                record = records.get( name );
+                if (record == null) {
+                    record = new Record(name, new HashMap(), connection, deepstreamConfig, client);
+                    records.put(name, record);
+                    record.addRecordEventsListener(recordHandlerListeners);
+                    record.addRecordDestroyPendingListener(recordHandlerListeners);
+                    record.start();
+                }
             }
         }
+
         record.incrementUsage();
 
         if (!record.isReady()) {
