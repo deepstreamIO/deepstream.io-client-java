@@ -1,3 +1,9 @@
+## [2.0.8] - 2017.04.12
+
+### Fixes
+- Calls to `getRecord` are now synchronized. Meaning multiple threads accessing the same record don't result in `MULTIPLE_SUBSCRIPTION` errors
+- Added a default global record merge strategy thanks to [@lironsteren](@lironsteren)
+
 ## [2.0.7] - 2017.04.05
 
 ### Fixes
