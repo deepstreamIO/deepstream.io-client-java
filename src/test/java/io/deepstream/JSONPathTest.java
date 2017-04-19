@@ -12,10 +12,19 @@ import java.net.URISyntaxException;
 public class JSONPathTest {
     private Gson gson = new Gson();
     private UtilJSONPath jsonPath;
+    private UtilJSONPath jsonPath2;
     private JsonObject coreElement;
+    private JsonObject coreElement2;
+    private JsonObject newTixTextObj;
 
     @Before
     public void setUp() throws URISyntaxException {
+
+        newTixTextObj = new JsonObject();
+        newTixTextObj.addProperty("00000001","tttttttt-1");
+        jsonPath2 = new UtilJSONPath( new JsonObject() );
+
+
         JsonArray pastAddresses = new JsonArray();
 
         JsonObject address1 = new JsonObject();
@@ -94,6 +103,42 @@ public class JSONPathTest {
     public void returnsNullForUndefinedKeys() {
         Assert.assertNull( jsonPath.get( "pastAddresses[ -1 ]" ) );
     };
+
+
+    @Test
+    public void handlesComplexArraysEmptySlotsAndNumericObjectMemberNames() {
+
+        jsonPath2.set("a.b.4", newTixTextObj);
+        Assert.assertEquals(
+                newTixTextObj,
+                jsonPath2.get("a.b.4")
+        );
+
+        jsonPath2.set("aaa[1].333.bbb[0].222", newTixTextObj);
+        Assert.assertEquals(
+                newTixTextObj,
+                jsonPath2.get("aaa[1].333.bbb[0].222")
+        );
+
+        jsonPath2.set("aaa[1].bbb", newTixTextObj);
+        Assert.assertEquals(
+                newTixTextObj,
+                jsonPath2.get("aaa[1].bbb")
+        );
+
+        jsonPath2.set("a.b.0.2.xxx[4].a", newTixTextObj);
+        Assert.assertEquals(
+                newTixTextObj,
+                jsonPath2.get("a.b.0.2.xxx[4].a")
+        );
+
+        jsonPath2.set("aaa[0].b.1.ccc[1].1", newTixTextObj);
+        Assert.assertEquals(
+                newTixTextObj,
+                jsonPath2.get("aaa[0].b.1.ccc[1].1")
+        );
+    };
+
 
     /**
      * Set

@@ -27,12 +27,14 @@ class UtilJSONPath {
 
         for( int i=0; i < st.length; i++ ) {
             token = st[i];
-
             try {
+                if (traverser.isJsonNull()) {
+                    break;
+                }
+
                 if (isArray(token)) {
                     String prefix = getTokenPrefix(token);
                     int index = Integer.parseInt( getIndex( token ) );
-
                     traverser = traverser.getAsJsonObject().get(prefix).getAsJsonArray().get(index);
                 } else if (traverser.isJsonObject()) {
                     traverser = traverser.getAsJsonObject().get(token);
@@ -57,13 +59,15 @@ class UtilJSONPath {
         for( int i=0; i<st.length; i++ ) {
             token = st[ i ];
             parent = traverser;
+            if (traverser.isJsonNull()) {
+                break;
+            }
 
             if (isArray(token)) {
                 String prefix = getTokenPrefix(token);
                 token = getIndex( token );
                 int index = Integer.parseInt( token );
                 JsonObject parentObject = traverser.getAsJsonObject();
-
                 if( parentObject.get(prefix) == null ) {
                     parentObject.add( prefix, initialiseArray(index) );
                 }
@@ -73,6 +77,9 @@ class UtilJSONPath {
                     extendArray( parentObject.get( prefix ).getAsJsonArray(), index );
                 }
                 parent = parentObject.get( prefix );
+                if (parentObject.get( prefix ).getAsJsonArray().get( index ).isJsonNull()) {
+                    parentObject.get( prefix ).getAsJsonArray().set( index, new JsonObject() );
+                }
                 traverser = parentObject.get( prefix ).getAsJsonArray().get( index );//traverser.getAsJsonObject().get( prefix );
             } else if( traverser.isJsonObject() ) {
                 JsonElement property = traverser.getAsJsonObject().get(token);
