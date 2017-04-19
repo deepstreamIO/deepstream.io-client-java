@@ -15,6 +15,6 @@ before_install:
 - ./scripts/setupJ2OBJC.sh true
 - ./scripts/installJava.sh
 script:
-- ./gradlew -b build-prod.gradle
+- ./gradlew -b build.gradle
 after_success:
   - if [ -n "TRAVIS_TAG" ]; then ./gradlew -b build-prod.gradle bintrayUpload; fi
