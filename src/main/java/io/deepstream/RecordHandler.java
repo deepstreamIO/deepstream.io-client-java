@@ -214,9 +214,11 @@ public class RecordHandler {
      *
      * @param recordName name of record to set
      * @param version version to set the record to. If -1 then record data is overwritten
-     * @param data the data the record will be set to
+     * @param data the data the record will be set to. Make sure that the Object passed
+     *             in can be serialised to a JsonElement, such as {@link Map}. Since this
+     *             is a root the object should also not be a primitive.
      */
-    public void setData(String recordName, int version, JsonObject data) throws DeepstreamError {
+    public void setData(String recordName, int version, JsonElement data) throws DeepstreamError {
         Record record = this.records.get(recordName);
         if (record != null) {
             throw new DeepstreamError("record data should be set via the record instance itself: Record.set(data)");
@@ -238,7 +240,7 @@ public class RecordHandler {
      * @param path the path the data will be written to
      * @param data the data the record will be set to
      */
-    public void setData(String recordName, int version, String path, JsonObject data) throws DeepstreamError {
+    public void setData(String recordName, int version, String path, JsonElement data) throws DeepstreamError {
         Record record = this.records.get(recordName);
         if (record != null) {
             throw new DeepstreamError("record data should be set via the record instance itself: Record.set(path, data)");
