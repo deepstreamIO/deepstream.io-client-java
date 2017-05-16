@@ -1,5 +1,6 @@
 package io.deepstream;
 
+import com.google.gson.JsonObject;
 import com.google.j2objc.annotations.ObjectiveCName;
 
 import com.google.gson.JsonElement;
@@ -206,6 +207,47 @@ public class RecordHandler {
         }
 
         return new SnapshotResult(data[0], deepstreamException[0]);
+    }
+
+    /**
+     * Allows setting of a record without being subscribed to it.
+     *
+     * @param recordName name of record to set
+     * @param version version to set the record to. If -1 then record data is overwritten
+     * @param data the data the record will be set to
+     */
+    public void setData(String recordName, int version, JsonObject data) throws DeepstreamError {
+        Record record = this.records.get(recordName);
+        if (record != null) {
+            throw new DeepstreamError("record data should be set via the record instance itself: Record.set(data)");
+        }
+
+        JsonObject config = new JsonObject();
+        config.addProperty("upsert", true);
+        String remoteMessage = MessageBuilder.getMsg(
+                Topic.RECORD, Actions.UPDATE, new String[]{ recordName, String.valueOf(version), data.toString(), config.toString() }
+        );
+        this.connection.send(remoteMessage);
+    }
+
+    /**
+     * Allows setting of a record path without being subscribed to it.
+     *
+     * @param recordName name of record to set
+     * @param version version to set the record to. If -1 then record data is overwritten
+     * @param path the path the data will be written to
+     * @param data the data the record will be set to
+     */
+    public void setData(String recordName, int version, String path, JsonObject data) throws DeepstreamError {
+        Record record = this.records.get(recordName);
+        if (record != null) {
+            throw new DeepstreamError("record data should be set via the record instance itself: Record.set(path, data)");
+        }
+
+        String remoteMessage = MessageBuilder.getMsg(
+                Topic.RECORD, Actions.PATCH, new String[]{ recordName, String.valueOf(version), path, MessageBuilder.typed(data) }
+        );
+        this.connection.send(remoteMessage);
     }
 
     /**
