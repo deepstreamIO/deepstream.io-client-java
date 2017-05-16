@@ -465,6 +465,7 @@ public class Record {
                     }
                 }
             });
+            this.destroy();
         }
         return this;
     }
@@ -831,6 +832,7 @@ public class Record {
     private void destroy() {
         this.clearTimeouts();
         this.utilResubscribeNotifier.destroy();
+        this.recordSetNotifier.destroy();
         this.isReady = false;
         this.isDestroyed = true;
     }
