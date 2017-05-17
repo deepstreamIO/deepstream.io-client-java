@@ -294,7 +294,7 @@ class Connection implements IConnection {
             if( this.loginCallback != null ) {
                 this.loginCallback.loginFailed(
                         Event.getEvent( message.data[ 0 ] ),
-                        MessageParser.convertTyped( message.data[ 1 ], this.client )
+                        MessageParser.convertTyped(message.data[1], this.client, this.options.getJsonParser())
                 );
             }
         }
@@ -308,7 +308,7 @@ class Connection implements IConnection {
 
             if( this.loginCallback != null ) {
                 try {
-                    Object data = MessageParser.convertTyped(message.data[0], this.client);
+                    Object data = MessageParser.convertTyped(message.data[0], this.client, this.options.getJsonParser());
                     this.loginCallback.loginSuccess(data);
                 } catch (IndexOutOfBoundsException e) {
                     this.loginCallback.loginSuccess(null);
