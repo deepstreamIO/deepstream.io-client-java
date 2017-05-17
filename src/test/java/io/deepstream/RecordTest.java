@@ -100,12 +100,11 @@ public class RecordTest {
     @Test
     public void recordDiscardsCorrectly() throws DeepstreamRecordDestroyedException {
         recordSendsAckAndRead();
-
         record.discard();
 
         Assert.assertEquals( connectionMock.lastSentMessage, TestUtil.replaceSeperators( "R|US|recordA+" ) );
-        Assert.assertTrue( record.isReady() );
-        Assert.assertFalse( record.isDestroyed() );
+        Assert.assertTrue( record.isDestroyed() );
+        Assert.assertFalse( record.isReady() );
     }
 
     @Test
