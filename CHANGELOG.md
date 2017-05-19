@@ -1,3 +1,12 @@
+## [2.1.0] - 2017.05.19
+
+### Features
+- `RecordHandler.setData` and `RecordHandler.setDataWithAck` allow setting of record data without being subscribed to the record
+
+### Fixes
+- fix a memory leak when many frequent record subscriptions and discards. Records and their internals were not being destroyed properly
+- handle complex numeric paths, courtesty of [@honorcode](@honorcode)
+
 ## [2.0.8] - 2017.04.12
 
 ### Fixes
