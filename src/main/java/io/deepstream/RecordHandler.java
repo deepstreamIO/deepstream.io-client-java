@@ -241,7 +241,7 @@ public class RecordHandler {
      * @param recordName name of record to set
      * @param version version to set the record to. If -1 then record data is overwritten
      * @param path the path the data will be written to
-     * @param data the data the record will be set to
+     * @param value the data the record will be set to
      */
     public void setData(String recordName, int version, String path, Object value) throws DeepstreamError {
         Record record = this.records.get(recordName);
@@ -278,14 +278,46 @@ public class RecordHandler {
         this.connection.send(remoteMessage);
     }
 
+    /**
+     * Set the value of a record without being subsribed to it. A write acknowledgement
+     * will be returned with the state of the write. This operation is force write and will
+     * overwrite any remote data.
+     *
+     * @param recordName the name of the record being set.
+     * @param value the value to set the record to
+     * @return RecordSetResult the result of the write
+     * @throws DeepstreamError
+     */
     public RecordSetResult setDataWithAck(String recordName, Object value) throws DeepstreamError {
         return this.setDataWithAck(recordName, null, -1, value);
     }
 
+    /**
+     * Set the value of a record without being subsribed to it. A write acknowledgement
+     * will be returned with the state of the write. This operation is force write and will
+     * overwrite any remote data.
+     *
+     * @param recordName the name of the record being set.
+     * @param path the path of the record being set
+     * @param value the value to set the record to
+     * @return RecordSetResult the result of the write
+     * @throws DeepstreamError
+     */
     public RecordSetResult setDataWithAck(String recordName, String path, Object value) throws DeepstreamError {
         return this.setDataWithAck(recordName, path, -1, value);
     }
 
+    /**
+     * Set the value of a record without being subsribed to it. A write acknowledgement
+     * will be returned with the state of the write.
+     *
+     * @param recordName the name of the record being set.
+     * @param path the path of the record being set
+     * @param version the version to set the record to
+     * @param value the value to set the record to
+     * @return RecordSetResult the result of the write
+     * @throws DeepstreamError
+     */
     public RecordSetResult setDataWithAck(String recordName, String path, int version, Object value) throws DeepstreamError {
         Record record = this.records.get(recordName);
         if (record != null) {
