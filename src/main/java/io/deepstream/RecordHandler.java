@@ -1,8 +1,7 @@
 package io.deepstream;
 
+import com.google.gson.*;
 import com.google.j2objc.annotations.ObjectiveCName;
-
-import com.google.gson.JsonElement;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +23,7 @@ public class RecordHandler {
     private final UtilSingleNotifier snapshotRegistry;
     private final Map<String, UtilListener> listeners;
     private final RecordHandlerListeners recordHandlerListeners;
+    private final UtilSingleNotifier recordSetNotifier;
 
     /**
      * A collection of factories for records. This class
@@ -46,6 +46,7 @@ public class RecordHandler {
 
         hasRegistry = new UtilSingleNotifier(client, connection, Topic.RECORD, Actions.HAS, deepstreamConfig.getRecordReadTimeout());
         snapshotRegistry = new UtilSingleNotifier(client, connection, Topic.RECORD, Actions.SNAPSHOT, deepstreamConfig.getRecordReadTimeout());
+        recordSetNotifier = new UtilSingleNotifier(client, connection, Topic.RECORD, Actions.PATCH, deepstreamConfig.getSubscriptionTimeout());
     }
 
     /**
@@ -209,6 +210,142 @@ public class RecordHandler {
     }
 
     /**
+     * Set the data to a record without being subscribed to it. This operation
+     * is a forceful set and will override any remote data
+     *
+     * @param recordName name of record to set
+     * @param data the data the record will be set to. Make sure that the Object passed
+     *             in can be serialised to a JsonElement, such as {@link Map}. Since this
+     *             is a root the object should also not be a primitive.
+     */
+    public void setData(String recordName, Object data) throws DeepstreamError {
+        this.setData(recordName, -1, null, data);
+    }
+
+    /**
+     * Set the path of a record to the given data without being subscribed to it. This operation
+     * is a forceful set and will override any remote data
+     *
+     * @param recordName name of record to set
+     * @param path the path the data will be written to
+     * @param data the data the record will be set to
+     */
+    public void setData(String recordName, String path, Object data) throws DeepstreamError {
+        this.setData(recordName, -1, path, data);
+    }
+
+    /**
+     * Set the data to a record without being subscribed to it. Allows setting of a specific version
+     * for a record.
+     *
+     * @param recordName name of record to set
+     * @param version version to set the record to. If -1 then record data is overwritten
+     * @param path the path the data will be written to
+     * @param data the data the record will be set to
+     */
+    public void setData(String recordName, int version, String path, Object value) throws DeepstreamError {
+        Record record = this.records.get(recordName);
+        if (record != null) {
+            throw new DeepstreamError("record data should be set via the record instance itself: Record.set");
+        }
+
+        JsonElement element;
+        if( value instanceof String ) {
+            element = new JsonPrimitive((String) value);
+        }
+        else if( value instanceof Number ) {
+            element = new JsonPrimitive((Number) value);
+        }
+        else if( value instanceof Boolean ) {
+            element = new JsonPrimitive((Boolean) value);
+        } else {
+            element = deepstreamConfig.getJsonParser().toJsonTree( value );
+        }
+
+        String remoteMessage;
+        if (path == null) {
+            JsonObject config = new JsonObject();
+            config.addProperty("upsert", true);
+            remoteMessage = MessageBuilder.getMsg(
+                    Topic.RECORD, Actions.UPDATE, new String[]{ recordName, String.valueOf(version), element.toString(), config.toString() }
+            );
+
+        } else {
+            remoteMessage = MessageBuilder.getMsg(
+                    Topic.RECORD, Actions.PATCH, new String[]{ recordName, String.valueOf(version), path, MessageBuilder.typed(element) }
+            );
+        }
+        this.connection.send(remoteMessage);
+    }
+
+    public RecordSetResult setDataWithAck(String recordName, Object value) throws DeepstreamError {
+        return this.setDataWithAck(recordName, null, -1, value);
+    }
+
+    public RecordSetResult setDataWithAck(String recordName, String path, Object value) throws DeepstreamError {
+        return this.setDataWithAck(recordName, path, -1, value);
+    }
+
+    public RecordSetResult setDataWithAck(String recordName, String path, int version, Object value) throws DeepstreamError {
+        Record record = this.records.get(recordName);
+        if (record != null) {
+            throw new DeepstreamError("record data should be set via the record instance itself: Record.setWithAck");
+        }
+        JsonElement element;
+        if( value instanceof String ) {
+            element = new JsonPrimitive((String) value);
+        }
+        else if( value instanceof Number ) {
+            element = new JsonPrimitive((Number) value);
+        }
+        else if( value instanceof Boolean ) {
+            element = new JsonPrimitive((Boolean) value);
+        } else {
+            element = deepstreamConfig.getJsonParser().toJsonTree( value );
+        }
+
+        JsonObject config = new JsonObject();
+        config.addProperty("writeSuccess", true);
+
+        Actions action;
+        if (path == null) {
+            config.addProperty("upsert", true);
+            action = Actions.UPDATE;
+        } else {
+            action = Actions.PATCH;
+        }
+
+        String[] data;
+        if( path == null ) {
+            data = new String[]{ recordName, String.valueOf(version), element.toString(), config.toString() };
+        } else {
+            data = new String[]{ recordName, String.valueOf(version), path, MessageBuilder.typed(value), config.toString() };
+        }
+
+        final RecordSetResult[] result = new RecordSetResult[1];
+        final CountDownLatch snapshotLatch = new CountDownLatch(1);
+        this.recordSetNotifier.request(String.valueOf(version), action, data, new UtilSingleNotifier.UtilSingleNotifierCallback() {
+            @Override
+            public void onSingleNotifierError(String name, DeepstreamError error) {
+                result[0] = new RecordSetResult( error.getMessage() );
+                snapshotLatch.countDown();
+            }
+
+            @Override
+            public void onSingleNotifierResponse(String name, Object data) {
+                result[0] = new RecordSetResult( null );
+                snapshotLatch.countDown();
+            }
+        });
+        try {
+            snapshotLatch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return result[0];
+    }
+
+    /**
      * Allows the user to query to see whether or not the record exists<br/>
      *
      * If the record is created locally the listener will be called sync, else
@@ -309,6 +446,18 @@ public class RecordHandler {
         if( message.action == Actions.HAS && hasRegistry.hasRequest( recordName )) {
             processed = true;
             hasRegistry.recieve( recordName, null, MessageParser.convertTyped(message.data[1], client, deepstreamConfig.getJsonParser()));
+        }
+
+        if (message.action == Actions.WRITE_ACKNOWLEDGEMENT) {
+            processed = true;
+            String val = String.valueOf(message.data[1]);
+            Object versions = deepstreamConfig.getJsonParser().fromJson( val, JsonArray.class );
+            Object error = MessageParser.convertTyped(message.data[2], this.client, deepstreamConfig.getJsonParser());
+            if( error != null ) {
+                this.recordSetNotifier.recieve((JsonArray) versions, new DeepstreamError((String) error));
+            } else {
+                this.recordSetNotifier.recieve((JsonArray) versions, null);
+            }
         }
 
         UtilListener listener = listeners.get( recordName );

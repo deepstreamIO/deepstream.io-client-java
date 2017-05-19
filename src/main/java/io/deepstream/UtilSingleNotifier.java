@@ -136,6 +136,7 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
             } else {
                 cb.onSingleNotifierResponse(null, null);
             }
+            requests.remove(version.getAsString());
         }
     }
 
