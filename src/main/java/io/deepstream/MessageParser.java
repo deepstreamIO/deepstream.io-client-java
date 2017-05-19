@@ -1,10 +1,12 @@
 package io.deepstream;
 
+import com.google.gson.stream.JsonReader;
 import com.google.j2objc.annotations.ObjectiveCName;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -76,7 +78,7 @@ class MessageParser {
      * @return The object the value represented
      */
     @ObjectiveCName("convertTyped:client:")
-    static Object convertTyped( String value, DeepstreamClientAbstract client ) {
+    static Object convertTyped( String value, DeepstreamClientAbstract client, Gson gson ) {
 
         char type = value.charAt(0);
 
@@ -96,7 +98,7 @@ class MessageParser {
             return false;
         }
         else if( Types.getType( type ) == Types.OBJECT ) {
-            return parseObject( value.substring( 1 ) );
+            return parseObject( value.substring( 1 ), gson );
         }
         else if( Types.getType( type ) == Types.UNDEFINED ) {
             return Types.UNDEFINED;
@@ -107,7 +109,28 @@ class MessageParser {
     }
 
     @ObjectiveCName("parseObject:")
-    static Object parseObject(String value) {
-        return new Gson().fromJson( value, JsonElement.class );
+    static Object parseObject(String value, Gson gson) {
+        return gson.fromJson( value, JsonElement.class );
+    }
+
+    static JsonElement readJsonStream(String data, Gson gson) {
+        JsonReader r = null;
+        JsonElement result = null;
+        try {
+            Reader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(data.getBytes("UTF-8"))));
+            r = new JsonReader(reader);
+            result = gson.fromJson(r, JsonElement.class);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } finally {
+            if (null != r) {
+                try {
+                    r.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return result;
     }
 }

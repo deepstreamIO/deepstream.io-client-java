@@ -1,11 +1,7 @@
 package io.deepstream;
 
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+import com.google.gson.*;
 import com.google.j2objc.annotations.ObjectiveCName;
 
 import java.util.*;
@@ -59,7 +55,7 @@ public class Record {
         this.version = -1;
         this.connection = connection;
         this.client = client;
-        this.gson = new Gson();
+        this.gson = deepstreamConfig.getJsonParser();
         this.data = new JsonObject();
         this.path = new UtilJSONPath( this.data );
         this.subscribers = new UtilEmitter();
@@ -465,6 +461,7 @@ public class Record {
                     }
                 }
             });
+            this.destroy();
         }
         return this;
     }
@@ -542,7 +539,7 @@ public class Record {
     private void handleWriteAcknowledgement(Message message) {
         String val = String.valueOf(message.data[1]);
         Object versions = gson.fromJson( val, JsonArray.class );
-        Object error = MessageParser.convertTyped(message.data[ 2 ], this.client);
+        Object error = MessageParser.convertTyped(message.data[ 2 ], this.client, gson);
         if( error != null ) {
             this.recordSetNotifier.recieve((JsonArray) versions, new DeepstreamError((String) error));
         } else {
@@ -561,7 +558,7 @@ public class Record {
 
     @ObjectiveCName("updateHasProvider:")
     private void updateHasProvider(Message message) {
-        this.hasProvider = (boolean) MessageParser.convertTyped(message.data[1], this.client);
+        this.hasProvider = (boolean) MessageParser.convertTyped(message.data[1], this.client, gson);
         for (RecordEventsListener recordEventsListener : this.recordEventsListeners) {
             recordEventsListener.onRecordHasProviderChanged(this.name, this.hasProvider);
         }
@@ -577,7 +574,7 @@ public class Record {
         JsonElement data;
         boolean delete = false;
         if( message.action == Actions.PATCH ) {
-            Object rawData = MessageParser.convertTyped( message.data[ 3 ], client );
+            Object rawData = MessageParser.convertTyped( message.data[ 3 ], client, gson );
             if( rawData == Types.UNDEFINED ) {
                 delete = true;
                 data = null;
@@ -770,7 +767,7 @@ public class Record {
 
         Map<String,JsonElement> oldValues = beginChange();
         this.version = Integer.parseInt( message.data[ 1 ] );
-        this.data = gson.fromJson( message.data[ 2 ], JsonElement.class );
+        this.data = MessageParser.readJsonStream(message.data[2], gson);
         this.path.setCoreElement(this.data);
         completeChange( oldValues );
         setReady();
@@ -831,6 +828,7 @@ public class Record {
     private void destroy() {
         this.clearTimeouts();
         this.utilResubscribeNotifier.destroy();
+        this.recordSetNotifier.destroy();
         this.isReady = false;
         this.isDestroyed = true;
     }

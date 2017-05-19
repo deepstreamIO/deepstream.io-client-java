@@ -428,12 +428,12 @@ public class RecordHandler {
 
         if( message.action == Actions.READ && snapshotRegistry.hasRequest( recordName )) {
             processed = true;
-            snapshotRegistry.recieve( recordName, null, MessageParser.parseObject( message.data[ 2 ] ) );
+            snapshotRegistry.recieve( recordName, null, MessageParser.parseObject(message.data[2], deepstreamConfig.getJsonParser()));
         }
 
         if( message.action == Actions.HAS && hasRegistry.hasRequest( recordName )) {
             processed = true;
-            hasRegistry.recieve( recordName, null, MessageParser.convertTyped( message.data[ 1 ], client ) );
+            hasRegistry.recieve( recordName, null, MessageParser.convertTyped(message.data[1], client, deepstreamConfig.getJsonParser()));
         }
 
         if (message.action == Actions.WRITE_ACKNOWLEDGEMENT) {

@@ -213,7 +213,7 @@ public class RpcHandler {
         Object data = null;
 
         if( message.data[ 2 ] != null ) {
-            data = MessageParser.convertTyped( message.data[ 2 ], this.client );
+            data = MessageParser.convertTyped(message.data[2], this.client, deepstreamConfig.getJsonParser());
         }
 
         RpcRequestedListener callback = this.providers.get( rpcName );

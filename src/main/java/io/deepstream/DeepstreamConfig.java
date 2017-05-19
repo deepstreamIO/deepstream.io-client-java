@@ -1,5 +1,6 @@
 package io.deepstream;
 
+import com.google.gson.Gson;
 import com.google.j2objc.annotations.ObjectiveCName;
 
 import java.util.Map;
@@ -7,6 +8,7 @@ import java.util.Properties;
 
 class DeepstreamConfig {
     private Properties properties;
+    private Gson gsonInstance = null;
 
     DeepstreamConfig() {
         properties = new Properties();
@@ -38,6 +40,7 @@ class DeepstreamConfig {
             this.getRecordReadTimeout();
             this.getRecordDeleteTimeout();
             this.getRecordMergeStrategy();
+            this.getJsonParser();
         } catch( Exception e ) {
             throw new InvalidDeepstreamConfig();
         }
@@ -93,6 +96,13 @@ class DeepstreamConfig {
     
     MergeStrategy getRecordMergeStrategy() {
         return MergeStrategy.valueOf(getOption(ConfigOptions.RECORD_MERGE_STRATEGY, "REMOTE_WINS"));
+    }
+
+    Gson getJsonParser() {
+        if (gsonInstance == null) {
+            gsonInstance = new Gson();
+        }
+        return gsonInstance;
     }
 
     @ObjectiveCName("getOption:defaultValue:")
