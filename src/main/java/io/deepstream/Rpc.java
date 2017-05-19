@@ -48,7 +48,7 @@ class Rpc implements UtilTimeoutListener {
      */
     @ObjectiveCName("respond:data:")
     void respond( String rpcName, String data ) {
-        Object convertedData = MessageParser.convertTyped( data, this.client );
+        Object convertedData = MessageParser.convertTyped(data, this.client, deepstreamConfig.getJsonParser());
         this.callback.onRpcSuccess(rpcName, convertedData);
         this.clearTimeouts();
     }

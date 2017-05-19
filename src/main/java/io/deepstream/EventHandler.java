@@ -144,7 +144,7 @@ public class EventHandler {
 
         if( message.action == Actions.EVENT ) {
             if( message.data.length == 2 ) {
-                this.broadcastEvent( eventName, MessageParser.convertTyped(message.data[1], this.client) );
+                this.broadcastEvent( eventName, MessageParser.convertTyped(message.data[1], this.client, deepstreamConfig.getJsonParser()));
             } else {
                 this.broadcastEvent(eventName, null);
             }
