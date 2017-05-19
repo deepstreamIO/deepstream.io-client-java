@@ -218,7 +218,7 @@ public class RecordHandler {
      *             in can be serialised to a JsonElement, such as {@link Map}. Since this
      *             is a root the object should also not be a primitive.
      */
-    public void setData(String recordName, JsonElement data) throws DeepstreamError {
+    public void setData(String recordName, Object data) throws DeepstreamError {
         this.setData(recordName, -1, null, data);
     }
 
@@ -230,7 +230,7 @@ public class RecordHandler {
      * @param path the path the data will be written to
      * @param data the data the record will be set to
      */
-    public void setData(String recordName, String path, JsonElement data) throws DeepstreamError {
+    public void setData(String recordName, String path, Object data) throws DeepstreamError {
         this.setData(recordName, -1, path, data);
     }
 
@@ -243,10 +243,23 @@ public class RecordHandler {
      * @param path the path the data will be written to
      * @param data the data the record will be set to
      */
-    public void setData(String recordName, int version, String path, JsonElement data) throws DeepstreamError {
+    public void setData(String recordName, int version, String path, Object value) throws DeepstreamError {
         Record record = this.records.get(recordName);
         if (record != null) {
             throw new DeepstreamError("record data should be set via the record instance itself: Record.set");
+        }
+
+        JsonElement element;
+        if( value instanceof String ) {
+            element = new JsonPrimitive((String) value);
+        }
+        else if( value instanceof Number ) {
+            element = new JsonPrimitive((Number) value);
+        }
+        else if( value instanceof Boolean ) {
+            element = new JsonPrimitive((Boolean) value);
+        } else {
+            element = deepstreamConfig.getJsonParser().toJsonTree( value );
         }
 
         String remoteMessage;
@@ -254,12 +267,12 @@ public class RecordHandler {
             JsonObject config = new JsonObject();
             config.addProperty("upsert", true);
             remoteMessage = MessageBuilder.getMsg(
-                    Topic.RECORD, Actions.UPDATE, new String[]{ recordName, String.valueOf(version), data.toString(), config.toString() }
+                    Topic.RECORD, Actions.UPDATE, new String[]{ recordName, String.valueOf(version), element.toString(), config.toString() }
             );
 
         } else {
             remoteMessage = MessageBuilder.getMsg(
-                    Topic.RECORD, Actions.PATCH, new String[]{ recordName, String.valueOf(version), path, MessageBuilder.typed(data) }
+                    Topic.RECORD, Actions.PATCH, new String[]{ recordName, String.valueOf(version), path, MessageBuilder.typed(element) }
             );
         }
         this.connection.send(remoteMessage);
@@ -288,8 +301,7 @@ public class RecordHandler {
         else if( value instanceof Boolean ) {
             element = new JsonPrimitive((Boolean) value);
         } else {
-            // todo: replace this with deepstreamConfig.getJsonParser() once fix/mem-leak merged
-            element = new Gson().toJsonTree( value );
+            element = deepstreamConfig.getJsonParser().toJsonTree( value );
         }
 
         JsonObject config = new JsonObject();
@@ -439,9 +451,8 @@ public class RecordHandler {
         if (message.action == Actions.WRITE_ACKNOWLEDGEMENT) {
             processed = true;
             String val = String.valueOf(message.data[1]);
-            // todo: replace this after fix/mem-leak is merged
-            Object versions = new Gson().fromJson( val, JsonArray.class );
-            Object error = MessageParser.convertTyped(message.data[2], this.client);
+            Object versions = deepstreamConfig.getJsonParser().fromJson( val, JsonArray.class );
+            Object error = MessageParser.convertTyped(message.data[2], this.client, deepstreamConfig.getJsonParser());
             if( error != null ) {
                 this.recordSetNotifier.recieve((JsonArray) versions, new DeepstreamError((String) error));
             } else {
