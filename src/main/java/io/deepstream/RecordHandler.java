@@ -218,8 +218,8 @@ public class RecordHandler {
      *             in can be serialised to a JsonElement, such as {@link Map}. Since this
      *             is a root the object should also not be a primitive.
      */
-    public void setData(String recordName, Object data) throws DeepstreamError {
-        this.setData(recordName, -1, null, data);
+    public RecordHandler setData(String recordName, Object data) {
+        return this.setData(recordName, -1, null, data);
     }
 
     /**
@@ -230,8 +230,8 @@ public class RecordHandler {
      * @param path the path the data will be written to
      * @param data the data the record will be set to
      */
-    public void setData(String recordName, String path, Object data) throws DeepstreamError {
-        this.setData(recordName, -1, path, data);
+    public RecordHandler setData(String recordName, String path, Object data) {
+        return this.setData(recordName, -1, path, data);
     }
 
     /**
@@ -243,12 +243,7 @@ public class RecordHandler {
      * @param path the path the data will be written to
      * @param value the data the record will be set to
      */
-    public void setData(String recordName, int version, String path, Object value) throws DeepstreamError {
-        Record record = this.records.get(recordName);
-        if (record != null) {
-            throw new DeepstreamError("record data should be set via the record instance itself: Record.set");
-        }
-
+    public RecordHandler setData(String recordName, int version, String path, Object value) {
         JsonElement element;
         if( value instanceof String ) {
             element = new JsonPrimitive((String) value);
@@ -262,20 +257,29 @@ public class RecordHandler {
             element = deepstreamConfig.getJsonParser().toJsonTree( value );
         }
 
+        Record record = this.records.get(recordName);
+        if (record != null) {
+            if (path != null) {
+                record.set(path, value);
+            } else {
+                record.set(element);
+            }
+            return this;
+        }
+
+        JsonObject config = new JsonObject();
         String remoteMessage;
         if (path == null) {
-            JsonObject config = new JsonObject();
-            config.addProperty("upsert", true);
             remoteMessage = MessageBuilder.getMsg(
-                    Topic.RECORD, Actions.UPDATE, new String[]{ recordName, String.valueOf(version), element.toString(), config.toString() }
+                    Topic.RECORD, Actions.CREATEANDUPDATE, new String[]{ recordName, String.valueOf(version), element.toString(), config.toString() }
             );
-
         } else {
             remoteMessage = MessageBuilder.getMsg(
-                    Topic.RECORD, Actions.PATCH, new String[]{ recordName, String.valueOf(version), path, MessageBuilder.typed(element) }
+                    Topic.RECORD, Actions.CREATEANDUPDATE, new String[]{ recordName, String.valueOf(version), path, MessageBuilder.typed(element), config.toString() }
             );
         }
         this.connection.send(remoteMessage);
+        return this;
     }
 
     /**
@@ -288,7 +292,7 @@ public class RecordHandler {
      * @return RecordSetResult the result of the write
      * @throws DeepstreamError
      */
-    public RecordSetResult setDataWithAck(String recordName, Object value) throws DeepstreamError {
+    public RecordSetResult setDataWithAck(String recordName, Object value) {
         return this.setDataWithAck(recordName, null, -1, value);
     }
 
@@ -303,7 +307,7 @@ public class RecordHandler {
      * @return RecordSetResult the result of the write
      * @throws DeepstreamError
      */
-    public RecordSetResult setDataWithAck(String recordName, String path, Object value) throws DeepstreamError {
+    public RecordSetResult setDataWithAck(String recordName, String path, Object value) {
         return this.setDataWithAck(recordName, path, -1, value);
     }
 
@@ -318,10 +322,14 @@ public class RecordHandler {
      * @return RecordSetResult the result of the write
      * @throws DeepstreamError
      */
-    public RecordSetResult setDataWithAck(String recordName, String path, int version, Object value) throws DeepstreamError {
+    public RecordSetResult setDataWithAck(String recordName, String path, int version, Object value) {
         Record record = this.records.get(recordName);
         if (record != null) {
-            throw new DeepstreamError("record data should be set via the record instance itself: Record.setWithAck");
+            if (path != null) {
+                return record.setWithAck(path, value);
+            } else {
+                return record.setWithAck(deepstreamConfig.getJsonParser().toJsonTree(value));
+            }
         }
         JsonElement element;
         if( value instanceof String ) {
@@ -339,14 +347,6 @@ public class RecordHandler {
         JsonObject config = new JsonObject();
         config.addProperty("writeSuccess", true);
 
-        Actions action;
-        if (path == null) {
-            config.addProperty("upsert", true);
-            action = Actions.UPDATE;
-        } else {
-            action = Actions.PATCH;
-        }
-
         String[] data;
         if( path == null ) {
             data = new String[]{ recordName, String.valueOf(version), element.toString(), config.toString() };
@@ -356,7 +356,7 @@ public class RecordHandler {
 
         final RecordSetResult[] result = new RecordSetResult[1];
         final CountDownLatch snapshotLatch = new CountDownLatch(1);
-        this.recordSetNotifier.request(String.valueOf(version), action, data, new UtilSingleNotifier.UtilSingleNotifierCallback() {
+        this.recordSetNotifier.request(String.valueOf(version), Actions.CREATEANDUPDATE, data, new UtilSingleNotifier.UtilSingleNotifierCallback() {
             @Override
             public void onSingleNotifierError(String name, DeepstreamError error) {
                 result[0] = new RecordSetResult( error.getMessage() );

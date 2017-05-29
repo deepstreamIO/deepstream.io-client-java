@@ -52,6 +52,11 @@ public enum Actions {
      * A combination of both the create and read actions
      */
     CREATEORREAD("CR"),
+    /*
+     * An upsert operation so that clients can set record data
+     * without being subscribed to the record
+     */
+    CREATEANDUPDATE("CU"),
     /**
      * An update, meaning all data in record has been updated
      */
