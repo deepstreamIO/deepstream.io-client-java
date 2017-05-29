@@ -1,3 +1,11 @@
+## [2.2.0] - 2017.05.29
+
+### Features
+- Using the `CU` (create and update) action in `RecordHandler.setData` and `RecordHandler.setDataWithAck`. This is inline with how upserts are now done on the server
+
+### Improvements
+- Now generating a jar with all dependencies included during the build
+
 ## [2.1.0] - 2017.05.19
 
 ### Features
