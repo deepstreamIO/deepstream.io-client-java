@@ -6,7 +6,11 @@ plugins {
     id 'com.github.j2objccontrib.j2objcgradle' version '0.6.0-alpha'
 }
 
-task client(type: Jar)
+task client(type: Jar) {
+    baseName = project.name
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
 
 artifacts {
     archives client
@@ -62,7 +66,6 @@ j2objcConfig {
 
 group 'io.deepstream'
 version '2.1.0'
-
 
 publishing {
     publications {

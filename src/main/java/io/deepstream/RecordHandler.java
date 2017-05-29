@@ -218,6 +218,7 @@ public class RecordHandler {
      *             in can be serialised to a JsonElement, such as {@link Map}. Since this
      *             is a root the object should also not be a primitive.
      */
+    @ObjectiveCName("setData:data:")
     public RecordHandler setData(String recordName, Object data) {
         return this.setData(recordName, -1, null, data);
     }
@@ -230,6 +231,7 @@ public class RecordHandler {
      * @param path the path the data will be written to
      * @param data the data the record will be set to
      */
+    @ObjectiveCName("setData:path:data:")
     public RecordHandler setData(String recordName, String path, Object data) {
         return this.setData(recordName, -1, path, data);
     }
@@ -243,6 +245,7 @@ public class RecordHandler {
      * @param path the path the data will be written to
      * @param value the data the record will be set to
      */
+    @ObjectiveCName("setData:version:path:data:")
     public RecordHandler setData(String recordName, int version, String path, Object value) {
         JsonElement element;
         if( value instanceof String ) {
@@ -292,6 +295,7 @@ public class RecordHandler {
      * @return RecordSetResult the result of the write
      * @throws DeepstreamError
      */
+    @ObjectiveCName("setDataWithAck:value:")
     public RecordSetResult setDataWithAck(String recordName, Object value) {
         return this.setDataWithAck(recordName, null, -1, value);
     }
@@ -307,6 +311,7 @@ public class RecordHandler {
      * @return RecordSetResult the result of the write
      * @throws DeepstreamError
      */
+    @ObjectiveCName("setDataWithAck:path:value:")
     public RecordSetResult setDataWithAck(String recordName, String path, Object value) {
         return this.setDataWithAck(recordName, path, -1, value);
     }
@@ -322,6 +327,7 @@ public class RecordHandler {
      * @return RecordSetResult the result of the write
      * @throws DeepstreamError
      */
+    @ObjectiveCName("setDataWithAck:path:version:value:")
     public RecordSetResult setDataWithAck(String recordName, String path, int version, Object value) {
         Record record = this.records.get(recordName);
         if (record != null) {
