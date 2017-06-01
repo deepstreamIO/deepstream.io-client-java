@@ -217,6 +217,7 @@ public class RecordHandler {
      * @param data the data the record will be set to. Make sure that the Object passed
      *             in can be serialised to a JsonElement, such as {@link Map}. Since this
      *             is a root the object should also not be a primitive.
+     * @return The RecordHandler
      */
     @ObjectiveCName("setData:data:")
     public RecordHandler setData(String recordName, Object data) {
@@ -230,6 +231,7 @@ public class RecordHandler {
      * @param recordName name of record to set
      * @param path the path the data will be written to
      * @param data the data the record will be set to
+     * @return The RecordHandler
      */
     @ObjectiveCName("setData:path:data:")
     public RecordHandler setData(String recordName, String path, Object data) {
@@ -244,6 +246,7 @@ public class RecordHandler {
      * @param version version to set the record to. If -1 then record data is overwritten
      * @param path the path the data will be written to
      * @param value the data the record will be set to
+     * @return The RecordHandler
      */
     @ObjectiveCName("setData:version:path:data:")
     public RecordHandler setData(String recordName, int version, String path, Object value) {
@@ -293,7 +296,6 @@ public class RecordHandler {
      * @param recordName the name of the record being set.
      * @param value the value to set the record to
      * @return RecordSetResult the result of the write
-     * @throws DeepstreamError
      */
     @ObjectiveCName("setDataWithAck:value:")
     public RecordSetResult setDataWithAck(String recordName, Object value) {
@@ -309,7 +311,6 @@ public class RecordHandler {
      * @param path the path of the record being set
      * @param value the value to set the record to
      * @return RecordSetResult the result of the write
-     * @throws DeepstreamError
      */
     @ObjectiveCName("setDataWithAck:path:value:")
     public RecordSetResult setDataWithAck(String recordName, String path, Object value) {
@@ -325,7 +326,6 @@ public class RecordHandler {
      * @param version the version to set the record to
      * @param value the value to set the record to
      * @return RecordSetResult the result of the write
-     * @throws DeepstreamError
      */
     @ObjectiveCName("setDataWithAck:path:version:value:")
     public RecordSetResult setDataWithAck(String recordName, String path, int version, Object value) {
