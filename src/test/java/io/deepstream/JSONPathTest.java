@@ -29,12 +29,12 @@ public class JSONPathTest {
 
         JsonObject address1 = new JsonObject();
         address1.addProperty( "street", "firststreet" );
-        address1.addProperty( "postCode",1001 );
+        address1.addProperty( "postCode", 1001 );
         pastAddresses.add( address1 );
 
         JsonObject address2 = new JsonObject();
         address2.addProperty( "street", "secondstreet" );
-        address2.addProperty( "postCode",2002 );
+        address2.addProperty( "postCode", 2002 );
         pastAddresses.add( address2 );
 
         JsonObject currentAddress = new JsonObject();
@@ -120,7 +120,9 @@ public class JSONPathTest {
         Assert.assertNull( jsonPath.get( "pastAddresses[ -1 ]" ) );
     };
 
-
+    @Test
+    public void returnsNullForKeyOfNumber() { Assert.assertNull( jsonPath.get( "pastAddresses[0].postCode.inner" ) ); };
+    
     @Test
     public void handlesComplexArraysEmptySlotsAndNumericObjectMemberNames() {
 
@@ -381,4 +383,9 @@ public class JSONPathTest {
         Assert.assertEquals(actual, "flat white");
         Assert.assertEquals(actual, jsonPath.get("alex.drinks[0][1]").getAsString());
     }
+
+    public void setsPathIntoNumericValues() {
+        jsonPath.set( "pastAddresses[0].postCode.inner", gson.toJsonTree( 789 ) );
+        Assert.assertEquals( 789, coreElement.get( "pastAddresses[1].postCode.inner" ).getAsInt() );
+    };
 }
