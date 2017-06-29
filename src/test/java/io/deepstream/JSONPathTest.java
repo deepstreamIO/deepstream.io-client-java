@@ -384,8 +384,12 @@ public class JSONPathTest {
         Assert.assertEquals(actual, jsonPath.get("alex.drinks[0][1]").getAsString());
     }
 
+    @Test
     public void setsPathIntoNumericValues() {
         jsonPath.set( "pastAddresses[0].postCode.inner", gson.toJsonTree( 789 ) );
-        Assert.assertEquals( 789, coreElement.get( "pastAddresses[1].postCode.inner" ).getAsInt() );
+        Assert.assertEquals( 789, jsonPath.get( "pastAddresses[0].postCode.inner" ).getAsInt() );
+
+        jsonPath.set( "pastAddresses[1].postCode[0]", gson.toJsonTree( 323 ) );
+        Assert.assertEquals( 323, jsonPath.get( "pastAddresses[1].postCode[0]" ).getAsInt() );
     };
 }
