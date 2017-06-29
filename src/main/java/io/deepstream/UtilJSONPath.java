@@ -2,12 +2,13 @@ package io.deepstream;
 
 import com.google.gson.*;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Objects;
 
 class UtilJSONPath {
+
     private JsonElement coreElement;
-    private Gson gson = new Gson();
 
     public UtilJSONPath(JsonElement e){
         this.coreElement = e;
@@ -21,124 +22,199 @@ class UtilJSONPath {
      * @return The element indicated by the path
      */
     private static JsonElement getIterateThrough(JsonElement element, String path) {
-        String[] st = path.split( "\\." );
+        ArrayList<Object> tokens = tokenize(path);
         JsonElement traverser = element;
-        String token = null;
+        Object token = null;
 
-        for( int i=0; i < st.length; i++ ) {
-            token = st[i];
+        for( int i=0; i < tokens.size(); i++ ) {
+            token = tokens.get(i);
+
             try {
-                if (traverser.isJsonNull()) {
+                if (traverser == null || traverser.isJsonNull()) {
                     break;
                 }
 
-                if (isArray(token)) {
-                    String prefix = getTokenPrefix(token);
-                    int index = Integer.parseInt( getIndex( token ) );
-                    traverser = traverser.getAsJsonObject().get(prefix).getAsJsonArray().get(index);
-                } else if (traverser.isJsonObject()) {
-                    traverser = traverser.getAsJsonObject().get(token);
+                if (traverser.isJsonObject()) {
+                    traverser = traverser.getAsJsonObject().get((String) token);
                 } else if (traverser.isJsonArray()) {
-                    break;
+                    traverser = traverser.getAsJsonArray().get((int) token);
+                } else {
+                    traverser = null;
                 }
             } catch( IndexOutOfBoundsException e ) {
-                return null;
-            } catch( NullPointerException e ) {
                 return null;
             }
         }
         return traverser;
     }
 
-    private static JsonElement setIterateThrough (JsonElement element, String path, JsonElement value, boolean delete) {
-        String[] st = path.split( "\\." );
-        JsonElement traverser = element;
-        JsonElement parent = null;
-        String token = null;
+    private static ArrayList<Object> tokenize(String path) {
+        ArrayList<Object> tokens = new ArrayList<>();
+        String[] parts = path.split("\\.");
 
-        for( int i=0; i<st.length; i++ ) {
-            token = st[ i ];
-            parent = traverser;
-            if (traverser.isJsonNull()) {
-                break;
+        for (int i = 0; i < parts.length; i++) {
+            String part = parts[i];
+
+            if (part.length() == 0) {
+                continue;
             }
 
-            if (isArray(token)) {
-                String prefix = getTokenPrefix(token);
-                token = getIndex( token );
-                int index = Integer.parseInt( token );
-                JsonObject parentObject = traverser.getAsJsonObject();
-                if( parentObject.get(prefix) == null ) {
-                    parentObject.add( prefix, initialiseArray(index) );
-                }
-                try {
-                    parentObject.get( prefix ).getAsJsonArray().get( index );
-                } catch( IndexOutOfBoundsException e ) {
-                    extendArray( parentObject.get( prefix ).getAsJsonArray(), index );
-                }
-                parent = parentObject.get( prefix );
-                if (parentObject.get( prefix ).getAsJsonArray().get( index ).isJsonNull()) {
-                    parentObject.get( prefix ).getAsJsonArray().set( index, new JsonObject() );
-                }
-                traverser = parentObject.get( prefix ).getAsJsonArray().get( index );//traverser.getAsJsonObject().get( prefix );
-            } else if( traverser.isJsonObject() ) {
-                JsonElement property = traverser.getAsJsonObject().get(token);
-                if (property == null) {
-                    traverser.getAsJsonObject().add(token, new JsonObject());
-                }
-                parent = traverser.getAsJsonObject();
-                traverser = traverser.getAsJsonObject().get(token);
+            String[] arrayIndexes = part.split("[\\[\\]]");
+            tokens.add(arrayIndexes[0].trim());
 
-            } else if( traverser.isJsonArray() ){
-                break;
+            for (int j = 1; j < arrayIndexes.length; j++) {
+                if (arrayIndexes[j].length() == 0) {
+                    continue;
+                }
+                tokens.add(Integer.valueOf(arrayIndexes[j].trim()));
             }
         }
+        return tokens;
+    }
 
+    private static JsonElement setIterateThrough (JsonElement element, String path, JsonElement value, boolean delete) {
+
+        ArrayList<Object> tokens = tokenize(path);
+        JsonElement[] nodes = new JsonElement[tokens.size()];
+        nodes[0] = element;
+        JsonElement traverser = null;
+
+        // will be either a String or int
+        Object token = null;
+        int i;
+        for(i = 0; i < tokens.size(); i++) {
+            JsonElement parent = nodes[i];
+            token = tokens.get(i);
+
+            Object nextToken;
+            try {
+                nextToken = tokens.get(i + 1);
+            } catch (IndexOutOfBoundsException e) {
+                break;
+            }
+
+            if (parent.isJsonObject()) {
+                JsonElement child = parent.getAsJsonObject().get((String) token);
+                if (child != null) {
+                    if (nextToken instanceof String && child.isJsonObject())
+                        traverser = parent.getAsJsonObject().get((String) token);
+                    else if (nextToken instanceof String && (!child.isJsonObject())) {
+                        parent.getAsJsonObject().add((String) token, new JsonObject());
+                        traverser = parent.getAsJsonObject().get((String) token);
+                    } else if (nextToken instanceof Integer && child.isJsonArray()) {
+                        traverser = parent.getAsJsonObject().get((String) token);
+                    } else if (nextToken instanceof Integer && !child.isJsonArray()) {
+                        parent.getAsJsonObject().add((String) token, initialiseArray((int) nextToken));
+                        traverser = parent.getAsJsonObject().get((String) token);
+                    }
+                } else {
+                    if (nextToken instanceof Integer) {
+                        parent.getAsJsonObject().add((String) token, initialiseArray((int) nextToken));
+                        traverser = parent.getAsJsonObject().get((String) token);
+                    } else {
+                        parent.getAsJsonObject().add((String) token, new JsonObject());
+                        traverser = parent.getAsJsonObject().get((String) token);
+                    }
+                }
+            } else if (parent.isJsonArray()) {
+                JsonElement child = null;
+                try {
+                    parent.getAsJsonArray().get((int) token);
+                } catch (IndexOutOfBoundsException e) {
+                    extendArray(parent.getAsJsonArray(), (int) token);
+
+                    if (nextToken instanceof Integer) {
+                        JsonArray array = initialiseArray((int) nextToken);
+                        parent.getAsJsonArray().set((int) token, array);
+                        traverser = parent.getAsJsonArray().get((int) token);
+                    } else {
+                        parent.getAsJsonArray().set((int) token, new JsonObject());
+                        traverser = parent.getAsJsonArray().get((int) token);
+                    }
+                }
+
+                child = parent.getAsJsonArray().get((int) token);
+
+                if (child != null) {
+                    if (nextToken instanceof String && child.isJsonObject())
+                        traverser = parent.getAsJsonArray().get((int) token);
+                    else if (nextToken instanceof String && (!child.isJsonObject())) {
+                        parent.getAsJsonArray().set((int) token, new JsonObject());
+                        traverser = parent.getAsJsonArray().get((int) token);
+                    } else if (nextToken instanceof Integer && child.isJsonArray()) {
+                        traverser = parent.getAsJsonArray().get((int) token);
+                    } else if (nextToken instanceof Integer && !child.isJsonArray()) {
+                        parent.getAsJsonArray().set((int) token, initialiseArray((int) nextToken));
+                        traverser = parent.getAsJsonArray().get((int) token);
+                    }
+                } else {
+                    if (nextToken instanceof Integer) {
+                        parent.getAsJsonObject().add((String) token, initialiseArray((int) nextToken));
+                        traverser = parent.getAsJsonObject().get((String) token);
+                    } else {
+                        parent.getAsJsonObject().add((String) token, new JsonObject());
+                        traverser = parent.getAsJsonObject().get((String) token);
+                    }
+                }
+
+                if (traverser.isJsonNull()) {
+                    if (nextToken instanceof Integer) {
+                        JsonArray arr = initialiseArray((int) nextToken);
+                        parent.getAsJsonArray().set((int) token, arr);
+                    } else if (nextToken instanceof String) {
+                        parent.getAsJsonArray().set((int) token, new JsonObject());
+                    }
+                    traverser = parent.getAsJsonArray().get((int) token);
+                }
+
+                if (traverser.isJsonArray()) {
+                    if (nextToken instanceof Integer && traverser.getAsJsonArray().size() < (int) nextToken) {
+                        extendArray(traverser.getAsJsonArray(), (int) nextToken);
+                    }
+                }
+            }
+            nodes[i + 1] = traverser;
+        }
         if( token != null && (value != null || delete) ) {
-            updateValue(value, parent, token, delete);
+            updateValue(value, nodes[nodes.length - 1], token, delete);
         }
         return traverser;
     }
 
     private static JsonArray initialiseArray(int size) {
         JsonArray array = new JsonArray();
-        for (int j = 0; j < size; j++) {
+        for (int j = 0; j < size + 1; j++) {
             array.add(JsonNull.INSTANCE);
         }
-        JsonElement temp = new JsonObject();
-        array.add(temp);
         return array;
     }
 
     private static void extendArray(JsonArray array, int size) {
-        for (int j = array.size(); j < size; j++) {
+        for (int j = array.size(); j < size + 1; j++) {
             array.add(JsonNull.INSTANCE);
         }
-        JsonElement temp = new JsonObject();
-        array.add(temp);
     }
 
-    private static void updateValue(JsonElement value, JsonElement parent, String token, boolean delete) {
+    private static void updateValue(JsonElement value, JsonElement parent, Object token, boolean delete) {
         if( parent.isJsonObject() ) {
             JsonObject object = (JsonObject) parent;
             if( delete ) {
-                object.remove( token );
+                object.remove((String) token);
             } else {
-                object.add( token, value );
+                object.add((String) token, value );
             }
         }
         else if( parent.isJsonArray() ) {
             JsonArray object = (JsonArray) parent;
             int size = object.size();
-            int index = Integer.parseInt( token );
 
             if( delete ) {
-                object.remove( index );
+                object.remove((int) token);
             } else {
-                for( int i=size; i<=index; i++ ){
+                for( int i=size; i<= (int) token; i++ ){
                     object.add( JsonNull.INSTANCE );
                 }
-                object.set( index, value );
+                object.set((int) token, value);
             }
         }
     }
