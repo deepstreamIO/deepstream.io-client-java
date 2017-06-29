@@ -10,20 +10,20 @@ import org.junit.Test;
 import java.net.URISyntaxException;
 
 public class JSONPathTest {
+
     private Gson gson = new Gson();
+
     private UtilJSONPath jsonPath;
     private UtilJSONPath jsonPath2;
+    private UtilJSONPath jsonPath3;
+
     private JsonObject coreElement;
     private JsonObject coreElement2;
     private JsonObject newTixTextObj;
+    private JsonArray jsonArrayOfArrayObj;
 
     @Before
     public void setUp() throws URISyntaxException {
-
-        newTixTextObj = new JsonObject();
-        newTixTextObj.addProperty("00000001","tttttttt-1");
-        jsonPath2 = new UtilJSONPath( new JsonObject() );
-
 
         JsonArray pastAddresses = new JsonArray();
 
@@ -48,6 +48,22 @@ public class JSONPathTest {
         coreElement.add( "pastAddresses", pastAddresses );
 
         jsonPath = new UtilJSONPath( coreElement );
+
+
+        // for new tests on numeric obj member names
+        newTixTextObj = new JsonObject();
+        newTixTextObj.addProperty("00000001","tttttttt-1");
+        jsonPath2 = new UtilJSONPath( new JsonObject() );
+
+        // for new tests on array of arrays
+        jsonArrayOfArrayObj = new JsonArray();
+        JsonArray innerArray = new JsonArray();
+        innerArray.add(JsonNull.INSTANCE);
+        innerArray.add("VALUE");
+        jsonArrayOfArrayObj.add(JsonNull.INSTANCE);
+        jsonArrayOfArrayObj.add(innerArray);
+        jsonPath3 = new UtilJSONPath( new JsonObject() );
+
     }
 
     @After
@@ -137,8 +153,49 @@ public class JSONPathTest {
                 newTixTextObj,
                 jsonPath2.get("aaa[0].b.1.ccc[1].1")
         );
+
+        System.out.println(jsonPath2.getCoreElement());
+
+        jsonPath2.set("aaa[0][2].b.1.ccc[1].1", newTixTextObj);
+        System.out.println(jsonPath2.getCoreElement());
+        Assert.assertEquals(
+                newTixTextObj,
+                jsonPath2.get("aaa[0][2].b.1.ccc[1].1")
+        );
     };
 
+    @Test
+    public void handlesComplexArraysOfArrays() {
+
+        JsonPrimitive value = new JsonPrimitive("VALUE");
+        jsonPath3.set("arrOfArr[0][2]", value);
+
+        Assert.assertEquals(
+                value,
+                jsonPath3.get("arrOfArr[0][2]")
+        );
+
+        jsonPath3.set("arrOfArr[0][2]", jsonArrayOfArrayObj);
+        Assert.assertEquals(
+                jsonArrayOfArrayObj,
+                jsonPath3.get("arrOfArr[0][2]")
+        );
+
+        Assert.assertEquals(
+                value,
+                jsonPath3.get("arrOfArr[0][2][1][1]")
+        );
+    };
+
+    @Test
+    public void handlesComplexSetArraysOfArraysValue() {
+
+        jsonPath3.set("arrOfArr", jsonArrayOfArrayObj);
+        Assert.assertEquals(
+                jsonArrayOfArrayObj,
+                jsonPath3.get("arrOfArr")
+        );
+    };
 
     /**
      * Set
@@ -167,7 +224,7 @@ public class JSONPathTest {
         JsonObject expected = new JsonObject();
         expected.addProperty( "street", "someStreet" );
         expected.addProperty( "postCode", 2002 );
-
+        System.out.println(jsonPath.getCoreElement());
         Assert.assertEquals(
                 expected,
                 coreElement.get( "pastAddresses" ).getAsJsonArray().get(1)
