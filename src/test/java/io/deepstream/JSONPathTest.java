@@ -154,10 +154,7 @@ public class JSONPathTest {
                 jsonPath2.get("aaa[0].b.1.ccc[1].1")
         );
 
-        System.out.println(jsonPath2.getCoreElement());
-
         jsonPath2.set("aaa[0][2].b.1.ccc[1].1", newTixTextObj);
-        System.out.println(jsonPath2.getCoreElement());
         Assert.assertEquals(
                 newTixTextObj,
                 jsonPath2.get("aaa[0][2].b.1.ccc[1].1")
@@ -224,7 +221,6 @@ public class JSONPathTest {
         JsonObject expected = new JsonObject();
         expected.addProperty( "street", "someStreet" );
         expected.addProperty( "postCode", 2002 );
-        System.out.println(jsonPath.getCoreElement());
         Assert.assertEquals(
                 expected,
                 coreElement.get( "pastAddresses" ).getAsJsonArray().get(1)
@@ -314,5 +310,75 @@ public class JSONPathTest {
                 "randomValue",
                 coreElement.get( "randomKey" ).getAsJsonArray().get( 0 ).getAsJsonObject().get( "name" ).getAsString()
         );
+    }
+
+    @Test
+    public void overridesSimpleObjects() {
+        UtilJSONPath jsonPath = new UtilJSONPath(new JsonObject());
+        String actual;
+
+        jsonPath.set("favourites.mars", new JsonPrimitive("BEST"));
+        actual = jsonPath.getCoreElement().getAsJsonObject().get("favourites").getAsJsonObject().get("mars").getAsString();
+        Assert.assertEquals("BEST", actual);
+        Assert.assertEquals("BEST", jsonPath.get("favourites.mars").getAsString());
+
+        jsonPath.set("favourites[0]", new JsonPrimitive("mars"));
+        actual = jsonPath.getCoreElement().getAsJsonObject().get("favourites").getAsJsonArray().get(0).getAsString();
+        Assert.assertEquals("mars", actual);
+        Assert.assertEquals("mars", jsonPath.get("favourites[0]").getAsString());
+
+        JsonObject mars = new JsonObject();
+        mars.add("name", new JsonPrimitive("mars"));
+        jsonPath.set("favourites[0]", mars);
+        actual = jsonPath.getCoreElement().getAsJsonObject().get("favourites").getAsJsonArray().get(0).getAsJsonObject().get("name").getAsString();
+        Assert.assertEquals("mars", actual);
+        Assert.assertEquals("mars", jsonPath.get("favourites[0].name").getAsString());
+    }
+
+    @Test
+    public void overridesComplexObjects() {
+        /**
+         * {
+         *   "alex": {
+         *      "drinks": [ "coffee", "beer", "tea" ],
+         *      "friends": [
+         *          {
+         *            "name": "John"
+         *          }
+         *      ]
+         *   }
+         * }
+         */
+        JsonObject root = new JsonObject();
+        JsonObject alex = new JsonObject();
+        JsonArray drinks = new JsonArray();
+        drinks.add("coffee"); drinks.add("beer"); drinks.add("tea");
+        JsonArray friends = new JsonArray();
+        JsonObject john = new JsonObject();
+        john.addProperty("name", "John");
+        friends.add(john);
+        alex.add("drinks", drinks);
+        alex.add("friends", friends);
+        root.add("alex", alex);
+
+        UtilJSONPath jsonPath = new UtilJSONPath(root);
+        String actual;
+
+        // override primitive in array to object
+        JsonObject coffee = new JsonObject();
+        coffee.addProperty("name", "coffee");
+        coffee.addProperty("type", "black");
+        jsonPath.set("alex.drinks[0]", coffee);
+
+        actual = jsonPath.getCoreElement().getAsJsonObject().get("alex").getAsJsonObject().get("drinks").getAsJsonArray().get(0).getAsJsonObject().get("name").getAsString();
+        Assert.assertEquals(actual, "coffee");
+        Assert.assertEquals(actual, jsonPath.get("alex.drinks[0].name").getAsString());
+
+        // override object to array
+        jsonPath.set("alex.drinks[0][1]", new JsonPrimitive("flat white"));
+
+        actual = jsonPath.getCoreElement().getAsJsonObject().get("alex").getAsJsonObject().get("drinks").getAsJsonArray().get(0).getAsJsonArray().get(1).getAsString();
+        Assert.assertEquals(actual, "flat white");
+        Assert.assertEquals(actual, jsonPath.get("alex.drinks[0][1]").getAsString());
     }
 }

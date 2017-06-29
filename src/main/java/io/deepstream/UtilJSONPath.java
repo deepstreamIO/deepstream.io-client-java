@@ -32,7 +32,7 @@ class UtilJSONPath {
             token = tokens.get(i);
 
             try {
-                if (traverser.isJsonNull()) {
+                if (traverser == null || traverser.isJsonNull()) {
                     break;
                 }
 
@@ -94,9 +94,6 @@ class UtilJSONPath {
             }
 
             if (parent.isJsonObject()) {
-                if (token instanceof Integer) {
-                    System.out.println("Parent is an object but needs to be turned into array");
-                }
                 JsonElement child = parent.getAsJsonObject().get((String) token);
                 if (child != null) {
                     if (nextToken instanceof String && child.isJsonObject())
@@ -109,10 +106,6 @@ class UtilJSONPath {
                     } else if (nextToken instanceof Integer && !child.isJsonArray()) {
                         parent.getAsJsonObject().add((String) token, initialiseArray((int) nextToken));
                         traverser = parent.getAsJsonObject().get((String) token);
-                    } else {
-
-                        System.out.println("here");
-                        System.out.println(child);
                     }
                 } else {
                     if (nextToken instanceof Integer) {
@@ -124,9 +117,6 @@ class UtilJSONPath {
                     }
                 }
             } else if (parent.isJsonArray()) {
-                if (token instanceof String) {
-                    System.out.println("Parent is array but needs to be object");
-                }
                 JsonElement child = null;
                 try {
                     parent.getAsJsonArray().get((int) token);
@@ -156,9 +146,6 @@ class UtilJSONPath {
                     } else if (nextToken instanceof Integer && !child.isJsonArray()) {
                         parent.getAsJsonArray().set((int) token, initialiseArray((int) nextToken));
                         traverser = parent.getAsJsonArray().get((int) token);
-                    } else {
-                        System.out.println("here");
-                        System.out.println(child);
                     }
                 } else {
                     if (nextToken instanceof Integer) {
@@ -181,7 +168,6 @@ class UtilJSONPath {
                 }
 
                 if (traverser.isJsonArray()) {
-                    System.out.println("here");
                     if (nextToken instanceof Integer && traverser.getAsJsonArray().size() < (int) nextToken) {
                         extendArray(traverser.getAsJsonArray(), (int) nextToken);
                     }
