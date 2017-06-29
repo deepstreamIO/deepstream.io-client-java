@@ -9,8 +9,6 @@ import java.util.Objects;
 class UtilJSONPath {
 
     private JsonElement coreElement;
-    private Gson gson = new Gson();
-    // private final Pattern ARRAY_PATTERN = Pattern.compile(SPLIT_EXP);
 
     public UtilJSONPath(JsonElement e){
         this.coreElement = e;
