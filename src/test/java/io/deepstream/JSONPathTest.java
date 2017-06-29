@@ -392,4 +392,80 @@ public class JSONPathTest {
         jsonPath.set( "pastAddresses[1].postCode[0]", gson.toJsonTree( 323 ) );
         Assert.assertEquals( 323, jsonPath.get( "pastAddresses[1].postCode[0]" ).getAsInt() );
     };
+
+    @Test
+    public void objectsArraysAndPrimitivesOverwritten() {
+        /**
+         * {
+         *   "alex": {
+         *      "drinks": [ "coffee", "beer", "tea" ],
+         *      "friends": [
+         *          {
+         *            "name": "John"
+         *          }
+         *      ]
+         *   }
+         * }
+         */
+        JsonObject root = new JsonObject();
+        JsonObject alex = new JsonObject();
+        JsonArray drinks = new JsonArray();
+        drinks.add("coffee"); drinks.add("beer"); drinks.add("tea");
+        JsonArray friends = new JsonArray();
+        JsonObject john = new JsonObject();
+        john.addProperty("name", "John");
+        friends.add(john);
+        alex.add("drinks", drinks);
+        alex.add("friends", friends);
+        root.add("alex", alex);
+
+        UtilJSONPath jsonPath = new UtilJSONPath(root);
+        String actual;
+
+        // override primitive in array to object
+        JsonObject coffee = new JsonObject();
+        coffee.addProperty("name", "coffee");
+        coffee.addProperty("type", "black");
+        jsonPath.set("alex.drinks[0]", coffee);
+
+        actual = jsonPath.getCoreElement().getAsJsonObject().get("alex").getAsJsonObject().get("drinks").getAsJsonArray().get(0).getAsJsonObject().get("name").getAsString();
+        Assert.assertEquals(actual, "coffee");
+        Assert.assertEquals(actual, jsonPath.get("alex.drinks[0].name").getAsString());
+
+        // override object to array
+        jsonPath.set("alex.drinks[0][1]", new JsonPrimitive("flat white"));
+
+        actual = jsonPath.getCoreElement().getAsJsonObject().get("alex").getAsJsonObject().get("drinks").getAsJsonArray().get(0).getAsJsonArray().get(1).getAsString();
+        Assert.assertEquals(actual, "flat white");
+        Assert.assertEquals(actual, jsonPath.get("alex.drinks[0][1]").getAsString());
+
+        jsonPath.set("alex.drinks", new JsonPrimitive("coffee, beer, tea"));
+        actual = jsonPath.getCoreElement().getAsJsonObject().get("alex").getAsJsonObject().get("drinks").getAsString();
+        Assert.assertEquals(actual, "coffee, beer, tea");
+
+        jsonPath.set("alex.drinks", drinks);
+        actual = jsonPath.getCoreElement().getAsJsonObject().get("alex").getAsJsonObject().get("drinks").getAsJsonArray().get(0).getAsJsonArray().get(1).getAsString();
+        Assert.assertEquals(actual, jsonPath.get("alex.drinks[0][1]").getAsString());
+
+        JsonObject drinksObject = new JsonObject();
+        drinksObject.addProperty("coffee", "drip");
+        drinksObject.addProperty("tea", "camomile");
+        drinksObject.addProperty("beer", "hefeweissen");
+        jsonPath.set("alex.drinks", drinksObject);
+
+        actual = jsonPath.getCoreElement().getAsJsonObject().get("alex").getAsJsonObject().get("drinks").getAsJsonObject().get("coffee").getAsString();
+        Assert.assertEquals(actual, "drip");
+        actual = jsonPath.getCoreElement().getAsJsonObject().get("alex").getAsJsonObject().get("drinks").getAsJsonObject().get("tea").getAsString();
+        Assert.assertEquals(actual, "camomile");
+        actual = jsonPath.getCoreElement().getAsJsonObject().get("alex").getAsJsonObject().get("drinks").getAsJsonObject().get("beer").getAsString();
+        Assert.assertEquals(actual, "hefeweissen");
+
+        jsonPath.setCoreElement(drinksObject);
+        actual = jsonPath.getCoreElement().getAsJsonObject().get("coffee").getAsString();
+        Assert.assertEquals(actual, "drip");
+        actual = jsonPath.getCoreElement().getAsJsonObject().get("tea").getAsString();
+        Assert.assertEquals(actual, "camomile");
+        actual = jsonPath.getCoreElement().getAsJsonObject().get("beer").getAsString();
+        Assert.assertEquals(actual, "hefeweissen");
+    }
 }
