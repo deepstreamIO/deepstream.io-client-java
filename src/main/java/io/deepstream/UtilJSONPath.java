@@ -38,6 +38,8 @@ class UtilJSONPath {
                     traverser = traverser.getAsJsonObject().get((String) token);
                 } else if (traverser.isJsonArray()) {
                     traverser = traverser.getAsJsonArray().get((int) token);
+                } else {
+                    traverser = null;
                 }
             } catch( IndexOutOfBoundsException e ) {
                 return null;
