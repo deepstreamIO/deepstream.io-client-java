@@ -15,7 +15,7 @@ jobs:
     - stage: Test
       os: linux
       language: java
-      script: bash ./gradlew -b build.gradle
+      script: bash ./gradlew -b build.gradle test
     - stage: Upload to bintray
       install: bash ./scripts/setupJ2OBJC.sh true
       script: bash ./gradlew -b build-prod.gradle bintrayUpload
