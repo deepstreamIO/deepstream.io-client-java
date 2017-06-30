@@ -1,3 +1,8 @@
+## [2.2.1] - 2017.06.30
+
+### Improvements
+- Better JSON path support for nested arrays and overriding properties during writes
+
 ## [2.2.0] - 2017.05.29
 
 ### Features
