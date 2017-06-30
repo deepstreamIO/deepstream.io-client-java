@@ -9,12 +9,14 @@ env:
   - secure: GqXKCOiQgEKqF6f9C08P9R8kbIm9cN8pWe41Z4QerUIOmod8vUGqGDxm9m6iCjnTobNWPoDOafyW5jGcL3MHg1PQhcDMh0HcvuDuRAi/V+ZJocXjgXM1N9r0EnPyF9/LuDytGACxYPqtCSFkTsHaCvbqh9kVSVTacwMFz24n+hZlGDRDJYD6PebdsfOxJn1Xmzju5+j3ylzjEru21/R7UTtzpS6guRNTeY0p46TVd7ZmTdrQvTAGDlql5NJik7hh7jJRgGFnDetAlt4wEnjipqOhB5eVyGSbOKM/KSZFANrtOia4aOnC5JU92CX3NVPpFf07pHXhSHhintaEEHARm//2BhHPXoJp/hD5Pvj6xT7ekZ6b9HKLaSi+O6AKFkeG/mjCNJ0MMu1OrDIMfE3rD8q3t/VGrnLc+aysDr0oI16wAUNpoWgfyYMHDhy5xcYkK3nEKsch79KDtZBhYfSgiylSk/Ne3fZMxd484QQlgACLILZ7IMRHrNlAHJkvAMOFieaFNcJZiMtTBw8YfKRSypKq63WCZfpW1Lu+08iIsygwBHrSOuWP6yZwVrnTGad2c6iM71j3n+L5tlF6JX5ZKu/wpJ50XdUlGsGne4CaZzlBT3izXIQssXlaeMwA6or21rNY9DcyQzNM+dSzukivs/GASX2F1l9/Tt8Co78b+Dg=
   - secure: Zsz/Mi0EM+PBIOPt2rVnkiqid3LGS/Lxjt1Pm1GnEcFIsNcMrt/bDyhwBNHJzBPl8k/sNbdchoRL94AiATbZJ5lbUpfCmtbXmXaY4M7N0uBX4lckaob0PvTy0+Z4agX7T5DFEFeU247WwUJwYzvBnbBGwqz3t23fx8knZxWtDoXPW1ziapcCr6Gr/81AA0XBvuLXb9o5xx1zd7gwXwZoMVjoMkBP6PIIl6CHUUnHODeQHwQO4czKC5pNWIxPGpUZPaywWLztOY614Sdj9HgR6vOB6GloTiOFxT+sz9jW4gjNfLKLXvALvN0DS/czbuneSB4zK4dE8CFrc55YUIyoD10DZ1FlGdAmhaM8xP5yWyl0+vn2eURdfeFJhE95jMgaR3T1Yr8xNQeqFj8tHkpIxAzlm+w2z6K1BGNUylBIGxz5/lFlE7UqR8TArQi7lo6c5HYBuz92eKgVLo/fndbw+TVkIKQJoxnSIWSRv6uJpywip+66vWPZ9AFvXbTC6SKW1oBotiDlG1sJZCfln2cgBXAVSC2WdmtokVeCUUo2x5L/j6qd4yBYN3cT41kdsI3UGyO3uNjOzExZhFU34kp0jYZANEYUTW9USSTE6/wzgHgub+L/lUsa2+XXGgUcGA5U3pQCyh2fCWvApEukY4lwAMMZKQeDN2O8l+WKnDFFD80=
 before_install:
-- chmod +x gradlew
-- chmod +x scripts/setupJ2OBJC.sh
-- chmod +x scripts/installJava.sh
-- ./scripts/setupJ2OBJC.sh true
-- ./scripts/installJava.sh
-script:
-- ./gradlew -b build.gradle
-after_success:
-  - if [ -n "TRAVIS_TAG" ]; then ./gradlew -b build-prod.gradle bintrayUpload; fi
+- bash ./scripts/setupJ2OBJC.sh true
+- bash ./scripts/installJava.sh
+
+jobs:
+  include:
+    - stage: Test
+      script: bash ./gradlew -b build.gradle
+    - stage: Upload to bintray
+      script: bash ./gradlew -b build-prod.gradle bintrayUpload
+      on:
+        tags: true
