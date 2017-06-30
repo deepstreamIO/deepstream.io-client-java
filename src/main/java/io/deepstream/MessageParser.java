@@ -1,10 +1,8 @@
 package io.deepstream;
 
-import com.google.gson.stream.JsonReader;
-import com.google.j2objc.annotations.ObjectiveCName;
-
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.stream.JsonReader;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -26,7 +24,6 @@ class MessageParser {
      * and returns an array of parsed message objects
      * or null for invalid messages
      */
-    @ObjectiveCName("parse:client:")
     static List<Message> parse( String message, DeepstreamClientAbstract client ) {
         List<Message> messages = new ArrayList<>();
         String[] rawMessages = message.split( MS );
@@ -47,7 +44,6 @@ class MessageParser {
      * @param client The deepstream client to notify if errors occur
      * @return The {@link Message} object that represents the message string
      */
-    @ObjectiveCName("parseMessage:client:")
     static Message parseMessage( String message, DeepstreamClientAbstract client ) {
         String[] parts = message.split( MPS );
 
@@ -77,7 +73,6 @@ class MessageParser {
      * @param client The deepstream client to notify if errors occur
      * @return The object the value represented
      */
-    @ObjectiveCName("convertTyped:client:")
     static Object convertTyped( String value, DeepstreamClientAbstract client, Gson gson ) {
 
         char type = value.charAt(0);
@@ -108,11 +103,23 @@ class MessageParser {
         return null;
     }
 
-    @ObjectiveCName("parseObject:")
+    /**
+     * parses the given object
+     * @param value the value to parse
+     * @param gson the gson instance to use
+     * @return the parsed object
+     */
     static Object parseObject(String value, Gson gson) {
         return gson.fromJson( value, JsonElement.class );
     }
 
+    /**
+     * reads a string as a json stream
+     *
+     * @param data the data to read
+     * @param gson the gson instance to use
+     * @return the parsed json element
+     */
     static JsonElement readJsonStream(String data, Gson gson) {
         JsonReader r = null;
         JsonElement result = null;

@@ -16,9 +16,9 @@ jobs:
       os: linux
       language: java
       script: bash ./gradlew -b build.gradle test
-    - stage: Upload to bintray
+    - stage: Release to bintray and pod
       install: bash ./scripts/setupJ2OBJC.sh true
       script: bash ./gradlew -b build-prod.gradle bintrayUpload
-      script: bash ./scripts/prepareiOS.sh
+      script:
       on:
         tags: true
