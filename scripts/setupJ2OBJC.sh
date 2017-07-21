@@ -23,7 +23,7 @@ echo '# J2OBJC End' >> $DIRECTORY/../local.properties;
 mkdir -p $J2OBJC_ROOT;
 pushd $J2OBJC_ROOT;
 if [ ! -f "$J2OBJC_ROOT/j2objc-$J2OBJCVersion.zip" ]; then
-    wget -q --retry-connrefused --waitretry=1 https://github.com/google/j2objc/releases/download/$J2OBJCVersion/j2objc-$J2OBJCVersion.zip > j2objc-$J2OBJCVersion.zip
+    wget -q --retry-connrefused --waitretry=1 https://github.com/google/j2objc/releases/download/$J2OBJCVersion/j2objc-$J2OBJCVersion.zip
 else
     rm -rf $J2OBJC_ROOT/j2objc-$J2OBJCVersion
 	echo 'j2objc already downloaded';
