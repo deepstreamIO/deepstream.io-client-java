@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 J2OBJCVersion=1.2
 
 # Paths and Stuff

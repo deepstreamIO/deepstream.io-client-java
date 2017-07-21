@@ -253,6 +253,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      */
     public DeepstreamClient close() {
         this.connection.close(false);
+        this.getAckTimeoutRegistry().close();
         return this;
     }
 

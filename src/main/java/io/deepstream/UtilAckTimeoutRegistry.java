@@ -113,6 +113,10 @@ class UtilAckTimeoutRegistry implements ConnectionStateListener, UtilTimeoutList
         this.state = connectionState;
     }
 
+    void close() {
+        this.executor.shutdown();
+    }
+
     /**
      * Clears the ack timeout for a message.
      *

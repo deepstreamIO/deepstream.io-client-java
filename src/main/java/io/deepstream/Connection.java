@@ -174,6 +174,11 @@ class Connection implements IConnection {
             this.reconnectTimeout.cancel();
             this.reconnectTimeout = null;
         }
+
+        this.recordThread.shutdown();
+        this.eventThread.shutdown();
+        this.rpcThread.shutdown();
+        this.presenceThread.shutdown();
     }
 
     void onOpen() {
