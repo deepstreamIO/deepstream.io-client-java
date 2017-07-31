@@ -11,26 +11,26 @@ import Starscream
 
 // MARK: - DeepstreamClient
 
-public extension DeepstreamClient {
-    public var record : RecordHandler {
+public extension DSDeepstreamClient {
+    public var record : DSRecordHandler {
         get {
             return self.getRecordHandler()
         }
     }
 
-    public var event : EventHandler {
+    public var event : DSEventHandler {
         get {
             return self.getEventHandler()
         }
     }
 
-    public var rpc : RpcHandler {
+    public var rpc : DSRpcHandler {
         get {
             return self.getRpcHandler()
         }
     }
 
-    public var presence : PresenceHandler {
+    public var presence : DSPresenceHandler {
         get {
             return self.getPresenceHandler()
         }
@@ -122,7 +122,7 @@ public extension JsonElement {
         return Gson().fromJson(with: jsonString, with: JsonArray_class_()) as! JsonArray
     }
 
-    private func makeJsonObject(_ jsonString : String) -> JsonObject {
+    private func makeGSONJsonObject(_ jsonString : String) -> JsonObject {
         return Gson().fromJson(with: jsonString, with: JsonObject_class_()) as! JsonObject
     }
 
@@ -134,7 +134,7 @@ public extension JsonElement {
                 if isJSONArray(jsonString) {
                     dataDeserialize.append(deepDeserializeArray(data: makeJsonArray(jsonString).array))
                 } else {
-                    dataDeserialize.append(deepDeserializeDict(data: makeJsonObject(jsonString).dict))
+                    dataDeserialize.append(deepDeserializeDict(data: makeGSONJsonObject(jsonString).dict))
                 }
             } else {
                 dataDeserialize.append(element)
@@ -153,7 +153,7 @@ public extension JsonElement {
                 if isJSONArray(jsonString) {
                     newValue = deepDeserializeArray(data: makeJsonArray(jsonString).array)
                 } else {
-                    newValue = deepDeserializeDict(data: makeJsonObject(jsonString).dict)
+                    newValue = deepDeserializeDict(data: makeGSONJsonObject(jsonString).dict)
                 }
             }
             dataDeserialize[key] = newValue
@@ -183,7 +183,7 @@ public extension JsonArray {
 public final class IOSDeepstreamFactory {
 
     private static let ourInstance = IOSDeepstreamFactory()
-    private var clients = [String : DeepstreamClient]()
+    private var clients = [String : DSDeepstreamClient]()
     private var lastUrl : String?
 
     public static func getInstance() -> IOSDeepstreamFactory {
@@ -200,7 +200,7 @@ public final class IOSDeepstreamFactory {
      * @return A deepstream client
      */
 
-    public func getClient(callback: @escaping (DeepstreamClient?) -> Void) {
+    public func getClient(callback: @escaping (DSDeepstreamClient?) -> Void) {
         DispatchQueue.global().async {
             guard let lastUrl = self.lastUrl else {
                 return callback(nil)
@@ -224,12 +224,12 @@ public final class IOSDeepstreamFactory {
      * @return A deepstream client
      * @throws URISyntaxException An error if the url syntax is invalid
      */
-    public func getClient(_ url: String, callback: @escaping (DeepstreamClient?) -> Void) {
+    public func getClient(_ url: String, callback: @escaping (DSDeepstreamClient?) -> Void) {
         self.lastUrl = url
         DispatchQueue.global().async {
             // Check if client exists and not in closed/error state
             guard let c = self.clients[url], self.clientNotAvailable(client: c) else {
-                let client = DeepstreamClient(url, endpointFactory: IOSEndpointWebsocketFactory())
+                let client = DSDeepstreamClient(url, endpointFactory: IOSEndpointWebsocketFactory())
                 self.clients[url] = client
                 return callback(client)
             }
@@ -251,12 +251,12 @@ public final class IOSDeepstreamFactory {
      * @throws URISyntaxException      An error if the url syntax is invalid
      * @throws InvalidDeepstreamConfig An exception if any of the options are invalid
      */
-    public func getClient(_ url: String, options: JavaUtilProperties, callback: @escaping (DeepstreamClient?) -> Void) {
+    public func getClient(_ url: String, options: JavaUtilProperties, callback: @escaping (DSDeepstreamClient?) -> Void) {
         self.lastUrl = url
         DispatchQueue.global().async {
             // Check if client exists and not in closed/error state
             guard let c = self.clients[url], self.clientNotAvailable(client: c) else {
-                let client = DeepstreamClient(url, options: options, endpointFactory: IOSEndpointWebsocketFactory())
+                let client = DSDeepstreamClient(url, options: options, endpointFactory: IOSEndpointWebsocketFactory())
                 self.clients[url] = client
                 return callback(client)
             }
@@ -265,19 +265,19 @@ public final class IOSDeepstreamFactory {
         }
     }
 
-    private func clientNotAvailable(client: DeepstreamClient) -> Bool {
-        let isClosed = (client.getConnectionState().toNSEnum() == ConnectionState_Enum.CLOSED)
-        let isError = (client.getConnectionState().toNSEnum() == ConnectionState_Enum.ERROR)
+    private func clientNotAvailable(client: DSDeepstreamClient) -> Bool {
+        let isClosed = (client.getConnectionState().toNSEnum() == DSConnectionState_Enum.CLOSED)
+        let isError = (client.getConnectionState().toNSEnum() == DSConnectionState_Enum.ERROR)
         return isClosed || isError
     }
 }
 
 // MARK: - IOSEndpointWebsocket
 
-private final class IOSEndpointWebsocket : NSObject, Endpoint {
+private final class IOSEndpointWebsocket : NSObject, DSEndpoint {
 
     private let uri : JavaNetURI!
-    public let connection : Connection!
+    public let connection : DSConnection!
     private var webSocket : WebSocket? {
         didSet {
             self.webSocket?.onConnect = {
@@ -298,7 +298,7 @@ private final class IOSEndpointWebsocket : NSObject, Endpoint {
         }
     }
 
-    public init(uri: JavaNetURI, connection: Connection) {
+    public init(uri: JavaNetURI, connection: DSConnection) {
         self.uri = uri
         self.connection = connection
     }
@@ -328,8 +328,8 @@ private final class IOSEndpointWebsocket : NSObject, Endpoint {
 
 // MARK: - IOSEndpointWebsocketFactory
 
-private final class IOSEndpointWebsocketFactory : NSObject, EndpointFactory {
-    public func createEndpoint(_ uri: JavaNetURI!, connection: Connection!) -> Endpoint! {
+private final class IOSEndpointWebsocketFactory : NSObject, DSEndpointFactory {
+    public func createEndpoint(_ uri: JavaNetURI!, connection: DSConnection!) -> DSEndpoint! {
         return IOSEndpointWebsocket(uri: uri, connection: connection)
     }
 }
