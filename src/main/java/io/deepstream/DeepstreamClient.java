@@ -289,6 +289,14 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
     }
 
     /**
+     * Set global connectivity state.
+     * @param  {GlobalConnectivityState} globalConnectivityState Current global connectivity state
+     */
+    public void setGlobalConnectivityState(GlobalConnectivityState globalConnectivityState){
+        this.connection.setGlobalConnectivityState(globalConnectivityState);
+    }
+
+    /**
      * Returns a random string. The first block of characters
      * is a timestamp, in order to allow databases to optimize for semi-
      * sequentuel numberings
