@@ -33,6 +33,7 @@ class Connection implements IConnection {
     private StringBuilder messageBuffer;
     private String url;
     private ConnectionState connectionState;
+    private GlobalConnectivityState globalConnectivityState;
     private DeepstreamClient.LoginCallback loginCallback;
     private JsonElement authParameters;
 
@@ -75,6 +76,7 @@ class Connection implements IConnection {
         this.originalUrl = url;
         this.url = url;
         this.connectionState = ConnectionState.CLOSED;
+        this.globalConnectivityState = GlobalConnectivityState.DISCONNECTED;
         this.messageBuffer = new StringBuilder();
         this.tooManyAuthAttempts = false;
         this.challengeDenied = false;
@@ -336,6 +338,27 @@ class Connection implements IConnection {
     }
 
     /**
+     * Set global connectivity state.
+     * @param  {GlobalConnectivityState} globalConnectivityState Current global connectivity state
+     */
+    protected void setGlobalConnectivityState(GlobalConnectivityState globalConnectivityState){
+        this.globalConnectivityState = globalConnectivityState;
+        if(globalConnectivityState == GlobalConnectivityState.CONNECTED){
+            if(this.connectionState == ConnectionState.CLOSED || this.connectionState == ConnectionState.ERROR) {
+                tryReconnect();
+            }
+        }else{
+            if(this.reconnectTimeout != null){
+                this.reconnectTimeout.cancel();
+            }
+            this.reconnectTimeout = null;
+            this.reconnectionAttempt = 0;
+            this.endpoint.forceClose();
+            this.setState(ConnectionState.CLOSED);
+        }
+    }
+
+    /**
      * Take the url passed when creating the client and ensure the correct
      * protocol is provided
      * @param  {String} url Url passed in by client
@@ -375,17 +398,19 @@ class Connection implements IConnection {
         int maxReconnectInterval = options.getMaxReconnectInterval();
 
         if( this.reconnectionAttempt < maxReconnectAttempts ) {
-            this.setState( ConnectionState.RECONNECTING );
-            this.reconnectTimeout = new Timer();
-            this.reconnectTimeout.schedule(new TimerTask() {
-                public void run() {
-                    tryOpen();
-                }
-            }, Math.min(
-                    reconnectIntervalIncrement * this.reconnectionAttempt,
-                    maxReconnectInterval
-            ));
-            this.reconnectionAttempt++;
+            if(this.globalConnectivityState == GlobalConnectivityState.CONNECTED) {
+                this.setState(ConnectionState.RECONNECTING);
+                this.reconnectTimeout = new Timer();
+                this.reconnectTimeout.schedule(new TimerTask() {
+                    public void run() {
+                        tryOpen();
+                    }
+                }, Math.min(
+                        reconnectIntervalIncrement * this.reconnectionAttempt,
+                        maxReconnectInterval
+                ));
+                this.reconnectionAttempt++;
+            }
 
         } else {
             this.clearReconnect();
