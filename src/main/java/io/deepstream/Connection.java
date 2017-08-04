@@ -344,7 +344,6 @@ class Connection implements IConnection {
     protected void setGlobalConnectivityState(GlobalConnectivityState globalConnectivityState){
         this.globalConnectivityState = globalConnectivityState;
         if(globalConnectivityState == GlobalConnectivityState.CONNECTED){
-            System.out.println("CONNECTED, global state is " + this.connectionState);
             if(this.connectionState == ConnectionState.CLOSED || this.connectionState == ConnectionState.ERROR) {
                 tryReconnect();
             }

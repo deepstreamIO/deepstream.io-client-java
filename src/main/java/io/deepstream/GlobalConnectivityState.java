@@ -1,9 +1,9 @@
 package io.deepstream;
 
-/**
- * Created by horin on 02.08.2017.
- */
 
+/**
+ * Used to indicated current network state.
+ */
 public enum GlobalConnectivityState {
     /**
      * Internet connection is available

@@ -289,7 +289,9 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
     }
 
     /**
-     * Set global connectivity state.
+     * Sets global connectivity state and notifies current connections about it. When connectivity is {@link GlobalConnectivityState#DISCONNECTED)} connection will be closed and
+     * no reconnects will be attempted. If connectivity is set to {@link GlobalConnectivityState#CONNECTED)} and current {@link ConnectionState)} is {@link ConnectionState#CLOSED)}
+     * or {@link ConnectionState#ERROR)} then client will try reconnecting. 
      * @param  {GlobalConnectivityState} globalConnectivityState Current global connectivity state
      */
     public void setGlobalConnectivityState(GlobalConnectivityState globalConnectivityState){
