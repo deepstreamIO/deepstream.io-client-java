@@ -5,10 +5,6 @@ package io.deepstream;
  */
 public enum ConnectionState {
     /**
-     * No netwrok connectivity available
-     */
-    NO_NETWORK_CONNECTIVITY,
-    /**
      * Connection is closed, usually due to closing the client or getting multiple authentication rejects
      * from server
      */

@@ -345,7 +345,7 @@ class Connection implements IConnection {
         this.globalConnectivityState = globalConnectivityState;
         if(globalConnectivityState == GlobalConnectivityState.CONNECTED){
             System.out.println("CONNECTED, global state is " + this.connectionState);
-            if(this.connectionState == ConnectionState.NO_NETWORK_CONNECTIVITY || this.connectionState == ConnectionState.CLOSED || this.connectionState == ConnectionState.ERROR) {
+            if(this.connectionState == ConnectionState.CLOSED || this.connectionState == ConnectionState.ERROR) {
                 tryReconnect();
             }
         }else{
@@ -355,7 +355,7 @@ class Connection implements IConnection {
             this.reconnectTimeout = null;
             this.reconnectionAttempt = 0;
             this.endpoint.forceClose();
-            this.setState(ConnectionState.NO_NETWORK_CONNECTIVITY);
+            this.setState(ConnectionState.CLOSED);
         }
     }
 
