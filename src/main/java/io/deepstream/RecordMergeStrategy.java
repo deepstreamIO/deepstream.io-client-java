@@ -1,8 +1,7 @@
 package io.deepstream;
 
-import com.google.j2objc.annotations.ObjectiveCName;
-
 import com.google.gson.JsonElement;
+import com.google.j2objc.annotations.ObjectiveCName;
 
 /**
  * Allows users to reconcile record versions if the data is not correctly in sync ( out of sync record versions )

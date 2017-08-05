@@ -64,6 +64,27 @@ public class DeepstreamFactory {
     }
 
     /**
+     * Returns a client that was previous created via the same url using this method or {@link DeepstreamFactory#getClient(String, Properties)}.
+     * If one wasn't created, it creates it first and stores it for future reference.
+     *
+     * @param url The url to connect to, also the key used to retrieve in future calls
+     * @param networkAvailable boolean to indicate whether network is available or not
+     * @return A deepstream client
+     * @throws URISyntaxException An error if the url syntax is invalid
+     */
+    public DeepstreamClient getClient(String url, boolean networkAvailable) throws URISyntaxException {
+        DeepstreamClient client = this.clients.get(url);
+        this.lastUrl = url;
+        if (clientDoesNotExist(client)) {
+            client = new DeepstreamClient(url,  new DeepstreamConfig(), new JavaEndpointFactory(), networkAvailable);
+            this.clients.put(url, client);
+        }else{
+            client.setGlobalConnectivityState(networkAvailable ? GlobalConnectivityState.CONNECTED : GlobalConnectivityState.DISCONNECTED);
+        }
+        return client;
+    }
+
+    /**
      * Returns a client that was previous created via the same url using this method or {@link DeepstreamFactory#getClient(String)}.
      * If one wasn't created, it creates it first and stores it for future reference.
      *

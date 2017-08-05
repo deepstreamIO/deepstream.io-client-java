@@ -7,7 +7,11 @@ import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * The main entry point for a DeepstreamClient. You can create a client directly using the constructors or use the
@@ -15,6 +19,7 @@ import java.util.concurrent.CountDownLatch;
  * {@link DeepstreamFactory#getClient(String, Properties)} to create one for you and hold them for future reference.
  */
 public class DeepstreamClient extends DeepstreamClientAbstract {
+    private ExecutorService executor;
 
     /**
      * The getters for data-sync, such as {@link RecordHandler#getRecord(String)},
@@ -124,11 +129,24 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      */
     @ObjectiveCName("init:deepstreamConfig:endpointFactory:")
     public DeepstreamClient(final String url, DeepstreamConfig deepstreamConfig, EndpointFactory endpointFactory) throws URISyntaxException {
-        this.connection = new Connection(url, deepstreamConfig, this, endpointFactory);
+        this(url, deepstreamConfig, endpointFactory, false);
+    }
+
+    /**
+     * deepstream.io java client
+     * @param url URL to connect to. The protocol can be omited, e.g. <host>:<port>
+     * @param deepstreamConfig A map of options that extend the ones specified in DefaultConfig.properties
+     * @param endpointFactory An EndpointFactory that returns an Endpoint
+     * @param networkAvailable indicates whether network is available or not
+     * @throws URISyntaxException Thrown if the url in incorrect
+     */
+    public DeepstreamClient(final String url, DeepstreamConfig deepstreamConfig, EndpointFactory endpointFactory, boolean networkAvailable) throws URISyntaxException {
+        this.executor = Executors.newSingleThreadExecutor();
+        this.connection = new Connection(url, deepstreamConfig, this, endpointFactory, networkAvailable);
         this.event = new EventHandler(deepstreamConfig, this.connection, this);
-        this.rpc = new RpcHandler(deepstreamConfig, this.connection, this);
-        this.record = new RecordHandler(deepstreamConfig, this.connection, this);
-        this.presence = new PresenceHandler(deepstreamConfig, this.connection, this);
+        this.rpc = new RpcHandler(deepstreamConfig, this.connection, this, this.executor);
+        this.record = new RecordHandler(deepstreamConfig, this.connection, this, this.executor);
+        this.presence = new PresenceHandler(deepstreamConfig, this.connection, this, this.executor);
     }
 
     /**
@@ -189,12 +207,12 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      * @return The login result
      */
     @ObjectiveCName("login")
-    public LoginResult login() {
+    public LoginResult login(){
         return this.login(null);
     }
 
     /**
-     * Send authentication parameters to the client to fully open
+     * Synchronously sends authentication parameters to the client to fully open
      * the connection.
      *
      * Please note: Authentication parameters are send over an already established
@@ -214,37 +232,83 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      * login can be called multiple times until either the connection is authenticated or
      * forcefully closed by the server since its maxAuthAttempts threshold has been exceeded
      *
+     * This will block your calling thread
+     *
      * @param authParams JSON.serializable authentication data
      * @return The login result
      */
     @ObjectiveCName("login:")
-    public LoginResult login(JsonElement authParams) {
-        final CountDownLatch loggedInLatch = new CountDownLatch(1);
-        final LoginResult[] loginResult = new LoginResult[1];
+    public LoginResult login(final JsonElement authParams){
+        try {
+            return this.loginAsync(authParams, null).get();
+        }catch(Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
 
-        this.connection.authenticate(authParams, new LoginCallback() {
+    /**
+     * Asynchronously sends authentication parameters to the client to fully open
+     * the connection and sends callback afterwards.
+     *
+     * Please note: Authentication parameters are send over an already established
+     * connection, rather than appended to the server URL. This means the parameters
+     * will be encrypted when used with a WSS / HTTPS connection. If the deepstream server
+     * on the other side has message logging enabled it will however be written to the logs in
+     * plain text. If additional security is a requirement it might therefor make sense to hash
+     * the password on the client.
+     *
+     * If the connection is not yet established the authentication parameter will be
+     * stored and send once it becomes available
+     *
+     * authParams can be any JSON serializable data structure and its up for the
+     * permission handler on the server to make sense of them, although something
+     * like { username: 'someName', password: 'somePass' } will probably make the most sense.
+     *
+     * login can be called multiple times until either the connection is authenticated or
+     * forcefully closed by the server since its maxAuthAttempts threshold has been exceeded
+     *
+     * This will not block your main thread. However you can block it by calling get().
+     *
+     * @param authParams JSON.serializable authentication data
+     * @param listener Callback to be called after login is successfull, may be null
+     * @return The login result
+     */
+    @ObjectiveCName("loginAsync:")
+    public Future<LoginResult> loginAsync(final JsonElement authParams, final LoginResultListener listener) {
+        return executor.submit(new Callable<LoginResult>() {
             @Override
-            @ObjectiveCName("loginSuccess:")
-            public void loginSuccess(Object userData) {
-                loginResult[0] = new LoginResult(true, userData);
-                loggedInLatch.countDown();
-            }
+            public LoginResult call() throws Exception {
+                final CountDownLatch loggedInLatch = new CountDownLatch(1);
+                final LoginResult[] loginResult = new LoginResult[1];
 
-            @Override
-            @ObjectiveCName("loginFailed:data:")
-            public void loginFailed(Event errorEvent, Object data) {
-                loginResult[0] = new LoginResult(false, errorEvent, data);
-                loggedInLatch.countDown();
+                connection.authenticate(authParams, new LoginCallback() {
+                    @Override
+                    @ObjectiveCName("loginSuccess:")
+                    public void loginSuccess(Object userData) {
+                        loginResult[0] = new LoginResult(true, userData);
+                        loggedInLatch.countDown();
+                    }
+
+                    @Override
+                    @ObjectiveCName("loginFailed:data:")
+                    public void loginFailed(Event errorEvent, Object data) {
+                        loginResult[0] = new LoginResult(false, errorEvent, data);
+                        loggedInLatch.countDown();
+                    }
+                });
+
+                try {
+                    loggedInLatch.await();
+                } catch (InterruptedException e) {
+                    loginResult[0] = new LoginResult(false, null, "An issue occured during login");
+                }
+                if(listener != null) {
+                    listener.loginCompleted(loginResult[0]);
+                }
+                return loginResult[0];
             }
         });
-
-        try {
-            loggedInLatch.await();
-        } catch (InterruptedException e) {
-            loginResult[0] = new LoginResult(false, null, "An issue occured during login");
-        }
-
-        return loginResult[0];
     }
 
     /**
@@ -252,7 +316,8 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
      * @return The deepstream client
      */
     public DeepstreamClient close() {
-        this.connection.close(false);
+        this.executor.shutdown();
+        this.connection.close(true);
         this.getAckTimeoutRegistry().close();
         return this;
     }
@@ -289,9 +354,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
     }
 
     /**
-     * Sets global connectivity state and notifies current connections about it. When connectivity is {@link GlobalConnectivityState#DISCONNECTED)} connection will be closed and
-     * no reconnects will be attempted. If connectivity is set to {@link GlobalConnectivityState#CONNECTED)} and current {@link ConnectionState)} is {@link ConnectionState#CLOSED)}
-     * or {@link ConnectionState#ERROR)} then client will try reconnecting. 
+     * Set global connectivity state.
      * @param  {GlobalConnectivityState} globalConnectivityState Current global connectivity state
      */
     public void setGlobalConnectivityState(GlobalConnectivityState globalConnectivityState){

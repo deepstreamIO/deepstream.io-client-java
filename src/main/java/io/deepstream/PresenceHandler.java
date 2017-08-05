@@ -3,7 +3,11 @@ package io.deepstream;
 
 import com.google.j2objc.annotations.ObjectiveCName;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 public class PresenceHandler {
 
@@ -14,8 +18,9 @@ public class PresenceHandler {
     private final DeepstreamClientAbstract client;
     private final UtilAckTimeoutRegistry ackTimeoutRegistry;
     private final UtilSingleNotifier notifier;
+    private final ExecutorService executor;
 
-    PresenceHandler(DeepstreamConfig deepstreamConfig, final IConnection connection, DeepstreamClientAbstract client) {
+    PresenceHandler(DeepstreamConfig deepstreamConfig, final IConnection connection, DeepstreamClientAbstract client, ExecutorService executor) {
         this.subscriptionTimeout = deepstreamConfig.getSubscriptionTimeout();
         this.connection = connection;
         this.client = client;
@@ -23,6 +28,7 @@ public class PresenceHandler {
         this.deepstreamConfig = deepstreamConfig;
         this.ackTimeoutRegistry = client.getAckTimeoutRegistry();
         this.notifier = new UtilSingleNotifier(client, connection, Topic.PRESENCE, Actions.QUERY, subscriptionTimeout);
+        this.executor = executor;
 
         new UtilResubscribeNotifier(this.client, new UtilResubscribeNotifier.UtilResubscribeListener() {
             @Override
@@ -35,42 +41,75 @@ public class PresenceHandler {
     }
 
     /**
-     * Queries for clients logged into deepstream
+     * Queries synchronously for clients logged into deepstream
+     *
+     * This will block your calling thread
      *
      * @return List<String> a list of currently connected clients
      * @throws DeepstreamError
      */
-    public String[] getAll() throws DeepstreamError {
-
-        final Object[] data = new Object[1];
-        final DeepstreamError[] deepstreamException = new DeepstreamError[1];
-
-        final CountDownLatch snapshotLatch = new CountDownLatch(1);
-
-        notifier.request(Actions.QUERY.toString(), new UtilSingleNotifier.UtilSingleNotifierCallback() {
-            @Override
-            public void onSingleNotifierError(String name, DeepstreamError error) {
-                deepstreamException[0] = error;
-                snapshotLatch.countDown();
+    public String[] getAll() throws DeepstreamError{
+        try {
+            return getAllAsync(null).get();
+        }catch(ExecutionException e){
+            Throwable t = e.getCause();
+            if(t instanceof DeepstreamError){
+                throw (DeepstreamError)t;
+            }else{
+                e.printStackTrace();
+                return null;
             }
+        }catch(Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
 
+    /**
+     * Queries asynchronously for clients logged into deepstream. You can block calling thread by executing .get() on result.
+     *
+     * @return Future<List<String>> a list of currently connected clients
+     * @param listener Callback to be called after query is successfull, may be null
+     * @throws DeepstreamError
+     */
+    public Future<String[]> getAllAsync(final PresenceGetAllResultListener listener) {
+        return executor.submit(new Callable<String[]>() {
             @Override
-            public void onSingleNotifierResponse(String name, Object users) {
-                data[0] = users;
-                snapshotLatch.countDown();
+            public String[] call() throws Exception {
+                final Object[] data = new Object[1];
+                final DeepstreamError[] deepstreamException = new DeepstreamError[1];
+
+                final CountDownLatch snapshotLatch = new CountDownLatch(1);
+
+                notifier.request(Actions.QUERY.toString(), new UtilSingleNotifier.UtilSingleNotifierCallback() {
+                    @Override
+                    public void onSingleNotifierError(String name, DeepstreamError error) {
+                        deepstreamException[0] = error;
+                        snapshotLatch.countDown();
+                    }
+
+                    @Override
+                    public void onSingleNotifierResponse(String name, Object users) {
+                        data[0] = users;
+                        snapshotLatch.countDown();
+                    }
+                });
+
+                try {
+                    snapshotLatch.await();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                if (deepstreamException[0] != null) {
+                    throw deepstreamException[0];
+                }
+                if(listener != null){
+                    listener.getAllCompleted((String[]) data[0]);
+                }
+                return (String[]) data[0];
             }
         });
-
-        try {
-            snapshotLatch.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        if (deepstreamException[0] != null) {
-            throw deepstreamException[0];
-        }
-        return (String[]) data[0];
     }
 
     /**

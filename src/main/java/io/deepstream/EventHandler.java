@@ -2,8 +2,10 @@ package io.deepstream;
 
 import com.google.j2objc.annotations.ObjectiveCName;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The entry point for events, such as {@link EventHandler#subscribe(String, EventListener)},

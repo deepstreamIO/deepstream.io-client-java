@@ -1,9 +1,8 @@
 package io.deepstream;
 
-import com.google.j2objc.annotations.ObjectiveCName;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.j2objc.annotations.ObjectiveCName;
 
 /**
  * Creates a deepstream message string, based on the

@@ -1,14 +1,15 @@
 package io.deepstream;
 
-import com.google.j2objc.annotations.ObjectiveCName;
-
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.j2objc.annotations.ObjectiveCName;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -55,6 +56,23 @@ class Connection implements IConnection {
      */
     Connection(final String url, final DeepstreamConfig options, DeepstreamClient client, EndpointFactory endpointFactory) throws URISyntaxException {
         this( url, options, client, endpointFactory, null );
+        this.endpoint = createEndpoint();
+    }
+
+    /**
+     * Creates an endpoint and passed it to {@link Connection#Connection(String, DeepstreamConfig, DeepstreamClient, EndpointFactory, Endpoint)}
+     *
+     * @see Connection#Connection(String, DeepstreamConfig, DeepstreamClient, EndpointFactory, Endpoint)
+     *
+     * @param url The endpoint url
+     * @param options The options used to initialise the deepstream client
+     * @param endpointFactory The factory to create endpoints
+     * @param client The deepstream client
+     * @throws URISyntaxException An exception if an invalid url is passed in
+     */
+    Connection(final String url, final DeepstreamConfig options, DeepstreamClient client, EndpointFactory endpointFactory, boolean networkAvailable) throws URISyntaxException {
+        this( url, options, client, endpointFactory, null );
+        this.globalConnectivityState = networkAvailable ? GlobalConnectivityState.CONNECTED : GlobalConnectivityState.DISCONNECTED;
         this.endpoint = createEndpoint();
     }
 
@@ -260,6 +278,7 @@ class Connection implements IConnection {
                 return;
             }
             this.tryReconnect();
+
         }
     }
 
@@ -326,13 +345,14 @@ class Connection implements IConnection {
 
     @ObjectiveCName("setState:")
     private void setState( ConnectionState connectionState ) {
+        System.out.println(connectionState);
         this.connectionState = connectionState;
 
         for (ConnectionStateListener connectStateListener : this.connectStateListeners) {
             connectStateListener.connectionStateChanged(connectionState);
         }
 
-        if( connectionState == ConnectionState.AWAITING_AUTHENTICATION && this.authParameters != null ) {
+        if( connectionState == ConnectionState.AWAITING_AUTHENTICATION && this.authParameters != null) {
             this.sendAuthMessage();
         }
     }
