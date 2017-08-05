@@ -1,11 +1,13 @@
 package io.deepstream;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.j2objc.annotations.ObjectiveCName;
 
-import com.google.gson.JsonElement;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A List is a specialised Record that contains
@@ -28,7 +30,21 @@ public class List {
 
     @ObjectiveCName("init:name:")
     List(RecordHandler recordHandler, String name) {
-        this.record = recordHandler.getRecord( name );
+        this.record = recordHandler.getRecord(name);
+        this.recordListeners = new List.RecordListeners( this, this.record );
+        this.listChangedListeners = new ArrayList<>();
+        this.listEntryChangedListeners = new ArrayList<>();
+        this.gson = new Gson();
+    }
+
+    /**
+     * Constructor is not public since it is created via {@link RecordHandler#getList(String)}
+     * @param record The record of list
+     * @param name The list name
+     */
+    @ObjectiveCName("init:name:")
+    List(Record record, String name) {
+        this.record = record;
         this.recordListeners = new List.RecordListeners( this, this.record );
         this.listChangedListeners = new ArrayList<>();
         this.listEntryChangedListeners = new ArrayList<>();

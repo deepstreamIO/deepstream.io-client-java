@@ -1,8 +1,7 @@
 package io.deepstream;
 
-import com.google.j2objc.annotations.ObjectiveCName;
-
 import com.google.gson.JsonElement;
+import com.google.j2objc.annotations.ObjectiveCName;
 
 /**
  * Record data changed listener, used to be notified whenever the record data has been modified either locally or remotely.

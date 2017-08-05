@@ -1,7 +1,5 @@
 package io.deepstream;
 
-import com.google.gson.JsonElement;
-
 public class HasResult {
 
     boolean exists;

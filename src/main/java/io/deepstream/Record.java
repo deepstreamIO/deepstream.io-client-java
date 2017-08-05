@@ -1,12 +1,23 @@
 package io.deepstream;
 
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.google.j2objc.annotations.ObjectiveCName;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 
 /**
@@ -29,6 +40,7 @@ public class Record {
     private final ArrayList<RecordReadyListener> onceRecordReadyListeners;
     private final String name;
     private final DeepstreamConfig deepstreamConfig;
+    private final ExecutorService executor;
     private boolean isReady;
     private boolean isDestroyed;
     private int version;
@@ -47,7 +59,7 @@ public class Record {
      * @param client deepstream.io client
      */
     @ObjectiveCName("init:recordOptions:connection:deepstreamConfig:client:")
-    Record(String name, Map recordOptions, IConnection connection, DeepstreamConfig deepstreamConfig, DeepstreamClientAbstract client) {
+    Record(String name, Map recordOptions, IConnection connection, DeepstreamConfig deepstreamConfig, DeepstreamClientAbstract client, ExecutorService executor) {
         this.ackTimeoutRegistry = client.getAckTimeoutRegistry();
         this.name = name;
         this.deepstreamConfig = deepstreamConfig;
@@ -75,6 +87,7 @@ public class Record {
             }
         });
         this.recordSetNotifier = new UtilSingleNotifier(client, connection, Topic.RECORD, Actions.PATCH, deepstreamConfig.getSubscriptionTimeout());
+        this.executor = executor;
     }
 
     /**
@@ -220,7 +233,7 @@ public class Record {
      * such as {@link Map}. Since this is a root the object should also not be a primitive.
      *
      * @see Record#set(String, Object)
-     */ 
+     */
     @ObjectiveCName("set:")
     public Record set( JsonElement value ) throws DeepstreamRecordDestroyedException {
         return this.set( null, value, false );
@@ -255,7 +268,7 @@ public class Record {
      * @see Record#set(String, Object)
      */
     @ObjectiveCName("setWithAck:")
-    public RecordSetResult setWithAck(Object value) {
+    public RecordSetResult setWithAck(Object value) throws DeepstreamRecordDestroyedException{
         return this.setWithAck(null, value);
     }
 
@@ -275,74 +288,114 @@ public class Record {
      * @throws DeepstreamRecordDestroyedException Thrown if the record has been destroyed and can't perform more actions
      */
     @ObjectiveCName("setWithAck:value:")
-    public RecordSetResult setWithAck(String path, Object value) {
-        throwExceptionIfDestroyed( "set" );
-
-        JsonElement element;
-        if( value instanceof String ) {
-            element = new JsonPrimitive((String) value);
-        }
-        else if( value instanceof Number ) {
-            element = new JsonPrimitive((Number) value);
-        }
-        else if( value instanceof Boolean ) {
-            element = new JsonPrimitive((Boolean) value);
-        } else {
-            element = gson.toJsonTree( value );
-        }
-
-        JsonElement object = this.path.get( path );
-
-        if( object != null && object.equals( value ) ) {
-            return new RecordSetResult(null);
-        } else if( path == null && this.data.equals( value ) ) {
-            return new RecordSetResult(null);
-        }
-
-        final RecordSetResult[] result = new RecordSetResult[1];
-        final Map<String,JsonElement> oldValues = beginChange();
-        this.path.set( path, element );
-        this.data = this.path.getCoreElement();
-
-        JsonObject config = new JsonObject();
-        config.addProperty("writeSuccess", true);
-        String newVersion = String.valueOf(this.version + 1);
-
-        String[] data;
-        if( path == null ) {
-            data = new String[]{ this.name(), newVersion, element.toString(), config.toString() };
-        } else {
-            data = new String[]{ this.name(), newVersion, path, MessageBuilder.typed(value), config.toString() };
-        }
-
-        Actions action;
-        if (path == null) {
-            action = Actions.UPDATE;
-        } else {
-            action = Actions.PATCH;
-        }
-
-        final CountDownLatch snapshotLatch = new CountDownLatch(1);
-        this.recordSetNotifier.request(newVersion, action, data, new UtilSingleNotifier.UtilSingleNotifierCallback() {
-            @Override
-            public void onSingleNotifierError(String name, DeepstreamError error) {
-                result[0] = new RecordSetResult( error.getMessage() );
-                snapshotLatch.countDown();
+    public RecordSetResult setWithAck(String path, Object value) throws DeepstreamRecordDestroyedException{
+        try {
+            return this.setWithAckAsync(path, value, null).get();
+        }catch(ExecutionException e){
+            Throwable t = e.getCause();
+            if(t instanceof DeepstreamRecordDestroyedException){
+                throw (DeepstreamRecordDestroyedException)t;
+            }else{
+                e.printStackTrace();
+                return null;
             }
+        }catch(Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
 
+    /**
+     * Set the value for a specific path in your Record data asynchronously and gives acknowledgement
+     * whether there were any errors storing the record data in cache or storage. You can block calling thread by executing .get() on result.<br/>
+     * Make sure that the Object passed in can be serialised to a JsonElement, otherwise it will
+     * throw a {@link IllegalStateException}.<br/>
+     * The best way to guarantee this is by setting Json friendly objects,
+     * such as {@link Map}.<br/>
+     * If your path is not null, you can pass in primitives, which is the
+     * equivalent of calling {@link Record#set(String, Object)}.
+     *
+     * @param path The path with the JsonElement at which to set the value
+     * @param value The value to set
+     * @param listener Callback to be called after query is successfull, may be null
+     * @return future record
+     * @throws DeepstreamRecordDestroyedException Thrown if the record has been destroyed and can't perform more actions
+     */
+    @ObjectiveCName("setWithAckAsync:value:")
+    public Future<RecordSetResult> setWithAckAsync(final String path, final Object value, final SetWithAckResultListener listener) {
+        return executor.submit(new Callable<RecordSetResult>() {
             @Override
-            public void onSingleNotifierResponse(String name, Object data) {
-                completeChange(oldValues);
-                result[0] = new RecordSetResult( null );
-                snapshotLatch.countDown();
+            public RecordSetResult call() throws Exception {
+                throwExceptionIfDestroyed("set");
+
+                JsonElement element;
+                if (value instanceof String) {
+                    element = new JsonPrimitive((String) value);
+                } else if (value instanceof Number) {
+                    element = new JsonPrimitive((Number) value);
+                } else if (value instanceof Boolean) {
+                    element = new JsonPrimitive((Boolean) value);
+                } else {
+                    element = gson.toJsonTree(value);
+                }
+
+                JsonElement object = Record.this.path.get(path);
+
+                if (object != null && object.equals(value)) {
+                    return new RecordSetResult(null);
+                } else if (path == null && Record.this.data.equals(value)) {
+                    return new RecordSetResult(null);
+                }
+
+                final RecordSetResult[] result = new RecordSetResult[1];
+                final Map<String, JsonElement> oldValues = beginChange();
+                Record.this.path.set(path, element);
+                Record.this.data = Record.this.path.getCoreElement();
+
+                JsonObject config = new JsonObject();
+                config.addProperty("writeSuccess", true);
+                String newVersion = String.valueOf(Record.this.version + 1);
+
+                String[] data;
+                if (path == null) {
+                    data = new String[]{Record.this.name(), newVersion, element.toString(), config.toString()};
+                } else {
+                    data = new String[]{Record.this.name(), newVersion, path, MessageBuilder.typed(value), config.toString()};
+                }
+
+                Actions action;
+                if (path == null) {
+                    action = Actions.UPDATE;
+                } else {
+                    action = Actions.PATCH;
+                }
+
+                final CountDownLatch snapshotLatch = new CountDownLatch(1);
+                Record.this.recordSetNotifier.request(newVersion, action, data, new UtilSingleNotifier.UtilSingleNotifierCallback() {
+                    @Override
+                    public void onSingleNotifierError(String name, DeepstreamError error) {
+                        result[0] = new RecordSetResult(error.getMessage());
+                        snapshotLatch.countDown();
+                    }
+
+                    @Override
+                    public void onSingleNotifierResponse(String name, Object data) {
+                        completeChange(oldValues);
+                        result[0] = new RecordSetResult(null);
+                        snapshotLatch.countDown();
+                    }
+                });
+                try {
+                    snapshotLatch.await();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if(listener != null){
+                    listener.setWithAckResultCompleted(result[0]);
+                }
+                return result[0];
             }
         });
-        try {
-            snapshotLatch.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        return result[0];
     }
 
     /**
@@ -532,7 +585,7 @@ public class Record {
         } else if( message.data[ 0 ].equals( Event.VERSION_EXISTS.toString() ) ) {
             recoverRecord( Integer.parseInt( message.data[ 2 ] ), gson.fromJson( message.data[ 3 ], JsonElement.class ));
         } else if( message.data[ 0 ].equals( Event.MESSAGE_DENIED.toString() ) ) {
-           clearTimeouts();
+            clearTimeouts();
         }
     }
 
@@ -943,5 +996,19 @@ public class Record {
          */
         @ObjectiveCName("onRecordReady:record:")
         void onRecordReady(String recordName, Record record);
+    }
+
+    @Override
+    public int hashCode() {
+        return this.name.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object otherEntry) {
+        if (otherEntry instanceof Record && otherEntry != null) {
+            return this.name.equals(((Record) otherEntry).name);
+        } else {
+            return false;
+        }
     }
 }

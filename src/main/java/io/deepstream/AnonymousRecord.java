@@ -1,11 +1,12 @@
 package io.deepstream;
 
+import com.google.gson.JsonElement;
 import com.google.j2objc.annotations.ObjectiveCName;
 
-import com.google.gson.JsonElement;
-
 import java.util.ArrayList;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
 
 /**
  * An AnonymousRecord is a record without a predefined name. It
@@ -269,37 +270,63 @@ public class AnonymousRecord {
     }
 
     /**
-     * Sets the underlying record the anonymous record is bound
+     * Synchronously sets the underlying record the anonymous record is bound
      * to. Can be called multiple times.
      *
      * @param recordName The name of the underlying record to use
      * @return The AnonymousRecord
      */
     @ObjectiveCName("setName:")
-    public AnonymousRecord setName( String recordName ) {
-        this.unsubscribeRecord();
-        this.record = this.recordHandler.getRecord( recordName );
-        this.subscribeRecord();
+    public AnonymousRecord setName( String recordName ){
+        try {
+            return setNameAsync(recordName, null).get();
+        }catch(Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
 
-        final CountDownLatch readyLatch = new CountDownLatch(1);
-        record.whenReady(new Record.RecordReadyListener() {
+    /**
+     * Asynchronously sets the underlying record the anonymous record is bound
+     * to. Can be called multiple times.
+     *
+     * @param recordName The name of the underlying record to use
+     * @param listener Callback to be called after query is successfull, may be null
+     * @return The AnonymousRecord
+     */
+    @ObjectiveCName("setNameAsync:")
+    public Future<AnonymousRecord> setNameAsync(final String recordName, final SetNameListener listener) {
+        return recordHandler.executor.submit(new Callable<AnonymousRecord>() {
             @Override
-            public void onRecordReady(String recordName, Record record) {
-                readyLatch.countDown();
+            public AnonymousRecord call() throws Exception {
+                AnonymousRecord.this.unsubscribeRecord();
+                AnonymousRecord.this.record = AnonymousRecord.this.recordHandler.getRecord(recordName);
+                AnonymousRecord.this.subscribeRecord();
+
+                final CountDownLatch readyLatch = new CountDownLatch(1);
+                record.whenReady(new Record.RecordReadyListener() {
+                    @Override
+                    public void onRecordReady(String recordName, Record record) {
+                        readyLatch.countDown();
+                    }
+                });
+
+                try {
+                    readyLatch.await();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                for (AnonymousRecordNameChangedListener anonymousRecordNameChangedCallback : AnonymousRecord.this.anonymousRecordNameChangedCallbacks) {
+                    anonymousRecordNameChangedCallback.recordNameChanged(recordName, AnonymousRecord.this);
+                }
+
+                if(listener != null){
+                    return AnonymousRecord.this;
+                }
+                return AnonymousRecord.this;
             }
         });
-
-        try {
-            readyLatch.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        for( AnonymousRecordNameChangedListener anonymousRecordNameChangedCallback : this.anonymousRecordNameChangedCallbacks ) {
-            anonymousRecordNameChangedCallback.recordNameChanged( recordName, this );
-        }
-
-        return this;
     }
 
     /**

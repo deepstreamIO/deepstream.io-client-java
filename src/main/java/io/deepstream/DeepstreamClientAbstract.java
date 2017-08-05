@@ -2,8 +2,6 @@ package io.deepstream;
 
 import com.google.j2objc.annotations.ObjectiveCName;
 
-import com.google.gson.JsonElement;
-
 abstract class DeepstreamClientAbstract {
     private UtilAckTimeoutRegistry utilAckTimeoutRegistry;
     private DeepstreamRuntimeErrorHandler deepstreamRuntimeErrorHandler;
@@ -14,10 +12,7 @@ abstract class DeepstreamClientAbstract {
     abstract DeepstreamClientAbstract removeConnectionChangeListener(ConnectionStateListener connectionStateListener);
     abstract ConnectionState getConnectionState();
 
-    abstract LoginResult login();
 
-    @ObjectiveCName("login:")
-    abstract LoginResult login(JsonElement data);
     abstract DeepstreamClientAbstract close();
     abstract String getUid();
 

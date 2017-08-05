@@ -4,7 +4,10 @@ import com.google.j2objc.annotations.ObjectiveCName;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 /**
  * The entry point for rpcs, both requesting them via {@link RpcHandler#make(String, Object)} and
@@ -17,6 +20,7 @@ public class RpcHandler {
     private final Map<String, RpcRequestedListener> providers;
     private final UtilAckTimeoutRegistry ackTimeoutRegistry;
     private final Map<String, Rpc> rpcs;
+    private ExecutorService executor;
 
     /**
      * The main class for remote procedure calls
@@ -29,13 +33,14 @@ public class RpcHandler {
      * @param client The deepstream client
      */
     @ObjectiveCName("init:connection:client:")
-    RpcHandler(DeepstreamConfig deepstreamConfig, final IConnection connection, DeepstreamClientAbstract client) {
+    RpcHandler(DeepstreamConfig deepstreamConfig, final IConnection connection, DeepstreamClientAbstract client, ExecutorService executor) {
         this.deepstreamConfig = deepstreamConfig;
         this.connection = connection;
         this.client = client;
         this.providers = new HashMap<>();
         this.rpcs = new HashMap<>();
         this.ackTimeoutRegistry = client.getAckTimeoutRegistry();
+        this.executor = executor;
         new UtilResubscribeNotifier(this.client, new UtilResubscribeNotifier.UtilResubscribeListener() {
             @Override
             public void resubscribe() {
@@ -86,45 +91,71 @@ public class RpcHandler {
     }
 
     /**
-     * Create a remote procedure call. This requires a rpc name for routing, a JSON serializable object for any associated
+     * Synchronously create a remote procedure call. This requires a rpc name for routing, a JSON serializable object for any associated
      * arguments and a callback to notify you with the rpc result or potential error.
      * @param rpcName The name of the rpc
      * @param data Serializable data that will be passed to the provider
      * @return Find out if the rpc succeeded via {@link RpcResult#success()} and associated data via {@link RpcResult#getData()}
      */
     @ObjectiveCName("make:data:")
-    public RpcResult make(String rpcName, Object data) {
-        final RpcResult[] rpcResponse = new RpcResult[1];
-        final CountDownLatch responseLatch = new CountDownLatch(1);
-
-
-        synchronized (this) {
-            String uid = this.client.getUid();
-            this.rpcs.put(uid, new Rpc(this.deepstreamConfig, this.client, rpcName, uid, new RpcResponseCallback() {
-                @Override
-                public void onRpcSuccess(String rpcName, Object data) {
-                    rpcResponse[0] = new RpcResult(true, data);
-                    responseLatch.countDown();
-                }
-
-                @Override
-                public void onRpcError(String rpcName, Object error) {
-                    rpcResponse[0] = new RpcResult(false, error);
-                    responseLatch.countDown();
-                }
-            }));
-
-            String typedData = MessageBuilder.typed(data);
-            this.connection.sendMsg(Topic.RPC, Actions.REQUEST, new String[]{rpcName, uid, typedData});
-        }
-
+    public RpcResult make(String rpcName, Object data){
         try {
-            responseLatch.await();
-        } catch (InterruptedException e) {
+            return makeAsync(rpcName, data, null).get();
+        }catch(Exception e){
             e.printStackTrace();
+            return null;
         }
+    }
 
-        return rpcResponse[0];
+    /**
+     * Asynchronously create a remote procedure call. This requires a rpc name for routing, a JSON serializable object for any associated
+     * arguments and a callback to notify you with the rpc result or potential error. You can block calling thread by executing .get() on result.
+     * @param rpcName The name of the rpc
+     * @param data Serializable data that will be passed to the provider
+     * @param listener Callback to be called after RPC is successfull created, may be null
+     * @return Find out if the rpc succeeded via {@link RpcResult#success()} and associated data via {@link RpcResult#getData()}
+     */
+    @ObjectiveCName("makeAsync:data:")
+    public Future<RpcResult> makeAsync(final String rpcName, final Object data, final RpcMakeListener listener) {
+        return executor.submit(new Callable<RpcResult>() {
+            @Override
+            public RpcResult call() throws Exception {
+                final RpcResult[] rpcResponse = new RpcResult[1];
+                final CountDownLatch responseLatch = new CountDownLatch(1);
+
+
+                synchronized (this) {
+                    String uid = RpcHandler.this.client.getUid();
+                    RpcHandler.this.rpcs.put(uid, new Rpc(RpcHandler.this.deepstreamConfig, RpcHandler.this.client, rpcName, uid, new RpcResponseCallback() {
+                        @Override
+                        public void onRpcSuccess(String rpcName, Object data) {
+                            rpcResponse[0] = new RpcResult(true, data);
+                            responseLatch.countDown();
+                        }
+
+                        @Override
+                        public void onRpcError(String rpcName, Object error) {
+                            rpcResponse[0] = new RpcResult(false, error);
+                            responseLatch.countDown();
+                        }
+                    }));
+
+                    String typedData = MessageBuilder.typed(data);
+                    RpcHandler.this.connection.sendMsg(Topic.RPC, Actions.REQUEST, new String[]{rpcName, uid, typedData});
+                }
+
+                try {
+                    responseLatch.await();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                if(listener != null){
+                    listener.makeCompleted(rpcResponse[0]);
+                }
+                return rpcResponse[0];
+            }
+        });
     }
 
     /**
