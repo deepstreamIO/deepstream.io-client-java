@@ -40,9 +40,9 @@ public class RecordHandler {
         this.client = client;
         recordHandlerListeners = new RecordHandlerListeners();
 
-        records = new HashMap<>();
-        lists = new HashMap<>();
-        listeners = new HashMap<>();
+        records = new HashMap<String, Record>();
+        lists = new HashMap<String, List>();
+        listeners = new HashMap<String, UtilListener>();
 
         hasRegistry = new UtilSingleNotifier(client, connection, Topic.RECORD, Actions.HAS, deepstreamConfig.getRecordReadTimeout());
         snapshotRegistry = new UtilSingleNotifier(client, connection, Topic.RECORD, Actions.SNAPSHOT, deepstreamConfig.getRecordReadTimeout());
@@ -413,7 +413,7 @@ public class RecordHandler {
                 @Override
                 @ObjectiveCName("onSingleNotifierResponse:data:")
                 public void onSingleNotifierResponse(String name, Object data) {
-                    hasRecord[0] = (boolean) data;
+                    hasRecord[0] = (Boolean) data;
                     hasLatch.countDown();
                 }
             });

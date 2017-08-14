@@ -130,7 +130,7 @@ public class PresenceHandler {
         java.util.List<Object> listeners = this.emitter.listeners( eventName );
         for( Object listener : listeners ) {
             if( args != null ) {
-                if ((boolean) args[1])
+                if ((Boolean) args[1])
                     ((PresenceEventListener) listener).onClientLogin((String) args[0]);
                 else
                     ((PresenceEventListener) listener).onClientLogout((String) args[0]);

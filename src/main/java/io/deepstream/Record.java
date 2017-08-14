@@ -64,9 +64,9 @@ public class Record {
         this.hasProvider = false;
         this.mergeStrategy = this.deepstreamConfig.getRecordMergeStrategy() != null ?
                 RecordMergeStrategies.INSTANCE.getMergeStrategy(this.deepstreamConfig.getRecordMergeStrategy()) : null ;
-        this.recordEventsListeners = new ArrayList<>();
-        this.onceRecordReadyListeners = new ArrayList<>();
-        this.recordDestroyPendingListeners = new ArrayList<>();
+        this.recordEventsListeners = new ArrayList<RecordEventsListener>();
+        this.onceRecordReadyListeners = new ArrayList<RecordReadyListener>();
+        this.recordDestroyPendingListeners = new ArrayList<Record.RecordDestroyPendingListener>();
 
         this.utilResubscribeNotifier = new UtilResubscribeNotifier(client, new UtilResubscribeNotifier.UtilResubscribeListener() {
             @Override
@@ -558,7 +558,7 @@ public class Record {
 
     @ObjectiveCName("updateHasProvider:")
     private void updateHasProvider(Message message) {
-        this.hasProvider = (boolean) MessageParser.convertTyped(message.data[1], this.client, gson);
+        this.hasProvider = (Boolean) MessageParser.convertTyped(message.data[1], this.client, gson);
         for (RecordEventsListener recordEventsListener : this.recordEventsListeners) {
             recordEventsListener.onRecordHasProviderChanged(this.name, this.hasProvider);
         }
@@ -669,7 +669,7 @@ public class Record {
             return null;
         }
 
-        Map<String,JsonElement> oldValues = new HashMap<>();
+        Map<String,JsonElement> oldValues = new HashMap<String,JsonElement>();
 
         if( paths.contains( ALL_EVENT ) ) {
             oldValues.put( ALL_EVENT, this.get() );

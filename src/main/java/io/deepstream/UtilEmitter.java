@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentMap;
  */
 class UtilEmitter {
 
-    private final ConcurrentMap<String, ConcurrentLinkedQueue<Object>> callbacks = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, ConcurrentLinkedQueue<Object>> callbacks = new ConcurrentHashMap<String, ConcurrentLinkedQueue<Object>>();
 
     private static boolean sameAs(Object fn, Object internal) {
         return fn.equals(internal) || internal instanceof OnceListener && fn.equals(((OnceListener) internal).fn);
@@ -45,7 +45,7 @@ class UtilEmitter {
     public UtilEmitter on(String event, Object fn) {
         ConcurrentLinkedQueue<Object> callbacks = this.callbacks.get(event);
         if (callbacks == null) {
-            callbacks = new ConcurrentLinkedQueue<>();
+            callbacks = new ConcurrentLinkedQueue<Object>();
             ConcurrentLinkedQueue<Object> _callbacks = this.callbacks.putIfAbsent(event, callbacks);
             if (_callbacks != null) {
                 callbacks = _callbacks;
@@ -123,7 +123,7 @@ class UtilEmitter {
     public List<Object> listeners(String event) {
         ConcurrentLinkedQueue<Object> callbacks = this.callbacks.get(event);
         return callbacks != null ?
-                new ArrayList<>(callbacks) : new ArrayList<>(0);
+                new ArrayList<Object>(callbacks) : new ArrayList<Object>(0);
     }
 
     /**

@@ -22,8 +22,8 @@ class UtilAckTimeoutRegistry implements ConnectionStateListener, UtilTimeoutList
     @ObjectiveCName("init:")
     UtilAckTimeoutRegistry(DeepstreamClientAbstract client) {
         this.client = client;
-        this.register = new ConcurrentHashMap<>();
-        this.ackTimers = new LinkedBlockingQueue<>();
+        this.register = new ConcurrentHashMap<String, ScheduledFuture>();
+        this.ackTimers = new LinkedBlockingQueue<AckTimeout>();
         this.executor = new ScheduledThreadPoolExecutor(5);
 
         this.state = client.getConnectionState();

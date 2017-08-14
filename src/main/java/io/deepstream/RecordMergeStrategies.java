@@ -15,7 +15,7 @@ class RecordMergeStrategies {
     private final Map<MergeStrategy, RecordMergeStrategy> strategies;
 
     public RecordMergeStrategies() {
-        strategies = new HashMap<>();
+        strategies = new HashMap<MergeStrategy, RecordMergeStrategy>();
         strategies.put(MergeStrategy.REMOTE_WINS, new RecordMergeStrategy() {
             @Override
             public JsonElement merge(Record record, JsonElement remoteValue, int remoteVersion) {

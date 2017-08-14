@@ -152,7 +152,7 @@ public enum Actions {
      */
     WRITE_ACKNOWLEDGEMENT( "WA" );
 
-    private static final Map<String,Actions> lookup  = new HashMap<>();
+    private static final Map<String,Actions> lookup  = new HashMap<String,Actions>();
 
     static {
         for( Actions s : EnumSet.allOf( Actions.class ) )

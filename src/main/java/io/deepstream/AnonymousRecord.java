@@ -33,8 +33,8 @@ public class AnonymousRecord {
     @ObjectiveCName("init:")
     AnonymousRecord(RecordHandler recordHandler) {
         this.recordHandler = recordHandler;
-        this.subscriptions = new ArrayList<>();
-        this.anonymousRecordNameChangedCallbacks = new ArrayList<>();
+        this.subscriptions = new ArrayList<Subscription>();
+        this.anonymousRecordNameChangedCallbacks = new ArrayList<AnonymousRecordNameChangedListener>();
     }
 
     /**

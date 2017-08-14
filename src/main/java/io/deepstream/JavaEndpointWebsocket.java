@@ -54,7 +54,9 @@ class JavaEndpointWebsocket implements Endpoint {
                 try {
                     sslContext = SSLContext.getInstance("TLS");
                     sslContext.init(null, null, null);
-                } catch (NoSuchAlgorithmException | KeyManagementException e) {
+                } catch (NoSuchAlgorithmException e) {
+                    throw new RuntimeException(e);
+                } catch (KeyManagementException e) {
                     throw new RuntimeException(e);
                 }
                 // set the SSL context to the client factory

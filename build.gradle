@@ -3,8 +3,8 @@ plugins {
 }
 
 // Java compatability
-sourceCompatibility = 1.7
-targetCompatibility = 1.7
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
 
 group 'io.deepstream'
 version '2.2.2'
@@ -35,6 +35,6 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.11'
     testCompile "org.mockito:mockito-core:1.+"
 
-    sourceCompatibility = 1.7
-    targetCompatibility = 1.7
+    sourceCompatibility = 1.6
+    targetCompatibility = 1.6
 }
