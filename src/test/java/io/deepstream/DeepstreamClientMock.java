@@ -11,7 +11,7 @@ public class DeepstreamClientMock extends DeepstreamClientAbstract {
     private ConnectionState connectionState;
 
     public DeepstreamClientMock() {
-        this.connectionListeners = new ArrayList<>();
+        this.connectionListeners = new ArrayList<ConnectionStateListener>();
     }
 
     public DeepstreamClientMock addConnectionChangeListener( ConnectionStateListener connectionStateListener) {

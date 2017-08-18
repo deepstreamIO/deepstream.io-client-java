@@ -26,8 +26,8 @@ public class EventHandler {
         this.connection = connection;
         this.client = client;
         this.deepstreamConfig = deepstreamConfig;
-        this.listeners = new HashMap<>();
-        this.subscriptions = new ArrayList<>();
+        this.listeners = new HashMap<String, UtilListener>();
+        this.subscriptions = new ArrayList<String>();
         this.ackTimeoutRegistry = client.getAckTimeoutRegistry();
 
         new UtilResubscribeNotifier(this.client, new UtilResubscribeNotifier.UtilResubscribeListener() {

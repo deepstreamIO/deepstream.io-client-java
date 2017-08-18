@@ -44,7 +44,7 @@ enum Types {
      */
     UNDEFINED( "U" );
 
-    private static final Map<String,Types> lookup  = new HashMap<>();
+    private static final Map<String,Types> lookup  = new HashMap<String,Types>();
 
     static {
         for( Types s : EnumSet.allOf( Types.class ) )

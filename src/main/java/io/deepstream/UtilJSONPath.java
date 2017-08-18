@@ -37,7 +37,7 @@ class UtilJSONPath {
                 if (traverser.isJsonObject()) {
                     traverser = traverser.getAsJsonObject().get((String) token);
                 } else if (traverser.isJsonArray()) {
-                    traverser = traverser.getAsJsonArray().get((int) token);
+                    traverser = traverser.getAsJsonArray().get((Integer) token);
                 } else {
                     traverser = null;
                 }
@@ -49,7 +49,7 @@ class UtilJSONPath {
     }
 
     private static ArrayList<Object> tokenize(String path) {
-        ArrayList<Object> tokens = new ArrayList<>();
+        ArrayList<Object> tokens = new ArrayList<Object>();
         String[] parts = path.split("\\.");
 
         for (int i = 0; i < parts.length; i++) {
@@ -104,12 +104,12 @@ class UtilJSONPath {
                     } else if (nextToken instanceof Integer && child.isJsonArray()) {
                         traverser = parent.getAsJsonObject().get((String) token);
                     } else if (nextToken instanceof Integer && !child.isJsonArray()) {
-                        parent.getAsJsonObject().add((String) token, initialiseArray((int) nextToken));
+                        parent.getAsJsonObject().add((String) token, initialiseArray((Integer) nextToken));
                         traverser = parent.getAsJsonObject().get((String) token);
                     }
                 } else {
                     if (nextToken instanceof Integer) {
-                        parent.getAsJsonObject().add((String) token, initialiseArray((int) nextToken));
+                        parent.getAsJsonObject().add((String) token, initialiseArray((Integer) nextToken));
                         traverser = parent.getAsJsonObject().get((String) token);
                     } else {
                         parent.getAsJsonObject().add((String) token, new JsonObject());
@@ -119,37 +119,37 @@ class UtilJSONPath {
             } else if (parent.isJsonArray()) {
                 JsonElement child = null;
                 try {
-                    parent.getAsJsonArray().get((int) token);
+                    parent.getAsJsonArray().get((Integer) token);
                 } catch (IndexOutOfBoundsException e) {
-                    extendArray(parent.getAsJsonArray(), (int) token);
+                    extendArray(parent.getAsJsonArray(), (Integer) token);
 
                     if (nextToken instanceof Integer) {
-                        JsonArray array = initialiseArray((int) nextToken);
-                        parent.getAsJsonArray().set((int) token, array);
-                        traverser = parent.getAsJsonArray().get((int) token);
+                        JsonArray array = initialiseArray((Integer) nextToken);
+                        parent.getAsJsonArray().set((Integer) token, array);
+                        traverser = parent.getAsJsonArray().get((Integer) token);
                     } else {
-                        parent.getAsJsonArray().set((int) token, new JsonObject());
-                        traverser = parent.getAsJsonArray().get((int) token);
+                        parent.getAsJsonArray().set((Integer) token, new JsonObject());
+                        traverser = parent.getAsJsonArray().get((Integer) token);
                     }
                 }
 
-                child = parent.getAsJsonArray().get((int) token);
+                child = parent.getAsJsonArray().get((Integer) token);
 
                 if (child != null) {
                     if (nextToken instanceof String && child.isJsonObject())
-                        traverser = parent.getAsJsonArray().get((int) token);
+                        traverser = parent.getAsJsonArray().get((Integer) token);
                     else if (nextToken instanceof String && (!child.isJsonObject())) {
-                        parent.getAsJsonArray().set((int) token, new JsonObject());
-                        traverser = parent.getAsJsonArray().get((int) token);
+                        parent.getAsJsonArray().set((Integer) token, new JsonObject());
+                        traverser = parent.getAsJsonArray().get((Integer) token);
                     } else if (nextToken instanceof Integer && child.isJsonArray()) {
-                        traverser = parent.getAsJsonArray().get((int) token);
+                        traverser = parent.getAsJsonArray().get((Integer) token);
                     } else if (nextToken instanceof Integer && !child.isJsonArray()) {
-                        parent.getAsJsonArray().set((int) token, initialiseArray((int) nextToken));
-                        traverser = parent.getAsJsonArray().get((int) token);
+                        parent.getAsJsonArray().set((Integer) token, initialiseArray((Integer) nextToken));
+                        traverser = parent.getAsJsonArray().get((Integer) token);
                     }
                 } else {
                     if (nextToken instanceof Integer) {
-                        parent.getAsJsonObject().add((String) token, initialiseArray((int) nextToken));
+                        parent.getAsJsonObject().add((String) token, initialiseArray((Integer) nextToken));
                         traverser = parent.getAsJsonObject().get((String) token);
                     } else {
                         parent.getAsJsonObject().add((String) token, new JsonObject());
@@ -159,17 +159,17 @@ class UtilJSONPath {
 
                 if (traverser.isJsonNull()) {
                     if (nextToken instanceof Integer) {
-                        JsonArray arr = initialiseArray((int) nextToken);
-                        parent.getAsJsonArray().set((int) token, arr);
+                        JsonArray arr = initialiseArray((Integer) nextToken);
+                        parent.getAsJsonArray().set((Integer) token, arr);
                     } else if (nextToken instanceof String) {
-                        parent.getAsJsonArray().set((int) token, new JsonObject());
+                        parent.getAsJsonArray().set((Integer) token, new JsonObject());
                     }
-                    traverser = parent.getAsJsonArray().get((int) token);
+                    traverser = parent.getAsJsonArray().get((Integer) token);
                 }
 
                 if (traverser.isJsonArray()) {
-                    if (nextToken instanceof Integer && traverser.getAsJsonArray().size() < (int) nextToken) {
-                        extendArray(traverser.getAsJsonArray(), (int) nextToken);
+                    if (nextToken instanceof Integer && traverser.getAsJsonArray().size() < (Integer) nextToken) {
+                        extendArray(traverser.getAsJsonArray(), (Integer) nextToken);
                     }
                 }
             }
@@ -209,12 +209,12 @@ class UtilJSONPath {
             int size = object.size();
 
             if( delete ) {
-                object.remove((int) token);
+                object.remove((Integer) token);
             } else {
-                for( int i=size; i<= (int) token; i++ ){
+                for( int i=size; i<= (Integer) token; i++ ){
                     object.add( JsonNull.INSTANCE );
                 }
-                object.set((int) token, value);
+                object.set((Integer) token, value);
             }
         }
     }

@@ -30,8 +30,8 @@ public class List {
     List(RecordHandler recordHandler, String name) {
         this.record = recordHandler.getRecord( name );
         this.recordListeners = new List.RecordListeners( this, this.record );
-        this.listChangedListeners = new ArrayList<>();
-        this.listEntryChangedListeners = new ArrayList<>();
+        this.listChangedListeners = new ArrayList<ListChangedListener>();
+        this.listEntryChangedListeners = new ArrayList<ListEntryChangedListener>();
         this.gson = new Gson();
     }
 
@@ -391,13 +391,13 @@ public class List {
      * }
      */
     private Map<String,ArrayList<Integer>> getStructure() {
-        Map<String, ArrayList<Integer>> structure = new HashMap<>();
+        Map<String, ArrayList<Integer>> structure = new HashMap<String, ArrayList<Integer>>();
         java.util.List<String> entries = Arrays.asList(this.getEntries());
 
         for( int i=0; i<entries.size();i++) {
             ArrayList<Integer> list = structure.get( entries.get(i) );
             if( list == null ) {
-                list = new ArrayList<>();
+                list = new ArrayList<Integer>();
                 structure.put( entries.get( i ), list );
             }
             list.add( i );

@@ -25,7 +25,7 @@ class MessageParser {
      * or null for invalid messages
      */
     static List<Message> parse( String message, DeepstreamClientAbstract client ) {
-        List<Message> messages = new ArrayList<>();
+        List<Message> messages = new ArrayList<Message>();
         String[] rawMessages = message.split( MS );
         Message parsedMessage;
         for (String rawMessage : rawMessages) {

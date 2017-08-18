@@ -38,7 +38,7 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
         this.timeoutDuration = timeoutDuration;
 
         this.utilResubscribeNotifier = new UtilResubscribeNotifier(client, this);
-        this.requests = new ConcurrentHashMap<>();
+        this.requests = new ConcurrentHashMap<String, ArrayList<UtilSingleNotifierCallback>>();
     }
 
     /**
@@ -63,7 +63,7 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
         ArrayList<UtilSingleNotifierCallback> callbacks = requests.get( name );
         if( callbacks == null ) {
             synchronized (this) {
-                callbacks = new ArrayList<>();
+                callbacks = new ArrayList<UtilSingleNotifierCallback>();
                 requests.put(name, callbacks);
                 send(name);
             }
@@ -86,7 +86,7 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
         ArrayList<UtilSingleNotifierCallback> callbacks = requests.get( name );
         if( callbacks == null ) {
             synchronized (this) {
-                callbacks = new ArrayList<>();
+                callbacks = new ArrayList<UtilSingleNotifierCallback>();
                 requests.put(name, callbacks);
                 send(action, data);
             }

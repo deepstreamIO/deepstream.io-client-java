@@ -72,7 +72,7 @@ class Connection implements IConnection {
 
     public Connection(String url, DeepstreamConfig options, DeepstreamClient client, EndpointFactory endpointFactory, Endpoint endpoint) {
         this.client = client;
-        this.connectStateListeners = new ArrayList<>();
+        this.connectStateListeners = new ArrayList<ConnectionStateListener>();
         this.originalUrl = url;
         this.url = url;
         this.connectionState = ConnectionState.CLOSED;

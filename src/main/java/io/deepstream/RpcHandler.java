@@ -33,8 +33,8 @@ public class RpcHandler {
         this.deepstreamConfig = deepstreamConfig;
         this.connection = connection;
         this.client = client;
-        this.providers = new HashMap<>();
-        this.rpcs = new HashMap<>();
+        this.providers = new HashMap<String, RpcRequestedListener>();
+        this.rpcs = new HashMap<String, Rpc>();
         this.ackTimeoutRegistry = client.getAckTimeoutRegistry();
         new UtilResubscribeNotifier(this.client, new UtilResubscribeNotifier.UtilResubscribeListener() {
             @Override
