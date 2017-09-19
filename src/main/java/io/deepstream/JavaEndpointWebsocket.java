@@ -1,16 +1,18 @@
 package io.deepstream;
 
-import org.java_websocket.client.DefaultSSLWebSocketClientFactory;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.drafts.Draft;
 import org.java_websocket.drafts.Draft_10;
 import org.java_websocket.handshake.ServerHandshake;
 
-import javax.net.ssl.SSLContext;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
 
 class JavaEndpointWebsocket implements Endpoint {
 
@@ -42,10 +44,17 @@ class JavaEndpointWebsocket implements Endpoint {
     @Override
     public void open() {
         this.websocket = new WebSocket( this.uri, new Draft_10() );
-        this.websocket.connect();
+        try {
+            this.websocket.setSocket(websocket.factory.createSocket());
+            this.websocket.connect();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private class WebSocket extends WebSocketClient {
+        SSLSocketFactory factory;
+
         WebSocket( URI serverUri , Draft draft  ) {
             super( serverUri, draft );
             // Set the SSL context if the socket server is using Secure WebSockets
@@ -60,8 +69,12 @@ class JavaEndpointWebsocket implements Endpoint {
                     throw new RuntimeException(e);
                 }
                 // set the SSL context to the client factory
-                this.setWebSocketFactory(new DefaultSSLWebSocketClientFactory(sslContext));
+
+                factory = sslContext.getSocketFactory();
+//                this.setWebSocketFactory(new DefaultSSLWebSocketClientFactory(sslContext));
             }
+
+
         }
 
         @Override
