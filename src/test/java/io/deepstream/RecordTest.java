@@ -19,7 +19,7 @@ public class RecordTest {
     DeepstreamRuntimeErrorHandler errorCallbackMock;
     Record record;
     RecordEventsListener recordEventsListener;
-    Record.RecordReadyListener recordReadyListener;
+    RecordReadyListener recordReadyListener;
     DeepstreamConfig config;
 
     @Before
@@ -40,7 +40,7 @@ public class RecordTest {
 
         recordHandler = new RecordHandler( config, connectionMock, deepstreamClientMock );
         recordEventsListener = mock(RecordEventsListener.class);
-        recordReadyListener = mock(Record.RecordReadyListener.class);
+        recordReadyListener = mock(RecordReadyListener.class);
 
         Thread b = new Thread(new Runnable() {
             @Override
