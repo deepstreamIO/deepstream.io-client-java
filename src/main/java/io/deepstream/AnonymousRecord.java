@@ -282,7 +282,7 @@ public class AnonymousRecord {
         this.subscribeRecord();
 
         final CountDownLatch readyLatch = new CountDownLatch(1);
-        record.whenReady(new Record.RecordReadyListener() {
+        record.whenReady(new RecordReadyListener() {
             @Override
             public void onRecordReady(String recordName, Record record) {
                 readyLatch.countDown();

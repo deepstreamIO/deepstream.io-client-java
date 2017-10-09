@@ -74,6 +74,18 @@ public class List {
     }
 
     /**
+     * Add a ListReadyListener as a callback. This means it will be called once when the list is ready, either in sync
+     * or async if the list is not already ready.
+     * @param listReadyListener The ListReadyListener that will be triggered only **once**
+     * @return The list
+     */
+    @ObjectiveCName("whenReady:")
+    public List whenReady (final ListReadyListener listReadyListener) {
+        this.record.whenReady(new ReadyListener(this, listReadyListener));
+        return this;
+    }
+
+    /**
      * Adds a Listener that will notify you if a Discard, Delete or Error event occurs
      * @param recordEventsListener The listener to add
      * @return The list
@@ -438,6 +450,25 @@ public class List {
         @Override
         public void afterRecordUpdate() {
             this.list.afterChange( this.beforeChange );
+        }
+        
+    }
+
+    private class ReadyListener implements RecordReadyListener
+    {
+        private final List list;
+        private final ListReadyListener listReadyListener;
+
+        @ObjectiveCName("init:listReadyListener:")
+        ReadyListener( List list, ListReadyListener listReadyListener ) {
+            this.list = list;
+            this.listReadyListener = listReadyListener;
+        }
+
+        @Override
+        public void onRecordReady(String recordName, Record record)
+        {
+            this.listReadyListener.onListReady(recordName, this.list);
         }
 
     }

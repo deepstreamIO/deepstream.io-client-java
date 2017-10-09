@@ -75,7 +75,7 @@ public class RecordHandler {
 
         if (!record.isReady()) {
             final CountDownLatch readyLatch = new CountDownLatch(1);
-            record.whenReady(new Record.RecordReadyListener() {
+            record.whenReady(new RecordReadyListener() {
                 @Override
                 public void onRecordReady(String recordName, Record record) {
                     readyLatch.countDown();

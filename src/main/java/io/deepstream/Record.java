@@ -502,7 +502,7 @@ public class Record {
      * @return The record
      */
     @ObjectiveCName("whenReady:")
-    Record whenReady(RecordReadyListener recordReadyListener) {
+    public Record whenReady(RecordReadyListener recordReadyListener) {
         if( this.isReady ) {
             recordReadyListener.onRecordReady( this.name, this );
         } else {
@@ -928,20 +928,5 @@ public class Record {
          */
         @ObjectiveCName("onDestroyPending:")
         void onDestroyPending(String recordName);
-    }
-
-    /**
-     * A listener that notifies the user whenever the record state is ready.
-     */
-    @ObjectiveCName("RecordReadyListener")
-    interface RecordReadyListener {
-        /**
-         * Called when the record is loaded from the server
-         *
-         * @param recordName The name of the record which is now ready
-         * @param record     The record which is now ready / loaded from server
-         */
-        @ObjectiveCName("onRecordReady:record:")
-        void onRecordReady(String recordName, Record record);
     }
 }
