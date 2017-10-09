@@ -7,6 +7,8 @@ import com.google.j2objc.annotations.ObjectiveCName;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 /**
@@ -29,14 +31,16 @@ public class Record {
     private final ArrayList<RecordReadyListener> onceRecordReadyListeners;
     private final String name;
     private final DeepstreamConfig deepstreamConfig;
-    private boolean isReady;
-    private boolean isDestroyed;
+    private volatile boolean isReady;
+    private volatile boolean isDestroyed;
+    private boolean isDiscarded;
     private int version;
-    private int usages;
+    private AtomicInteger usages;
     private RecordMergeStrategy mergeStrategy;
     private RecordRemoteUpdateHandler recordRemoteUpdateHandler;
     private JsonElement data;
     private boolean hasProvider;
+    private ReentrantLock readyLock;
 
     /**
      * Constructor is not public since it is created via {@link RecordHandler#getRecord(String)}
@@ -47,11 +51,11 @@ public class Record {
      * @param client deepstream.io client
      */
     @ObjectiveCName("init:recordOptions:connection:deepstreamConfig:client:")
-    Record(String name, Map recordOptions, IConnection connection, DeepstreamConfig deepstreamConfig, DeepstreamClientAbstract client) {
+    Record (String name, Map recordOptions, IConnection connection, DeepstreamConfig deepstreamConfig, DeepstreamClientAbstract client) {
         this.ackTimeoutRegistry = client.getAckTimeoutRegistry();
         this.name = name;
         this.deepstreamConfig = deepstreamConfig;
-        this.usages = 0;
+        this.usages = new AtomicInteger();
         this.version = -1;
         this.connection = connection;
         this.client = client;
@@ -62,6 +66,8 @@ public class Record {
         this.isReady = false;
         this.isDestroyed = false;
         this.hasProvider = false;
+        this.isDiscarded = false;
+        this.readyLock = new ReentrantLock();
         this.mergeStrategy = this.deepstreamConfig.getRecordMergeStrategy() != null ?
                 RecordMergeStrategies.INSTANCE.getMergeStrategy(this.deepstreamConfig.getRecordMergeStrategy()) : null ;
         this.recordEventsListeners = new ArrayList<RecordEventsListener>();
@@ -448,22 +454,34 @@ public class Record {
      */
     public Record discard() throws DeepstreamRecordDestroyedException {
         throwExceptionIfDestroyed("discard");
-        this.usages--;
-        if( this.usages <= 0 ) {
-            this.whenReady(new RecordReadyListener() {
-                @Override
-                public void onRecordReady(String recordName, Record record) {
-                    ackTimeoutRegistry.add(Topic.RECORD, Actions.UNSUBSCRIBE, name, deepstreamConfig.getSubscriptionTimeout());
-                    connection.send( MessageBuilder.getMsg( Topic.RECORD, Actions.UNSUBSCRIBE, name ) );
-
-                    for(RecordDestroyPendingListener recordDestroyPendingHandler: recordDestroyPendingListeners) {
-                        recordDestroyPendingHandler.onDestroyPending( name );
-                    }
-                }
-            });
-            this.destroy();
+        if (this.usages.decrementAndGet() <= 0) {
+            finishDiscard();
         }
         return this;
+    }
+
+    void finishDiscard () {
+        // This must be a synchronized block so that RecordHandler.getRecord will not continue until the
+        // record has been removed from the cache in onDestroyPending.
+        synchronized (this) {
+            // We only want one thread to do the discard one time so check the isDiscarded flag within
+            // this synchronized section.
+            if (!isDiscarded) {
+                this.whenReady(new RecordReadyListener() {
+                    @Override
+                    public void onRecordReady (String recordName, Record record) {
+                        ackTimeoutRegistry.add(Topic.RECORD, Actions.UNSUBSCRIBE, name, deepstreamConfig.getSubscriptionTimeout());
+                        connection.send(MessageBuilder.getMsg(Topic.RECORD, Actions.UNSUBSCRIBE, name));
+
+                        for (RecordDestroyPendingListener recordDestroyPendingHandler : recordDestroyPendingListeners) {
+                            recordDestroyPendingHandler.onDestroyPending(name);
+                        }
+                    }
+                });
+                this.destroy();
+                isDiscarded = true;
+            }
+        }
     }
 
     /**
@@ -503,11 +521,18 @@ public class Record {
      */
     @ObjectiveCName("whenReady:")
     Record whenReady(RecordReadyListener recordReadyListener) {
-        if( this.isReady ) {
-            recordReadyListener.onRecordReady( this.name, this );
-        } else {
-            synchronized (this) {
+        readyLock.lock();
+        try {
+            if( this.isReady ) {
+                readyLock.unlock();
+                recordReadyListener.onRecordReady( this.name, this );
+            } else {
                 this.onceRecordReadyListeners.add( recordReadyListener );
+            }
+        }
+        finally {
+            if (readyLock.isHeldByCurrentThread()) {
+                readyLock.unlock();
             }
         }
         return this;
@@ -778,12 +803,22 @@ public class Record {
      * and emits the ready event
      */
     private void setReady() {
-        this.isReady = true;
+        ArrayList<RecordReadyListener> listCopy = null;
 
-        for(RecordReadyListener recordReadyListener: this.onceRecordReadyListeners) {
+        readyLock.lock();
+        try {
+            this.isReady = true;
+            // Capture the list inside the lock so we can execute the listeners outside the lock.
+            listCopy = new ArrayList<RecordReadyListener>(this.onceRecordReadyListeners);
+            this.onceRecordReadyListeners.clear();
+        }
+        finally {
+            readyLock.unlock();
+        }
+
+        for(RecordReadyListener recordReadyListener: listCopy) {
             recordReadyListener.onRecordReady( this.name, this );
         }
-        this.onceRecordReadyListeners.clear();
     }
 
     /**
@@ -901,8 +936,8 @@ public class Record {
         this.recordDestroyPendingListeners.add( recordDestroyPendingListener );
     }
 
-    void incrementUsage() {
-        this.usages++;
+    int getAndIncrementUsage() {
+        return this.usages.getAndIncrement();
     }
 
     @ObjectiveCName("RecordRemoteUpdateHandler")
