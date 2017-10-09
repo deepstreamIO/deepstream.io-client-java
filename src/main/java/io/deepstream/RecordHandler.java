@@ -5,6 +5,7 @@ import com.google.j2objc.annotations.ObjectiveCName;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -17,11 +18,11 @@ public class RecordHandler {
     private final DeepstreamConfig deepstreamConfig;
     private final IConnection connection;
     private final DeepstreamClientAbstract client;
-    private final Map<String, Record> records;
+    private final ConcurrentHashMap<String, Record> records;
     private final Map<String, List> lists;
     private final UtilSingleNotifier hasRegistry;
     private final UtilSingleNotifier snapshotRegistry;
-    private final Map<String, UtilListener> listeners;
+    private final ConcurrentHashMap<String, UtilListener> listeners;
     private final RecordHandlerListeners recordHandlerListeners;
     private final UtilSingleNotifier recordSetNotifier;
 
@@ -40,9 +41,9 @@ public class RecordHandler {
         this.client = client;
         recordHandlerListeners = new RecordHandlerListeners();
 
-        records = new HashMap<String, Record>();
+        records = new ConcurrentHashMap<String, Record>();
         lists = new HashMap<String, List>();
-        listeners = new HashMap<String, UtilListener>();
+        listeners = new ConcurrentHashMap<String, UtilListener>();
 
         hasRegistry = new UtilSingleNotifier(client, connection, Topic.RECORD, Actions.HAS, deepstreamConfig.getRecordReadTimeout());
         snapshotRegistry = new UtilSingleNotifier(client, connection, Topic.RECORD, Actions.SNAPSHOT, deepstreamConfig.getRecordReadTimeout());
@@ -57,17 +58,16 @@ public class RecordHandler {
      */
     @ObjectiveCName("getRecord:")
     public Record getRecord( String name ) {
-        Record record = records.get( name );
-        if( record == null ) {
-            synchronized (this) {
-                record = records.get( name );
-                if (record == null) {
-                    record = new Record(name, new HashMap(), connection, deepstreamConfig, client);
-                    records.put(name, record);
-                    record.addRecordEventsListener(recordHandlerListeners);
-                    record.addRecordDestroyPendingListener(recordHandlerListeners);
-                    record.start();
-                }
+        Record record = null;
+
+        synchronized (records) {
+            record = records.get( name );
+            if( record == null ) {
+                record = new Record(name, new HashMap(), connection, deepstreamConfig, client);
+                record.addRecordEventsListener(recordHandlerListeners);
+                record.addRecordDestroyPendingListener(recordHandlerListeners);
+                records.put(name, record);
+                record.start();
             }
         }
 
@@ -100,12 +100,14 @@ public class RecordHandler {
      */
     @ObjectiveCName("getList:")
     public List getList( String name ) {
-        List list = lists.get( name );
-        if( list == null ) {
-            list = new List(this, name);
-            lists.put(name, list);
+        synchronized (lists) {
+            List list = lists.get(name);
+            if (list == null) {
+                list = new List(this, name);
+                lists.put(name, list);
+            }
+            return list;
         }
-        return list;
     }
 
     /**
@@ -137,10 +139,10 @@ public class RecordHandler {
      */
     @ObjectiveCName("listen:listenCallback:")
     public void listen( String pattern, ListenListener listenCallback ) {
-        if( listeners.containsKey( pattern ) ) {
-            client.onError( Topic.RECORD, Event.LISTENER_EXISTS, pattern );
-        } else {
-            synchronized (this) {
+        synchronized (listeners) {
+            if (listeners.containsKey( pattern )) {
+                client.onError(Topic.RECORD, Event.LISTENER_EXISTS, pattern);
+            } else {
                 UtilListener utilListener = new UtilListener(Topic.RECORD, pattern, listenCallback, deepstreamConfig, client, connection);
                 listeners.put(pattern, utilListener);
                 utilListener.start();
@@ -155,10 +157,9 @@ public class RecordHandler {
      */
     @ObjectiveCName("unlisten:")
     public void unlisten( String pattern ) {
-        UtilListener listener = listeners.get( pattern );
+        UtilListener listener = listeners.remove( pattern );
         if( listener != null ) {
             listener.destroy();
-            listeners.remove( pattern );
         } else {
             client.onError( Topic.RECORD, Event.NOT_LISTENING, pattern );
         }
@@ -592,7 +593,9 @@ public class RecordHandler {
         @ObjectiveCName("onRecordDiscarded:")
         public void onRecordDiscarded(String recordName) {
             records.remove(recordName);
-            lists.remove(recordName);
+            synchronized (lists) {
+                lists.remove(recordName);
+            }
         }
     }
 }
