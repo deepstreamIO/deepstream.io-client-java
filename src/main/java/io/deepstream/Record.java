@@ -7,6 +7,7 @@ import com.google.j2objc.annotations.ObjectiveCName;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 /**
@@ -37,6 +38,7 @@ public class Record {
     private RecordRemoteUpdateHandler recordRemoteUpdateHandler;
     private JsonElement data;
     private boolean hasProvider;
+    private final ReentrantLock lock;
 
     /**
      * Constructor is not public since it is created via {@link RecordHandler#getRecord(String)}
@@ -47,7 +49,7 @@ public class Record {
      * @param client deepstream.io client
      */
     @ObjectiveCName("init:recordOptions:connection:deepstreamConfig:client:")
-    Record(String name, Map recordOptions, IConnection connection, DeepstreamConfig deepstreamConfig, DeepstreamClientAbstract client) {
+    Record (String name, Map recordOptions, IConnection connection, DeepstreamConfig deepstreamConfig, DeepstreamClientAbstract client, ReentrantLock lock) {
         this.ackTimeoutRegistry = client.getAckTimeoutRegistry();
         this.name = name;
         this.deepstreamConfig = deepstreamConfig;
@@ -62,6 +64,7 @@ public class Record {
         this.isReady = false;
         this.isDestroyed = false;
         this.hasProvider = false;
+        this.lock = lock;
         this.mergeStrategy = this.deepstreamConfig.getRecordMergeStrategy() != null ?
                 RecordMergeStrategies.INSTANCE.getMergeStrategy(this.deepstreamConfig.getRecordMergeStrategy()) : null ;
         this.recordEventsListeners = new ArrayList<RecordEventsListener>();
@@ -448,20 +451,28 @@ public class Record {
      */
     public Record discard() throws DeepstreamRecordDestroyedException {
         throwExceptionIfDestroyed("discard");
-        this.usages--;
-        if( this.usages <= 0 ) {
-            this.whenReady(new RecordReadyListener() {
-                @Override
-                public void onRecordReady(String recordName, Record record) {
-                    ackTimeoutRegistry.add(Topic.RECORD, Actions.UNSUBSCRIBE, name, deepstreamConfig.getSubscriptionTimeout());
-                    connection.send( MessageBuilder.getMsg( Topic.RECORD, Actions.UNSUBSCRIBE, name ) );
-
-                    for(RecordDestroyPendingListener recordDestroyPendingHandler: recordDestroyPendingListeners) {
-                        recordDestroyPendingHandler.onDestroyPending( name );
+        lock.lock();
+        try {
+            this.usages--;
+            if (this.usages <= 0) {
+                lock.unlock();
+                this.whenReady(new RecordReadyListener() {
+                    @Override
+                    public void onRecordReady (String recordName, Record record) {
+                        ackTimeoutRegistry.add(Topic.RECORD, Actions.UNSUBSCRIBE, name, deepstreamConfig.getSubscriptionTimeout());
+                        connection.send(MessageBuilder.getMsg(Topic.RECORD, Actions.UNSUBSCRIBE, name));
+                        
+                        for (RecordDestroyPendingListener recordDestroyPendingHandler : recordDestroyPendingListeners) {
+                            recordDestroyPendingHandler.onDestroyPending(name);
+                        }
                     }
-                }
-            });
-            this.destroy();
+                });
+                this.destroy();
+            }
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
         }
         return this;
     }

@@ -15,6 +15,7 @@ import org.mockito.Matchers;
 
 import java.util.HashMap;
 import java.util.Properties;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static org.mockito.Mockito.*;
 
@@ -42,7 +43,7 @@ public class RecordSubscriptionLocalTest {
         options.put( "recordReadAckTimeout", "10" );
         options.put( "recordReadTimeout", "20" );
 
-        this.record = new Record( "testRecord", new HashMap(), connectionMock, new DeepstreamConfig( options ), deepstreamClientMock );
+        this.record = new Record( "testRecord", new HashMap(), connectionMock, new DeepstreamConfig( options ), deepstreamClientMock, new ReentrantLock() );
         record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|A|S|testRecord" ), deepstreamClientMock ) );
         record.onMessage( MessageParser.parseMessage( TestUtil.replaceSeperators( "R|R|testRecord|0|{}" ), deepstreamClientMock ) );
         Assert.assertEquals( new JsonObject(), record.get() );

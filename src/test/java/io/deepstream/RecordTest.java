@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Properties;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static org.mockito.Mockito.*;
 
@@ -45,7 +46,7 @@ public class RecordTest {
         Thread b = new Thread(new Runnable() {
             @Override
             public void run() {
-                record = new Record( "recordA", new HashMap(), connectionMock, config, deepstreamClientMock );
+                record = new Record( "recordA", new HashMap(), connectionMock, config, deepstreamClientMock, new ReentrantLock() );
                 record.addRecordEventsListener(recordEventsListener);
                 record.start();
             }

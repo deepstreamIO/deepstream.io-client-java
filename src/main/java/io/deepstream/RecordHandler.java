@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * The getters for data-sync, such as {@link RecordHandler#getRecord(String)},
@@ -25,6 +26,7 @@ public class RecordHandler {
     private final ConcurrentHashMap<String, UtilListener> listeners;
     private final RecordHandlerListeners recordHandlerListeners;
     private final UtilSingleNotifier recordSetNotifier;
+    private final ReentrantLock recordsLock;
 
     /**
      * A collection of factories for records. This class
@@ -39,6 +41,7 @@ public class RecordHandler {
         this.deepstreamConfig = deepstreamConfig;
         this.connection = connection;
         this.client = client;
+        this.recordsLock = new ReentrantLock();
         recordHandlerListeners = new RecordHandlerListeners();
 
         records = new ConcurrentHashMap<String, Record>();
@@ -60,18 +63,22 @@ public class RecordHandler {
     public Record getRecord( String name ) {
         Record record = null;
 
-        synchronized (records) {
+        recordsLock.lock();
+        try {
             record = records.get( name );
             if( record == null ) {
-                record = new Record(name, new HashMap(), connection, deepstreamConfig, client);
+                record = new Record(name, new HashMap(), connection, deepstreamConfig, client, recordsLock);
                 record.addRecordEventsListener(recordHandlerListeners);
                 record.addRecordDestroyPendingListener(recordHandlerListeners);
+                record.incrementUsage();
                 records.put(name, record);
                 record.start();
+            } else {
+                record.incrementUsage();
             }
+        } finally {
+            recordsLock.unlock();
         }
-
-        record.incrementUsage();
 
         if (!record.isReady()) {
             final CountDownLatch readyLatch = new CountDownLatch(1);
