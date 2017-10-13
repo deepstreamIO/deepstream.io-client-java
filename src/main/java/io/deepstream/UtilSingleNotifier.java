@@ -75,7 +75,7 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
 
     /**
      * Add a request where a response may contain more than one bit of data. Commonly used with
-     * {@link UtilSingleNotifier#recieve(JsonArray, DeepstreamError)}
+     * {@link UtilSingleNotifier#receive(JsonArray, DeepstreamError)}
      *
      * @param name The name or version to store callbacks on
      * @param data The data to send in the request
@@ -103,8 +103,8 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
      * @param error An error that may have occurred during the request
      * @param data The result data from the request
      */
-    @ObjectiveCName("recieve:error:data:")
-    public void recieve(String name, DeepstreamError error, Object data) {
+    @ObjectiveCName("receive:error:data:")
+    public void receive(String name, DeepstreamError error, Object data) {
         ArrayList<UtilSingleNotifierCallback> callbacks = requests.get( name );
         for (UtilSingleNotifierCallback callback : callbacks) {
             ackTimeoutRegistry.clear(topic, action, name);
@@ -127,7 +127,7 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
      * @param data The data received in the message
      * @param error Any errors from the message
      */
-    public void recieve(JsonArray data, DeepstreamError error) {
+    public void receive(JsonArray data, DeepstreamError error) {
         for (JsonElement version : data) {
             ArrayList<UtilSingleNotifierCallback> callbacks = requests.get( version.getAsString() );
             UtilSingleNotifierCallback cb = callbacks.get(0);
@@ -164,7 +164,7 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
     @Override
     @ObjectiveCName("onTimeout:action:event:name:")
     public void onTimeout(Topic topic, Actions action, Event event, String name) {
-        this.recieve(name, new DeepstreamError(String.format("Response for % timed out", name)), null);
+        this.receive(name, new DeepstreamError(String.format("Response for % timed out", name)), null);
     }
 
     interface UtilSingleNotifierCallback {

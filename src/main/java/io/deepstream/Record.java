@@ -541,9 +541,9 @@ public class Record {
         Object versions = gson.fromJson( val, JsonArray.class );
         Object error = MessageParser.convertTyped(message.data[ 2 ], this.client, gson);
         if( error != null ) {
-            this.recordSetNotifier.recieve((JsonArray) versions, new DeepstreamError((String) error));
+            this.recordSetNotifier.receive((JsonArray) versions, new DeepstreamError((String) error));
         } else {
-            this.recordSetNotifier.recieve((JsonArray) versions, null);
+            this.recordSetNotifier.receive((JsonArray) versions, null);
         }
     }
 

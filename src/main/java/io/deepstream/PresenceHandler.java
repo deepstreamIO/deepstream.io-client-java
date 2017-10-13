@@ -119,7 +119,7 @@ public class PresenceHandler {
             this.broadcastEvent( Topic.PRESENCE.toString(), message.data[0], false );
         }
         else if( message.action == Actions.QUERY ) {
-            this.notifier.recieve(Actions.QUERY.toString(), null, message.data);
+            this.notifier.receive(Actions.QUERY.toString(), null, message.data);
         }
         else {
             this.client.onError( Topic.PRESENCE, Event.UNSOLICITED_MESSAGE, message.action.toString() );
