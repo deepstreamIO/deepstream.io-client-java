@@ -7,6 +7,7 @@ import com.google.j2objc.annotations.ObjectiveCName;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListener, UtilTimeoutListener {
 
@@ -14,7 +15,7 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
     private final Actions action;
     private final int timeoutDuration;
     private final IConnection connection;
-    private final Map<String, ArrayList<UtilSingleNotifierCallback> > requests;
+    private final ConcurrentHashMap<String, ConcurrentLinkedQueue<UtilSingleNotifierCallback>> requests;
     private final UtilAckTimeoutRegistry ackTimeoutRegistry;
     private final UtilResubscribeNotifier utilResubscribeNotifier;
 
@@ -38,7 +39,7 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
         this.timeoutDuration = timeoutDuration;
 
         this.utilResubscribeNotifier = new UtilResubscribeNotifier(client, this);
-        this.requests = new ConcurrentHashMap<String, ArrayList<UtilSingleNotifierCallback>>();
+        this.requests = new ConcurrentHashMap<String, ConcurrentLinkedQueue<UtilSingleNotifierCallback>>();
     }
 
     /**
@@ -60,16 +61,7 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
      */
     @ObjectiveCName("request:utilSingleNotifierCallback:")
     public void request( String name, UtilSingleNotifierCallback utilSingleNotifierCallback ) {
-        ArrayList<UtilSingleNotifierCallback> callbacks = requests.get( name );
-        if( callbacks == null ) {
-            synchronized (this) {
-                callbacks = new ArrayList<UtilSingleNotifierCallback>();
-                requests.put(name, callbacks);
-                send(name);
-            }
-        }
-
-        callbacks.add( utilSingleNotifierCallback );
+        this.request(name, null, null, utilSingleNotifierCallback);
         ackTimeoutRegistry.add(topic, action, name, Event.RESPONSE_TIMEOUT, this, timeoutDuration);
     }
 
@@ -83,16 +75,22 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
      * @param utilSingleNotifierCallback The callback to call once the request is completed
      */
     public void request( String name, Actions action, String[] data, UtilSingleNotifierCallback utilSingleNotifierCallback ) {
-        ArrayList<UtilSingleNotifierCallback> callbacks = requests.get( name );
-        if( callbacks == null ) {
-            synchronized (this) {
-                callbacks = new ArrayList<UtilSingleNotifierCallback>();
-                requests.put(name, callbacks);
-                send(action, data);
+        ConcurrentLinkedQueue<UtilSingleNotifierCallback> callbacks = requests.get(name);
+        if (callbacks == null) {
+            callbacks = new ConcurrentLinkedQueue<UtilSingleNotifierCallback>();
+            ConcurrentLinkedQueue<UtilSingleNotifierCallback> prevCallbacks = requests.putIfAbsent(name, callbacks);
+            if( prevCallbacks == null ) {
+                if (action != null) {
+                    send(action, data);
+                } else {
+                    send(name);
+                }
+            } else {
+                callbacks = prevCallbacks;
             }
         }
 
-        callbacks.add( utilSingleNotifierCallback );
+        callbacks.add(utilSingleNotifierCallback);
     }
 
     /**
@@ -105,7 +103,7 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
      */
     @ObjectiveCName("recieve:error:data:")
     public void recieve(String name, DeepstreamError error, Object data) {
-        ArrayList<UtilSingleNotifierCallback> callbacks = requests.get( name );
+        ConcurrentLinkedQueue<UtilSingleNotifierCallback> callbacks = requests.remove( name );
         for (UtilSingleNotifierCallback callback : callbacks) {
             ackTimeoutRegistry.clear(topic, action, name);
             if( error != null ) {
@@ -114,7 +112,6 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
                 callback.onSingleNotifierResponse( name, data );
             }
         }
-        requests.remove( name );
     }
 
     /**
@@ -129,14 +126,13 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
      */
     public void recieve(JsonArray data, DeepstreamError error) {
         for (JsonElement version : data) {
-            ArrayList<UtilSingleNotifierCallback> callbacks = requests.get( version.getAsString() );
-            UtilSingleNotifierCallback cb = callbacks.get(0);
+            ConcurrentLinkedQueue<UtilSingleNotifierCallback> callbacks = requests.remove( version.getAsString() );
+            UtilSingleNotifierCallback cb = callbacks.peek();
             if( error != null) {
                 cb.onSingleNotifierError(null, error);
             } else {
                 cb.onSingleNotifierResponse(null, null);
             }
-            requests.remove(version.getAsString());
         }
     }
 

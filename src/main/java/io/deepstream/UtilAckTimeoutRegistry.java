@@ -10,7 +10,7 @@ class UtilAckTimeoutRegistry implements ConnectionStateListener, UtilTimeoutList
     private final Map<String, ScheduledFuture> register;
     private final ScheduledExecutorService executor;
     private final DeepstreamClientAbstract client;
-    private final LinkedBlockingQueue<AckTimeout> ackTimers;
+    private final ConcurrentLinkedQueue<AckTimeout> ackTimers;
 
     private ConnectionState state;
 
@@ -23,7 +23,7 @@ class UtilAckTimeoutRegistry implements ConnectionStateListener, UtilTimeoutList
     UtilAckTimeoutRegistry(DeepstreamClientAbstract client) {
         this.client = client;
         this.register = new ConcurrentHashMap<String, ScheduledFuture>();
-        this.ackTimers = new LinkedBlockingQueue<AckTimeout>();
+        this.ackTimers = new ConcurrentLinkedQueue<AckTimeout>();
         this.executor = new ScheduledThreadPoolExecutor(5);
 
         this.state = client.getConnectionState();
@@ -124,10 +124,9 @@ class UtilAckTimeoutRegistry implements ConnectionStateListener, UtilTimeoutList
      */
     @ObjectiveCName("clearWithUniqueName:")
     private boolean clear( String uniqueName ) {
-        ScheduledFuture scheduledFuture = register.get( uniqueName );
+        ScheduledFuture scheduledFuture = register.remove( uniqueName );
         if( scheduledFuture != null ) {
             scheduledFuture.cancel( false );
-            register.remove( uniqueName );
             return true;
         } else {
             return false;
@@ -161,17 +160,8 @@ class UtilAckTimeoutRegistry implements ConnectionStateListener, UtilTimeoutList
 
     private void scheduleAcks() {
         AckTimeout task = null;
-        while( this.ackTimers.peek() != null ) {
-            try {
-                task = this.ackTimers.take();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            if( task != null ) {
-                this.executor.schedule( task, task.timeout, TimeUnit.MICROSECONDS );
-            }
-            task = null;
+        while( (task = this.ackTimers.poll()) != null ) {
+            this.executor.schedule( task, task.timeout, TimeUnit.MICROSECONDS );
         }
     }
 
