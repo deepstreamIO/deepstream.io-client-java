@@ -16,8 +16,11 @@ jobs:
       os: linux
       language: java
       script: bash ./gradlew -b build.gradle test
-    - stage: Release to bintray and pod
+    - stage: J2Objc
       install: bash ./scripts/setupJ2OBJC.sh true
-      script: bash ./gradlew -b build-prod.gradle bintrayUpload
-      on:
-        tags: true
+      script: bash ./gradlew -b build-prod.gradle 
+  #  - stage: Release to bintray and pod
+  #    install: bash ./scripts/setupJ2OBJC.sh true
+  #    script: bash ./gradlew -b build-prod.gradle bintrayUpload
+  #    on:
+  #      tags: true
