@@ -486,7 +486,7 @@ public class RecordHandler {
             hasRegistry.receive( recordName, null, MessageParser.convertTyped(message.data[1], client, deepstreamConfig.getJsonParser()));
         }
 
-        if (message.action == Actions.WRITE_ACKNOWLEDGEMENT) {
+        if (message.action == Actions.WRITE_ACKNOWLEDGEMENT && !processed) {
             processed = true;
             String val = String.valueOf(message.data[1]);
             Object versions = deepstreamConfig.getJsonParser().fromJson( val, JsonArray.class );
