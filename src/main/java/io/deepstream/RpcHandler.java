@@ -130,7 +130,7 @@ public class RpcHandler {
     /**
      * Main interface. Handles incoming messages
      * from the message distributor
-     * @param message The message recieved from the server
+     * @param message The message received from the server
      */
     @ObjectiveCName("handle:")
     void handle( Message message ) {

@@ -458,12 +458,12 @@ public class RecordHandler {
             }
 
             if( message.data[ 0 ].equals( Actions.SNAPSHOT.toString() ) ) {
-                snapshotRegistry.recieve(recordName, new DeepstreamError(message.data[2]), null);
+                snapshotRegistry.receive(recordName, new DeepstreamError(message.data[2]), null);
                 return;
             }
 
             if( message.data[ 0 ].equals(Actions.HAS.toString() ))  {
-                hasRegistry.recieve(recordName, new DeepstreamError(message.data[2]), null);
+                hasRegistry.receive(recordName, new DeepstreamError(message.data[2]), null);
                 return;
             }
         } else {
@@ -478,12 +478,12 @@ public class RecordHandler {
 
         if( message.action == Actions.READ && snapshotRegistry.hasRequest( recordName )) {
             processed = true;
-            snapshotRegistry.recieve( recordName, null, MessageParser.parseObject(message.data[2], deepstreamConfig.getJsonParser()));
+            snapshotRegistry.receive( recordName, null, MessageParser.parseObject(message.data[2], deepstreamConfig.getJsonParser()));
         }
 
         if( message.action == Actions.HAS && hasRegistry.hasRequest( recordName )) {
             processed = true;
-            hasRegistry.recieve( recordName, null, MessageParser.convertTyped(message.data[1], client, deepstreamConfig.getJsonParser()));
+            hasRegistry.receive( recordName, null, MessageParser.convertTyped(message.data[1], client, deepstreamConfig.getJsonParser()));
         }
 
         if (message.action == Actions.WRITE_ACKNOWLEDGEMENT) {
@@ -492,9 +492,9 @@ public class RecordHandler {
             Object versions = deepstreamConfig.getJsonParser().fromJson( val, JsonArray.class );
             Object error = MessageParser.convertTyped(message.data[2], this.client, deepstreamConfig.getJsonParser());
             if( error != null ) {
-                this.recordSetNotifier.recieve((JsonArray) versions, new DeepstreamError((String) error));
+                this.recordSetNotifier.receive((JsonArray) versions, new DeepstreamError((String) error));
             } else {
-                this.recordSetNotifier.recieve((JsonArray) versions, null);
+                this.recordSetNotifier.receive((JsonArray) versions, null);
             }
         }
 

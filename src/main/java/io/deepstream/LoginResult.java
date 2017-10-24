@@ -51,7 +51,7 @@ public class LoginResult {
      * Return the data associated with login. If login was successful,
      * this would be the user associated data. Otherwise data explaining
      * the reason why it wasn't.
-     * @return A JsonElement containing the data recieved from the server during login
+     * @return A JsonElement containing the data received from the server during login
      */
     public Object getData() {
         return this.data;

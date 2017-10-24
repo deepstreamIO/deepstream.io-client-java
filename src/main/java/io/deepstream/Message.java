@@ -13,7 +13,7 @@ class Message {
     final Topic topic;
 
     /**
-     * @param raw The raw data recieved
+     * @param raw The raw data received
      * @param topic The message topic
      * @param action The message action
      * @param data The message data, as an array
