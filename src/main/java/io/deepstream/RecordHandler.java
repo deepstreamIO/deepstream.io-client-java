@@ -5,7 +5,9 @@ import com.google.j2objc.annotations.ObjectiveCName;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * The getters for data-sync, such as {@link RecordHandler#getRecord(String)},
@@ -17,13 +19,14 @@ public class RecordHandler {
     private final DeepstreamConfig deepstreamConfig;
     private final IConnection connection;
     private final DeepstreamClientAbstract client;
-    private final Map<String, Record> records;
+    private final ConcurrentHashMap<String, Record> records;
     private final Map<String, List> lists;
     private final UtilSingleNotifier hasRegistry;
     private final UtilSingleNotifier snapshotRegistry;
-    private final Map<String, UtilListener> listeners;
+    private final ConcurrentHashMap<String, UtilListener> listeners;
     private final RecordHandlerListeners recordHandlerListeners;
     private final UtilSingleNotifier recordSetNotifier;
+    private final ReentrantLock recordsLock;
 
     /**
      * A collection of factories for records. This class
@@ -38,11 +41,12 @@ public class RecordHandler {
         this.deepstreamConfig = deepstreamConfig;
         this.connection = connection;
         this.client = client;
+        this.recordsLock = new ReentrantLock();
         recordHandlerListeners = new RecordHandlerListeners();
 
-        records = new HashMap<String, Record>();
+        records = new ConcurrentHashMap<String, Record>();
         lists = new HashMap<String, List>();
-        listeners = new HashMap<String, UtilListener>();
+        listeners = new ConcurrentHashMap<String, UtilListener>();
 
         hasRegistry = new UtilSingleNotifier(client, connection, Topic.RECORD, Actions.HAS, deepstreamConfig.getRecordReadTimeout());
         snapshotRegistry = new UtilSingleNotifier(client, connection, Topic.RECORD, Actions.SNAPSHOT, deepstreamConfig.getRecordReadTimeout());
@@ -57,21 +61,31 @@ public class RecordHandler {
      */
     @ObjectiveCName("getRecord:")
     public Record getRecord( String name ) {
-        Record record = records.get( name );
-        if( record == null ) {
-            synchronized (this) {
-                record = records.get( name );
-                if (record == null) {
-                    record = new Record(name, new HashMap(), connection, deepstreamConfig, client);
-                    records.put(name, record);
-                    record.addRecordEventsListener(recordHandlerListeners);
-                    record.addRecordDestroyPendingListener(recordHandlerListeners);
-                    record.start();
-                }
+        Record record = null;
+
+        recordsLock.lock();
+        try {
+            record = records.get( name );
+            if( record == null ) {
+                record = createRecord(name);
+                recordsLock.unlock();
+                record.start();
+            } else if (record.getAndIncrementUsage() <= 0) {
+                // Some other thread is discarding this record. We need the record out of the records
+                // map before we can put the new record there so we will finish the discard here. Either this
+                // thread or the other thread will end up finishing the discard.
+                record.finishDiscard();
+
+                assert records.get(name) == null;
+                record = createRecord(name);
+                recordsLock.unlock();
+                record.start();
+            }
+        } finally {
+            if (recordsLock.isHeldByCurrentThread()) {
+                recordsLock.unlock();
             }
         }
-
-        record.incrementUsage();
 
         if (!record.isReady()) {
             final CountDownLatch readyLatch = new CountDownLatch(1);
@@ -91,6 +105,15 @@ public class RecordHandler {
         return record;
     }
 
+    Record createRecord (String name) {
+        Record record = new Record(name, new HashMap(), connection, deepstreamConfig, client);
+        record.addRecordEventsListener(recordHandlerListeners);
+        record.addRecordDestroyPendingListener(recordHandlerListeners);
+        record.getAndIncrementUsage();
+        records.put(name, record);
+        return record;
+    }
+
     /**
      * Returns an existing List or creates a new one. A list is a specialised
      * type of record that holds an array of recordNames.
@@ -100,12 +123,14 @@ public class RecordHandler {
      */
     @ObjectiveCName("getList:")
     public List getList( String name ) {
-        List list = lists.get( name );
-        if( list == null ) {
-            list = new List(this, name);
-            lists.put(name, list);
+        synchronized (lists) {
+            List list = lists.get(name);
+            if (list == null) {
+                list = new List(this, name);
+                lists.put(name, list);
+            }
+            return list;
         }
-        return list;
     }
 
     /**
@@ -137,10 +162,10 @@ public class RecordHandler {
      */
     @ObjectiveCName("listen:listenCallback:")
     public void listen( String pattern, ListenListener listenCallback ) {
-        if( listeners.containsKey( pattern ) ) {
-            client.onError( Topic.RECORD, Event.LISTENER_EXISTS, pattern );
-        } else {
-            synchronized (this) {
+        synchronized (listeners) {
+            if (listeners.containsKey( pattern )) {
+                client.onError(Topic.RECORD, Event.LISTENER_EXISTS, pattern);
+            } else {
                 UtilListener utilListener = new UtilListener(Topic.RECORD, pattern, listenCallback, deepstreamConfig, client, connection);
                 listeners.put(pattern, utilListener);
                 utilListener.start();
@@ -155,10 +180,9 @@ public class RecordHandler {
      */
     @ObjectiveCName("unlisten:")
     public void unlisten( String pattern ) {
-        UtilListener listener = listeners.get( pattern );
+        UtilListener listener = listeners.remove( pattern );
         if( listener != null ) {
             listener.destroy();
-            listeners.remove( pattern );
         } else {
             client.onError( Topic.RECORD, Event.NOT_LISTENING, pattern );
         }
@@ -592,7 +616,9 @@ public class RecordHandler {
         @ObjectiveCName("onRecordDiscarded:")
         public void onRecordDiscarded(String recordName) {
             records.remove(recordName);
-            lists.remove(recordName);
+            synchronized (lists) {
+                lists.remove(recordName);
+            }
         }
     }
 }
