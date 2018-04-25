@@ -26,7 +26,9 @@ class JavaEndpointWebsocket implements Endpoint {
 
     @Override
     public void send(String message) {
-        this.websocket.send( message );
+        if (this.websocket.isOpen()) {
+            this.websocket.send(message);
+        }
     }
 
     @Override
