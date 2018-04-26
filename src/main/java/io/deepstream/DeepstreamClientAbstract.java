@@ -45,11 +45,13 @@ abstract class DeepstreamClientAbstract {
          * Help to diagnose the problem quicker by checking for
          * some mon problems
          */
-        if( event.equals( Event.ACK_TIMEOUT ) || event.equals( Event.RESPONSE_TIMEOUT ) ) {
-            if( getConnectionState().equals( ConnectionState.AWAITING_AUTHENTICATION ) ) {
-                String errMsg = "Your message timed out because you\'re not authenticated. Have you called login()?";
-                onError( Topic.ERROR, Event.NOT_AUTHENTICATED, errMsg );
-                return;
+        if (event != null) {
+            if( event.equals( Event.ACK_TIMEOUT ) || event.equals( Event.RESPONSE_TIMEOUT ) ) {
+                if( getConnectionState().equals( ConnectionState.AWAITING_AUTHENTICATION ) ) {
+                    String errMsg = "Your message timed out because you\'re not authenticated. Have you called login()?";
+                    onError(Topic.ERROR, Event.NOT_AUTHENTICATED, errMsg);
+                    return;
+                }
             }
         }
 

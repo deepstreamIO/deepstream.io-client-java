@@ -398,7 +398,7 @@ class Connection implements IConnection {
         int maxReconnectInterval = options.getMaxReconnectInterval();
 
         if( this.reconnectionAttempt < maxReconnectAttempts ) {
-            if(this.globalConnectivityState == GlobalConnectivityState.CONNECTED) {
+            if(this.globalConnectivityState == GlobalConnectivityState.DISCONNECTED) {
                 this.setState(ConnectionState.RECONNECTING);
                 this.reconnectTimeout = new Timer();
                 this.reconnectTimeout.schedule(new TimerTask() {
