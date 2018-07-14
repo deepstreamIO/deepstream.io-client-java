@@ -240,7 +240,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
         });
 
         try {
-            loggedInLatch.await(1000 * 3, TimeUnit.MILLISECONDS);
+            loggedInLatch.await(3, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             loginResult[0] = new LoginResult(false, null, "An issue occured during login");
         }
