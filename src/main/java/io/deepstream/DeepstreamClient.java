@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The main entry point for a DeepstreamClient. You can create a client directly using the constructors or use the
@@ -239,7 +240,7 @@ public class DeepstreamClient extends DeepstreamClientAbstract {
         });
 
         try {
-            loggedInLatch.await();
+            loggedInLatch.await(1000 * 3, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             loginResult[0] = new LoginResult(false, null, "An issue occured during login");
         }
