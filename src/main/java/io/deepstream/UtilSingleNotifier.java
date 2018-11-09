@@ -61,8 +61,8 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
     @ObjectiveCName("request:utilSingleNotifierCallback:")
     public void request( String name, UtilSingleNotifierCallback utilSingleNotifierCallback ) {
         ArrayList<UtilSingleNotifierCallback> callbacks = requests.get( name );
-        if( callbacks == null ) {
-            synchronized (this) {
+        synchronized (this) {
+            if( callbacks == null ) {
                 callbacks = new ArrayList<UtilSingleNotifierCallback>();
                 requests.put(name, callbacks);
                 send(name);
@@ -84,8 +84,8 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
      */
     public void request( String name, Actions action, String[] data, UtilSingleNotifierCallback utilSingleNotifierCallback ) {
         ArrayList<UtilSingleNotifierCallback> callbacks = requests.get( name );
-        if( callbacks == null ) {
-            synchronized (this) {
+        synchronized (this) {
+            if( callbacks == null ) {
                 callbacks = new ArrayList<UtilSingleNotifierCallback>();
                 requests.put(name, callbacks);
                 send(action, data);
