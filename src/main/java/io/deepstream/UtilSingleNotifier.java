@@ -105,16 +105,21 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
      */
     @ObjectiveCName("receive:error:data:")
     public void receive(String name, DeepstreamError error, Object data) {
-        ArrayList<UtilSingleNotifierCallback> callbacks = requests.get( name );
+        ackTimeoutRegistry.clear(topic, action, name);
+        ArrayList<UtilSingleNotifierCallback> callbacks;
+        synchronized (this) {
+            callbacks = requests.remove( name );
+        }
+        if (callbacks == null) {
+            return;
+        }
         for (UtilSingleNotifierCallback callback : callbacks) {
-            ackTimeoutRegistry.clear(topic, action, name);
             if( error != null ) {
                 callback.onSingleNotifierError( name, error );
             } else {
                 callback.onSingleNotifierResponse( name, data );
             }
         }
-        requests.remove( name );
     }
 
     /**
