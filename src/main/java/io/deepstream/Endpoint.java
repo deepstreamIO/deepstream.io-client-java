@@ -1,6 +1,5 @@
 package io.deepstream;
-
-import com.google.j2objc.annotations.ObjectiveCName;
+import com.google.protobuf.MessageLite;
 
 /**
  * The interface required for any connection endpoints. Currently we support websockets
@@ -10,8 +9,7 @@ interface Endpoint {
      * Message to send to the deepstream server
      * @param message The message to send (TOPIC|ACTION|ARRAY+)
      */
-    @ObjectiveCName("send:")
-    void send(String message);
+    void send(MessageLite message);
 
     /**
      * Close the connection

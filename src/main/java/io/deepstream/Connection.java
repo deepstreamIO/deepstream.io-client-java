@@ -8,7 +8,6 @@ import com.google.gson.JsonObject;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -16,11 +15,10 @@ import java.util.concurrent.Executors;
  * Establishes a connection to a deepstream server, either
  * using TCP or via a WebSocket
  */
-class Connection implements IConnection {
+class Connection {
 
     private final DeepstreamClient client;
     private final String originalUrl;
-    private final ArrayList<ConnectionStateListener> connectStateListeners;
     private final DeepstreamConfig options;
     private final EndpointFactory endpointFactory;
     private Endpoint endpoint;
@@ -263,10 +261,18 @@ class Connection implements IConnection {
         }
     }
 
-    @ObjectiveCName("handleConnectionResponse:")
-    private void handleConnectionResponse( Message message ) {
-        if( message.action == Actions.PING ) {
-            this.endpoint.send( MessageBuilder.getMsg( Topic.CONNECTION, Actions.PONG ) );
+    private void handleConnectionResponse( io.deepstream.protobuf.Connection.ConnectionMessage message ) {
+        switch (message.getActionValue()) {
+            case Connection.CONNECTION_ACTION.CONNECTION_PING_VALUE:
+                this.endpoint.send(
+                    Connection.ConnectionMessage.newBuilder()
+                        .setAction(Connection.CONNECTION_ACTION.CONNECTION_PONG)
+                );
+                break;
+
+        }
+        if( message.get == Actions.PING ) {
+
         }
         else if( message.action == Actions.ACK ) {
             this.setState( ConnectionState.AWAITING_AUTHENTICATION );

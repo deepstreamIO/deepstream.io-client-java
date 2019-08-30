@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package deepstream;
+
+option java_package = "io.deepstream.protobuf";
+
+enum AUTH_ACTION {
+    AUTH_UNKNOWN = 0;
+
+    AUTH_ERROR = 1;
+    AUTH_REQUEST = 2;
+    AUTH_AUTH_SUCCESSFUL = 3;
+    AUTH_AUTH_UNSUCCESSFUL = 4;
+
+    AUTH_TOO_MANY_AUTH_ATTEMPTS = 100;
+    AUTH_INVALID_MESSAGE = 101;
+    AUTH_INVALID_MESSAGE_DATA = 102;
+}
+
+message AuthMessage {
+    AUTH_ACTION action = 1;
+    string data = 2;
+    bool isError = 3;
+    bool isAck = 4;
+}

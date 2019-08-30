@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+option java_package = "io.deepstream.protobuf";
+
+enum CLUSTER_ACTION {
+    CLUSTER_UNKNOWN = 0;
+    CLUSTER_REMOVE = 1;
+    CLUSTER_STATUS = 2;
+}
+
+message ClusterMessage {
+    CLUSTER_ACTION action = 1;
+    string data = 2;
+    bool isError = 3;
+    bool isAck = 4;
+
+    int32 leaderScore = 5;
+    string externalUrl = 6;
+    string role = 7;
+}

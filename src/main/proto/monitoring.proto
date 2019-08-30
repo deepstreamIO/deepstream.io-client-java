@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+option java_package = "io.deepstream.protobuf";
+
+enum MONITORING_ACTION {
+    MONITORING_UNKNOWN = 0;
+}
+
+message MonitoringMessage {
+    MONITORING_ACTION action = 1;
+    string data = 2;
+    string correlationId = 3;
+    bool isError = 4;
+    bool isAck = 5;
+}
+  

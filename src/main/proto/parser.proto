@@ -1,0 +1,24 @@
+syntax = "proto3";
+import "general.proto";
+
+option java_package = "io.deepstream.protobuf";
+
+enum PARSER_ACTION {
+    PARSER_UNKNOWN = 0;
+    PARSER_UNKNOWN_TOPIC = 1;
+    PARSER_UNKNOWN_ACTION = 2;
+    PARSER_INVALID_MESSAGE = 3;
+    PARSER_MESSAGE_PARSE_ERROR = 4;
+    PARSER_MAXIMUM_MESSAGE_SIZE_EXCEEDED = 5;
+    PARSER_ERROR = 6;
+    PARSER_INVALID_META_PARAMS = 7;
+}
+
+message ParserMessage {
+    PARSER_ACTION action = 1;
+    string data = 2;
+  
+    TOPIC originalTOPIC = 8;
+    int32 originalAction = 9;
+}
+  

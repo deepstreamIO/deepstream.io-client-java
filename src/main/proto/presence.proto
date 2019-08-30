@@ -1,0 +1,44 @@
+syntax = "proto3";
+import "general.proto";
+
+option java_package = "io.deepstream.protobuf";
+
+enum PRESENCE_ACTION {
+    PRESENCE_UNKNOWN = 0;
+    PRESENCE_ERROR = 1;
+
+    PRESENCE_QUERY_ALL = 2;
+    PRESENCE_QUERY_ALL_RESPONSE = 3;
+    PRESENCE_QUERY = 4;
+    PRESENCE_QUERY_RESPONSE = 5;
+    PRESENCE_PRESENCE_JOIN = 6;
+    PRESENCE_PRESENCE_JOIN_ALL = 7;
+    PRESENCE_PRESENCE_LEAVE = 8;
+    PRESENCE_PRESENCE_LEAVE_ALL = 9;
+
+    PRESENCE_SUBSCRIBE = 10;
+    PRESENCE_UNSUBSCRIBE = 11;
+    PRESENCE_SUBSCRIBE_ALL = 12;
+    PRESENCE_UNSUBSCRIBE_ALL = 13;
+
+    PRESENCE_INVALID_PRESENCE_USERS = 100;
+
+    PRESENCE_MESSAGE_PERMISSION_ERROR = 101;
+    PRESENCE_MESSAGE_DENIED = 102;
+    PRESENCE_MULTIPLE_SUBSCRIPTIONS = 103;
+    PRESENCE_NOT_SUBSCRIBED = 104;
+}
+
+message PresenceMessage {
+    PRESENCE_ACTION action = 1;
+    TOPIC originalTOPIC = 2;
+    int32 originalAction = 3;
+    string data = 4;
+    string correlationId = 5;
+    bool isError = 6;
+    bool isAck = 7;
+    string name = 8;
+  
+    repeated string names = 9;
+  }
+  

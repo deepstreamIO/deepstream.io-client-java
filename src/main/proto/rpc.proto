@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+option java_package = "io.deepstream.protobuf";
+
+enum RPC_ACTION {
+    RPC_UNKNOWN = 0;
+
+    RPC_ERROR = 1;
+    RPC_REQUEST = 2;
+    RPC_ACCEPT = 4;
+    RPC_RESPONSE = 5;
+    RPC_REJECT = 6;
+    RPC_REQUEST_ERROR = 7;
+    RPC_PROVIDE = 8;
+    RPC_UNPROVIDE = 9;
+
+    RPC_NO_RPC_PROVIDER = 100;
+    RPC_ACCEPT_TIMEOUT = 101;
+    RPC_MULTIPLE_ACCEPT = 102;
+    RPC_INVALID_RPC_CORRELATION_ID = 103;
+    RPC_RESPONSE_TIMEOUT = 104;
+    RPC_MULTIPLE_RESPONSE = 105;
+
+    RPC_MESSAGE_PERMISSION_ERROR = 106;
+    RPC_MESSAGE_DENIED = 107;
+    RPC_INVALID_MESSAGE_DATA = 108;
+    RPC_MULTIPLE_PROVIDERS = 109;
+    RPC_NOT_PROVIDED = 110;
+}
+
+message RpcMessage {
+    RPC_ACTION action = 1;
+    string data = 2;
+    string correlationId = 3;
+    bool isError = 4;
+    bool isAck = 5;
+  
+    repeated string names = 6;
+  
+    // rpc
+    string name = 7;
+    string reason = 8;
+  
+    // permission
+    int32 originalAction = 9;  
+
+    // requestorName = 'rn',
+    // requestorData = 'rd',
+    // trustedSender = 'ts',
+  }
+  

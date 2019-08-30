@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+option java_package = "io.deepstream.protobuf";
+
+enum CONNECTION_ACTION {
+    CONNECTION_UNKNOWN = 0;
+
+    CONNECTION_ERROR = 1;
+    CONNECTION_PING = 2;
+    CONNECTION_PONG = 3;
+    CONNECTION_ACCEPT = 4;
+    CONNECTION_CHALLENGE = 5;
+    CONNECTION_REJECT = 6;
+    CONNECTION_REDIRECT = 7;
+    CONNECTION_CLOSING = 8;
+    CONNECTION_CLOSED = 9;
+
+    CONNECTION_AUTHENTICATION_TIMEOUT = 100;
+    CONNECTION_INVALID_MESSAGE = 101;
+}
+
+message ConnectionMessage {
+    CONNECTION_ACTION action = 1;
+    string data = 2;
+    bool isError = 3;
+    bool isAck = 4;
+
+    string url = 5;
+    string protocolVersion = 6;
+  }
+  

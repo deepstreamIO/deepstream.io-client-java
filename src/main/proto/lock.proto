@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option java_package = "io.deepstream.protobuf";
+
+enum LOCK_ACTION {
+  LOCK_UNKNOWN = 0;
+  LOCK_ERROR = 1;
+  LOCK_REQUEST = 2;
+  LOCK_RESPONSE = 3;
+  LOCK_RELEASE = 4;
+}
+
+message LockMessage {
+    LOCK_ACTION action = 1;
+    bool locked = 3;
+}
+  

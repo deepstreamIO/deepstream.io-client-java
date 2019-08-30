@@ -1,0 +1,51 @@
+syntax = "proto3";
+import "general.proto";
+
+option java_package = "io.deepstream.protobuf";
+
+enum EVENT_ACTION {
+  EVENT_UNKNOWN = 0;
+
+  EVENT_ERROR = 1;
+  EVENT_EMIT = 2;
+
+  EVENT_SUBSCRIBE = 3;
+  EVENT_UNSUBSCRIBE = 4;
+
+  EVENT_LISTEN = 5;
+  EVENT_UNLISTEN = 6;
+
+  EVENT_LISTEN_ACCEPT = 7;
+  EVENT_LISTEN_REJECT = 8;
+
+  EVENT_SUBSCRIPTION_HAS_PROVIDER = 9;
+  EVENT_SUBSCRIPTION_HAS_NO_PROVIDER = 10;
+  EVENT_SUBSCRIPTION_FOR_PATTERN_FOUND = 11;
+  EVENT_SUBSCRIPTION_FOR_PATTERN_REMOVED = 12;
+
+  EVENT_INVALID_LISTEN_REGEX = 100;
+  EVENT_LISTEN_RESPONSE_TIMEOUT = 101;
+  EVENT_LISTEN_UNSUCCESSFUL = 102;
+
+  EVENT_MESSAGE_PERMISSION_ERROR = 103;
+  EVENT_MESSAGE_DENIED = 104;
+  EVENT_INVALID_MESSAGE_DATA = 105;
+  EVENT_MULTIPLE_SUBSCRIPTIONS = 106;
+  EVENT_NOT_SUBSCRIBED = 107;
+}
+
+message EventMessage {
+    EVENT_ACTION action = 1;
+    string data = 2;
+    string correlationId = 3;
+    bool isError = 4;
+    bool isAck = 5;
+    string name = 6;
+
+    repeated string names = 7;
+    string subscription = 8;
+
+    TOPIC originalTOPIC = 10;
+    EVENT_ACTION originalAction = 11;
+}
+  
