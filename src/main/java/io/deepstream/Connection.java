@@ -254,6 +254,7 @@ class Connection implements IConnection {
             this.setState( ConnectionState.CLOSED );
         }
         else {
+            this.setState( ConnectionState.ERROR );
             if(!this.originalUrl.equals(this.url)) {
                 this.url = this.originalUrl;
                 this.endpoint = this.createEndpoint();
