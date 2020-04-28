@@ -2,7 +2,7 @@ package io.deepstream;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.drafts.Draft;
-import org.java_websocket.drafts.Draft_10;
+import org.java_websocket.drafts.Draft_6455;
 import org.java_websocket.handshake.ServerHandshake;
 
 import java.io.IOException;
@@ -60,12 +60,17 @@ class JavaEndpointWebsocket implements Endpoint {
             // Set the SSL context if the socket server is using Secure WebSockets
             if (serverUri.toString().startsWith("wss:")) {
                 SSLContext sslContext;
+                SSLSocketFactory factory;
                 try {
                     sslContext = SSLContext.getInstance("TLS");
                     sslContext.init(null, null, null);
+                    factory = sslContext.getSocketFactory();
+                    this.setSocket(factory.createSocket());
                 } catch (NoSuchAlgorithmException e) {
                     throw new RuntimeException(e);
                 } catch (KeyManagementException e) {
+                    throw new RuntimeException(e);
+                } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
                 // set the SSL context to the client factory

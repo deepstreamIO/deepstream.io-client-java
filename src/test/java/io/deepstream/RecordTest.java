@@ -9,6 +9,9 @@ import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static org.mockito.Mockito.*;
 
@@ -59,6 +62,44 @@ public class RecordTest {
 
     @After
     public void tearDown() {
+    }
+
+    @Test
+    public void recordThreadTest() {
+        ExecutorService recordService = Executors.newFixedThreadPool(20);
+        ExecutorService handleService = Executors.newFixedThreadPool(1);
+
+        for (int ii = 0; ii < 10000; ++ii) {
+            recordService.submit(new Runnable() {
+                @Override
+                public void run () {
+                    Record record = recordHandler.getRecord("foo");
+                    Assert.assertFalse(record.isDestroyed());
+                    record.discard();
+                }
+            });
+            handleService.submit(new Runnable() {
+                @Override
+                public void run () {
+                    recordHandler.handle(MessageParser.parseMessage(TestUtil.replaceSeperators("R|R|foo|1|{\"bar\":\"baz\"}"), deepstreamClientMock));
+                }
+            });
+        }
+
+        recordService.shutdown();
+        handleService.shutdown();
+
+        try
+        {
+            if (!recordService.awaitTermination(5000, TimeUnit.MILLISECONDS)) {
+                Assert.fail("recordService has hung threads");
+            }
+            if (!handleService.awaitTermination(5000, TimeUnit.MILLISECONDS)) {
+                Assert.fail("handleService has hung threads");
+            }
+        } catch (InterruptedException exc) {
+            Assert.fail(exc.getMessage());
+        }
     }
 
     @Test
