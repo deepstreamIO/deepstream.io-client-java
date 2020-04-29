@@ -164,7 +164,7 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
     @Override
     @ObjectiveCName("onTimeout:action:event:name:")
     public void onTimeout(Topic topic, Actions action, Event event, String name) {
-        this.receive(name, new DeepstreamError(String.format("Response for % timed out", name)), null);
+        this.receive(name, new DeepstreamError(String.format("Response for %s timed out", name)), null);
     }
 
     interface UtilSingleNotifierCallback {

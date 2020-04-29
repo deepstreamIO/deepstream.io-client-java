@@ -43,18 +43,11 @@ class JavaEndpointWebsocket implements Endpoint {
 
     @Override
     public void open() {
-        this.websocket = new WebSocket( this.uri, new Draft_10() );
-        try {
-            this.websocket.setSocket(websocket.factory.createSocket());
-            this.websocket.connect();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        this.websocket = new WebSocket( this.uri, new Draft_6455() );
+        this.websocket.connect();
     }
 
     private class WebSocket extends WebSocketClient {
-        SSLSocketFactory factory;
-
         WebSocket( URI serverUri , Draft draft  ) {
             super( serverUri, draft );
             // Set the SSL context if the socket server is using Secure WebSockets
@@ -73,13 +66,7 @@ class JavaEndpointWebsocket implements Endpoint {
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-                // set the SSL context to the client factory
-
-                factory = sslContext.getSocketFactory();
-//                this.setWebSocketFactory(new DefaultSSLWebSocketClientFactory(sslContext));
             }
-
-
         }
 
         @Override
