@@ -61,8 +61,8 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
     @ObjectiveCName("request:utilSingleNotifierCallback:")
     public void request( String name, UtilSingleNotifierCallback utilSingleNotifierCallback ) {
         ArrayList<UtilSingleNotifierCallback> callbacks = requests.get( name );
-        if( callbacks == null ) {
-            synchronized (this) {
+        synchronized (this) {
+            if( callbacks == null ) {
                 callbacks = new ArrayList<UtilSingleNotifierCallback>();
                 requests.put(name, callbacks);
                 send(name);
@@ -84,8 +84,8 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
      */
     public void request( String name, Actions action, String[] data, UtilSingleNotifierCallback utilSingleNotifierCallback ) {
         ArrayList<UtilSingleNotifierCallback> callbacks = requests.get( name );
-        if( callbacks == null ) {
-            synchronized (this) {
+        synchronized (this) {
+            if( callbacks == null ) {
                 callbacks = new ArrayList<UtilSingleNotifierCallback>();
                 requests.put(name, callbacks);
                 send(action, data);
@@ -105,16 +105,21 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
      */
     @ObjectiveCName("receive:error:data:")
     public void receive(String name, DeepstreamError error, Object data) {
-        ArrayList<UtilSingleNotifierCallback> callbacks = requests.get( name );
+        ackTimeoutRegistry.clear(topic, action, name);
+        ArrayList<UtilSingleNotifierCallback> callbacks;
+        synchronized (this) {
+            callbacks = requests.remove( name );
+        }
+        if (callbacks == null) {
+            return;
+        }
         for (UtilSingleNotifierCallback callback : callbacks) {
-            ackTimeoutRegistry.clear(topic, action, name);
             if( error != null ) {
                 callback.onSingleNotifierError( name, error );
             } else {
                 callback.onSingleNotifierResponse( name, data );
             }
         }
-        requests.remove( name );
     }
 
     /**
@@ -164,7 +169,7 @@ class UtilSingleNotifier implements UtilResubscribeNotifier.UtilResubscribeListe
     @Override
     @ObjectiveCName("onTimeout:action:event:name:")
     public void onTimeout(Topic topic, Actions action, Event event, String name) {
-        this.receive(name, new DeepstreamError(String.format("Response for % timed out", name)), null);
+        this.receive(name, new DeepstreamError(String.format("Response for %s timed out", name)), null);
     }
 
     interface UtilSingleNotifierCallback {
